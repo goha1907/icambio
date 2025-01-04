@@ -1,5 +1,5 @@
 from decimal import Decimal
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -60,6 +60,29 @@ class Order(models.Model):
         related_name='processed_orders',
         verbose_name='Оператор'
     )
+    total_from_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        verbose_name='Общая сумма исходной валюты'
+    )
+    total_to_amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+        verbose_name='Общая сумма целевой валюты'
+    )
+    phone_regex = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message="Phone number must be entered in format: '+999999999'"
+    )
+    client_phone = models.CharField(
+        max_length=20,
+        validators=[phone_regex],
+        blank=True,
+        null=True,
+        verbose_name='Телефон клиента'
+    )
 
     class Meta:
         verbose_name = 'Заказ'
@@ -68,6 +91,15 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Заказ #{self.id} ({self.get_status_display()})"
+
+    def calculate_totals(self):
+        """Подсчет общих сумм заказа"""
+        self.total_from_amount = sum(
+            item.from_amount for item in self.items.all()
+        )
+        self.total_to_amount = sum(
+            item.to_amount for item in self.items.all()
+        )
 
 
 class OrderItem(models.Model):

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 
 
 class Currency(models.Model):
@@ -20,16 +20,43 @@ class Currency(models.Model):
 
 class Branch(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название филиала')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
     city = models.CharField(max_length=100, verbose_name='Город')
     address = models.TextField(verbose_name='Адрес')
-    phone = models.CharField(max_length=20, verbose_name='Телефон')
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name='Широта'
+    )
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name='Долгота'
+    )
+    phone_regex = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+    )
+    phone = models.CharField(
+        validators=[phone_regex],
+        max_length=20,
+        verbose_name='Телефон'
+    )
     email = models.EmailField(verbose_name='Email')
-    is_active = models.BooleanField(default=True, verbose_name='Активен')
     base_currency = models.ForeignKey(
         Currency,
         on_delete=models.PROTECT,
         related_name='base_branches',
         verbose_name='Базовая валюта'
+    )
+    working_hours = models.JSONField(
+        default=dict,
+        verbose_name='Часы работы',
+        help_text='График работы филиала'
     )
     manager = models.ForeignKey(
         'users.User',
@@ -38,11 +65,6 @@ class Branch(models.Model):
         blank=True,
         related_name='managed_branches',
         verbose_name='Управляющий'
-    )
-    working_hours = models.JSONField(
-        default=dict,
-        verbose_name='Часы работы',
-        help_text='График работы филиала'
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Создан')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Обновлен')

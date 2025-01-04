@@ -2,6 +2,8 @@ import decimal
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
+from django_filters import rest_framework as filters
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -136,18 +138,32 @@ class BranchViewSet(viewsets.ModelViewSet):
         return Response(stats)
 
 
+class ExchangeRateFilter(filters.FilterSet):
+    min_rate = filters.NumberFilter(field_name="rate", lookup_expr='gte')
+    max_rate = filters.NumberFilter(field_name="rate", lookup_expr='lte')
+
+    class Meta:
+        model = ExchangeRate
+        fields = ['branch', 'from_currency', 'to_currency', 'is_active']
+
+
 class ExchangeRateViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с курсами обмена"""
     queryset = ExchangeRate.objects.all()
     serializer_class = ExchangeRateSerializer
     permission_classes = [IsAuthenticated]
+    filter_class = ExchangeRateFilter
 
     def get_queryset(self):
-        queryset = ExchangeRate.objects.filter(is_active=True)
-        branch_id = self.request.query_params.get('branch', None)
-        if branch_id:
-            queryset = queryset.filter(branch_id=branch_id)
-        return queryset
+        queryset = super().get_queryset()
+        cache_key = f'exchange_rates_{self.request.query_params}'
+        cached_data = cache.get(cache_key)
+
+        if cached_data is None:
+            cached_data = queryset
+            cache.set(cache_key, cached_data, timeout=300)
+
+        return cached_data
 
     def perform_create(self, serializer):
         try:

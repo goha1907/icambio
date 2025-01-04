@@ -24,7 +24,15 @@ class Command(BaseCommand):
         user_permissions = Permission.objects.filter(content_type=user_ct)
 
         # Назначаем разрешения группам
-        operator_group.permissions.set([])  # Базовые права
+        operator_permissions = Permission.objects.filter(
+            codename__in=[
+                'view_user',  # Просмотр пользователей
+                'view_order', # Просмотр заказов
+                'change_order_status',  # Изменение статуса заказа
+                'view_exchange_rate'  # Просмотр курсов обмена
+            ]
+        )
+        operator_group.permissions.set(operator_permissions)
         branch_owner_group.permissions.set(user_permissions)  # Все права на пользователей
         admin_group.permissions.set(Permission.objects.all())  # Все права
 

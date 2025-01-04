@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from rest_framework import serializers
 from .models import Order, OrderItem, Review
 from exchange.serializers import BranchSerializer
@@ -59,10 +60,37 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
     def validate(self, data):
-        if not data.get('items', []):
-            raise serializers.ValidationError(
-                "Заказ должен содержать хотя бы одну операцию обмена"
+        items_data = data.get('items', [])
+
+        # Проверяем лимиты обмена
+        for item_data in items_data:
+            rate = ExchangeRate.objects.get(
+                branch=data['branch'],
+                from_currency=item_data['from_currency'],
+                to_currency=item_data['to_currency'],
+                is_active=True
             )
+
+            if item_data['from_amount'] < rate.min_amount:
+                raise serializers.ValidationError(
+                    f"Minimum amount for {item_data['from_currency']} is {rate.min_amount}"
+                )
+
+        # Проверяем время работы филиала
+        branch = data['branch']
+        current_time = timezone.now().time()
+        current_day = timezone.now().strftime('%A').lower()
+
+        working_hours = branch.working_hours.get(current_day, {})
+        if working_hours:
+            open_time = datetime.strptime(working_hours['open'], '%H:%M').time()
+            close_time = datetime.strptime(working_hours['close'], '%H:%M').time()
+
+            if not (open_time <= current_time <= close_time):
+                raise serializers.ValidationError(
+                    f"Branch is closed. Working hours: {working_hours['open']} - {working_hours['close']}"
+                )
+
         return data
 
 

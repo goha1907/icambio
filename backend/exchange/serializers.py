@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Currency, Branch, ExchangeRate, CurrencyBalance
@@ -84,20 +86,19 @@ class BranchCreateUpdateSerializer(serializers.ModelSerializer):
         model = Branch
         fields = '__all__'
 
+    def validate_email(self, value):
+        if Branch.objects.exclude(pk=getattr(self.instance, 'pk', None)).filter(email=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
     def validate_working_hours(self, value):
-        """Валидация формата рабочих часов"""
-        required_days = ['monday', 'tuesday', 'wednesday',
-                         'thursday', 'friday', 'saturday', 'sunday']
-
-        if not isinstance(value, dict):
-            raise serializers.ValidationError("Working hours must be a dictionary")
-
-        for day in required_days:
-            if day not in value:
-                raise serializers.ValidationError(f"Missing {day} in working hours")
-            if not isinstance(value[day], dict):
-                raise serializers.ValidationError(f"Invalid format for {day}")
-            if 'open' not in value[day] or 'close' not in value[day]:
-                raise serializers.ValidationError(f"Missing open/close time for {day}")
-
+        time_format = '%H:%M'
+        for day, hours in value.items():
+            try:
+                open_time = datetime.strptime(hours['open'], time_format)
+                close_time = datetime.strptime(hours['close'], time_format)
+                if close_time <= open_time:
+                    raise serializers.ValidationError(f"Closing time must be later than opening time for {day}")
+            except ValueError:
+                raise serializers.ValidationError(f"Invalid time format for {day}. Use HH:MM format")
         return value

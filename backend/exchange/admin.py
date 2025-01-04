@@ -34,6 +34,18 @@ class ExchangeRateAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('updated_at',)
 
+    actions = ['activate_rates', 'deactivate_rates']
+
+    def activate_rates(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} rates were activated.')
+    activate_rates.short_description = "Activate selected rates"
+
+    def deactivate_rates(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} rates were deactivated.')
+    deactivate_rates.short_description = "Deactivate selected rates"
+
 
 @admin.register(CurrencyBalance)
 class CurrencyBalanceAdmin(admin.ModelAdmin):

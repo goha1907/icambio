@@ -21,11 +21,19 @@ class CanCreateReview(permissions.BasePermission):
 
 
 class CanManageOrders(permissions.BasePermission):
-    """
-    Разрешение для сотрудников, позволяющее управлять заказами.
-    """
     def has_permission(self, request, view):
-        # Проверяем, входит ли пользователь в группы, которые могут управлять заказами
-        return request.user.groups.filter(
-            name__in=['Operator', 'Branch Owner', 'Admin']
-        ).exists()
+        if request.user.is_staff:
+            return True
+        if view.action in ['create', 'list', 'retrieve']:
+            return True
+        if view.action == 'change_status':
+            return request.user.groups.filter(
+                name__in=['Operator', 'Branch Owner', 'Admin']
+            ).exists()
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        # Владелец филиала может управлять только заказами своего филиала
+        if request.user.groups.filter(name='Branch Owner').exists():
+            return obj.branch.manager == request.user
+        return True

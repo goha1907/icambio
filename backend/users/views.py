@@ -1,18 +1,22 @@
 from rest_framework import viewsets, status
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth import get_user_model
+from django_filters import rest_framework as filters
 from .serializers import ChangePasswordSerializer, UserCreateSerializer, UserProfileSerializer
 
 User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    parser_classes = (MultiPartParser, FormParser)
-    queryset = User.objects.all()
-    permission_classes = (IsAuthenticated,)
+    filter_backends = (filters.DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_fields = ['is_active', 'groups__name']
+    search_fields = ['username', 'email', 'first_name', 'last_name', 'referral_code']
+    ordering_fields = ['date_joined', 'referral_balance']
+    ordering = ['-date_joined']
 
     def get_serializer_class(self):
         if self.action == 'create':

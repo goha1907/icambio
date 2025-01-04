@@ -37,6 +37,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Этот email уже используется.")
+        return value
+
     def create(self, validated_data):
         validated_data.pop('password2')
         user = User.objects.create_user(
