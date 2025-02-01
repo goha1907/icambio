@@ -1,0 +1,32 @@
+# Django и DRF
+Django==5.0.2
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+djoser==2.2.2
+django-filter==23.5
+
+# JWT токены
+djangorestframework-simplejwt==5.3.1
+
+# # База данных
+# psycopg2-binary==2.9.9
+
+# Работа с окружением
+python-dotenv==1.0.1
+
+# Celery для асинхронных задач
+celery==5.3.6
+
+# Redis для кэширования
+redis==5.0.1
+django-redis==5.4.0
+
+# Документация API
+drf-spectacular==0.27.1
+
+# Валидация
+django-phonenumber-field==7.3.0
+phonenumbers==8.13.30
+
+# Утилиты
+Pillow==10.2.0  # для работы с изображениями
