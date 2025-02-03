@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Currency, ExchangeRate, ExchangeOffice, CurrencyBalance
+from exchange.models import (
+    Currency,
+    ExchangeRate,
+    ExchangeOffice,
+    CurrencyBalance
+)
 
 
 @admin.register(Currency)
@@ -12,7 +17,8 @@ class CurrencyAdmin(admin.ModelAdmin):
 
 @admin.register(ExchangeRate)
 class ExchangeRateAdmin(admin.ModelAdmin):
-    list_display = ('from_currency', 'to_currency', 'rate', 'min_amount', 'is_active', 'updated_at')
+    list_display = ('from_currency', 'to_currency', 'rate',
+                    'min_amount', 'is_active', 'updated_at')
     list_filter = ('is_active', 'from_currency', 'to_currency')
     search_fields = ('from_currency__code', 'to_currency__code')
     ordering = ('from_currency', 'to_currency')

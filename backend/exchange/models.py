@@ -6,6 +6,11 @@ class Currency(models.Model):
     code = models.CharField('Код валюты', max_length=10, unique=True)
     name = models.CharField('Название', max_length=50)
     symbol = models.CharField('Символ', max_length=5)
+    decimal_places = models.PositiveSmallIntegerField(
+        'Знаков после запятой',
+        default=2,
+        help_text='Количество знаков после запятой для отображения и расчетов'
+    )
     is_active = models.BooleanField('Активна', default=True)
 
     class Meta:
@@ -49,7 +54,25 @@ class ExchangeRate(models.Model):
         unique_together = ['from_currency', 'to_currency']
 
     def __str__(self):
-        return f"{self.from_currency.code} -> {self.to_currency.code}: {self.rate}"
+        return (f"{self.from_currency.code} -> "
+                f"{self.to_currency.code}: {self.rate}")
+
+    def calculate_to_receive(self, amount_from):
+        """Расчет суммы к получению"""
+        if amount_from < self.min_amount:
+            raise ValueError(
+                f"Сумма обмена должна быть не менее {self.min_amount}"
+            )
+        return amount_from * self.rate
+
+    def calculate_to_exchange(self, amount_to):
+        """Расчет суммы к обмену"""
+        amount_from = amount_to / self.rate
+        if amount_from < self.min_amount:
+            raise ValueError(
+                f"Сумма обмена будет меньше минимальной {self.min_amount}"
+            )
+        return amount_from
 
 
 class ExchangeOffice(models.Model):

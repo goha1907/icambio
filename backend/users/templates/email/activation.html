@@ -1,0 +1,16 @@
+{% load i18n %}
+
+{% block subject %}
+{% blocktrans %}Активация аккаунта на {{ site_name }}{% endblocktrans %}
+{% endblock subject %}
+
+{% block text_body %}
+{% blocktrans %}Вы получили это письмо, потому что вам нужно завершить процесс активации аккаунта на {{ site_name }}.{% endblocktrans %}
+
+{% trans "Пожалуйста, перейдите по следующей ссылке для активации вашего аккаунта:" %}
+{{ protocol }}://{{ domain }}/{{ url|safe }}
+
+{% trans "Спасибо за использование нашего сайта!" %}
+
+{% blocktrans %}Команда {{ site_name }}{% endblocktrans %}
+{% endblock text_body %}
