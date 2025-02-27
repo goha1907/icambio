@@ -1,0 +1,159 @@
+/* frontend/src/styles/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Базовые стили */
+@layer base {
+  body {
+    @apply text-gray-900 antialiased bg-gray-50;
+  }
+
+  h1 {
+    @apply text-3xl font-bold text-gray-900 mb-6;
+  }
+
+  #root {
+    @apply flex flex-col min-h-screen;
+  }
+}
+
+/* Компоненты */
+@layer components {
+  /* Страницы */
+  .page-container {
+    @apply flex-grow py-8 px-4 flex flex-col;
+  }
+
+  .page-content {
+    @apply space-y-6 max-w-4xl mx-auto;
+  }
+
+  /* Layout */
+  .layout-container {
+    @apply min-h-screen flex flex-col;
+  }
+
+  /* Header */
+  .header {
+    @apply bg-white shadow-sm border-b py-2 sticky top-0 z-30;
+  }
+
+  .header-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16;
+  }
+
+  .header-left {
+    @apply flex items-center space-x-6;
+  }
+
+  .header-right {
+    @apply flex items-center space-x-4;
+  }
+
+  /* Main Content */
+  .main-container {
+    @apply flex-grow;
+  }
+
+  .content-wrapper {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Footer */
+  .footer {
+    @apply bg-white border-t py-6 mt-auto;
+  }
+
+  .footer-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-8;
+  }
+
+  /* Auth Pages */
+  .auth-container {
+    @apply min-h-[calc(100vh-180px)] flex items-center justify-center;
+  }
+
+  .auth-form {
+    @apply w-full max-w-md p-8 bg-white rounded-lg shadow;
+  }
+
+  /* Формы */
+  .form-container {
+    @apply w-full max-w-md mx-auto bg-white rounded-lg shadow p-8;
+  }
+
+  .form-footer {
+    @apply mt-6 text-center space-y-2;
+  }
+
+  .form-group {
+    @apply mb-4;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  .form-error {
+    @apply mt-1 text-sm text-red-500;
+  }
+  
+  .form-link {
+    @apply text-blue-600 hover:text-blue-700 text-sm;
+  }
+
+  /* Контент */
+  .content-container {
+    @apply max-w-3xl mx-auto;
+  }
+
+  .content-text {
+    @apply mt-4 text-lg text-gray-600;
+  }
+
+  /* Текст */
+  .text-secondary {
+    @apply text-sm text-gray-600;
+  }
+
+  /* Группы элементов */
+  .button-group {
+    @apply flex space-x-4;
+  }
+
+  /* Навигация */
+  .nav-link {
+    @apply px-3 py-2 text-gray-600 rounded-md transition-all duration-200 border border-transparent;
+  }
+
+  .nav-link:hover {
+    @apply text-blue-600 border-blue-600;
+  }
+  
+  .nav-link-active {
+    @apply text-blue-600 border-blue-600;
+  }
+
+  /* Кнопки */
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200;
+  }
+
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  }
+
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-500;
+  }
+
+  /* Ссылки */
+  .link {
+    @apply text-blue-600 hover:text-blue-700;
+  }
+}

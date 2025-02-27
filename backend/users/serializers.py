@@ -7,10 +7,9 @@ User = get_user_model()
 
 
 class UserCreateSerializer(BaseUserCreateSerializer):
-    referral_code = serializers.CharField(required=False, write_only=True)
-
     class Meta(BaseUserCreateSerializer.Meta):
-        fields = ('username', 'email', 'password', 'referral_code')
+        model = User
+        fields = ('email', 'password', 're_password')
 
     def validate_referral_code(self, value):
         if value:
@@ -35,13 +34,11 @@ class UserCreateSerializer(BaseUserCreateSerializer):
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'phone', 'telegram', 'whatsapp')
+        fields = ('username', 'first_name', 'last_name', 'telegram', 'whatsapp')
 
-    def validate_phone(self, value):
-        if value and not value.startswith('+'):
-            raise serializers.ValidationError(
-                "Номер телефона должен начинаться с '+'"
-            )
+    def validate_username(self, value):
+        if User.objects.exclude(pk=self.instance.pk).filter(username=value).exists():
+            raise serializers.ValidationError("Этот никнейм уже занят")
         return value
 
 
@@ -51,5 +48,5 @@ class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name',
-                  'phone', 'telegram', 'whatsapp', 'referral_link')
-        read_only_fields = ('referral_code', 'bonus_balance')
+                  'telegram', 'whatsapp', 'referral_link')
+        read_only_fields = ('email', 'referral_code', 'bonus_balance')
