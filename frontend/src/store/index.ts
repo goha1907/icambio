@@ -1,7 +1,6 @@
-// frontend/src/store/index.ts
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '@/store/slices/authSlice';
-import exchangeReducer from '@/store/slices/exchangeSlice';
+import authReducer from '@/features/auth/store/authSlice';
+import exchangeReducer from '@/features/exchange/store/exchangeSlice';
 
 export const store = configureStore({
   reducer: {

@@ -1,4 +1,3 @@
-// frontend/src/layouts/components/Footer.tsx
 import { Link } from 'react-router-dom';
 
 export const Footer = () => {
@@ -9,9 +8,21 @@ export const Footer = () => {
         <div>
           <h3 className="text-sm font-semibold text-gray-600">О компании</h3>
           <ul className="mt-4 space-y-2">
-            <li><Link to="/about" className="link">О нас</Link></li>
-            <li><Link to="/rules" className="link">Правила обмена</Link></li>
-            <li><Link to="/aml-kyc" className="link">AML/KYC</Link></li>
+            <li>
+              <Link to="/about" className="link">
+                О нас
+              </Link>
+            </li>
+            <li>
+              <Link to="/rules" className="link">
+                Правила обмена
+              </Link>
+            </li>
+            <li>
+              <Link to="/aml-kyc" className="link">
+                AML/KYC
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -25,11 +36,9 @@ export const Footer = () => {
           </ul>
         </div>
       </div>
-      
+
       <div className="content-wrapper mt-8">
-        <p className="text-center text-secondary">
-          © 2024 iCambio. Все права защищены.
-        </p>
+        <p className="text-center text-secondary">© 2024 iCambio. Все права защищены.</p>
       </div>
     </footer>
   );

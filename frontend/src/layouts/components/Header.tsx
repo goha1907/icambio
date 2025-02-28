@@ -1,7 +1,6 @@
-// frontend/src/layouts/components/Header.tsx
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { UserMenu } from '@/components/user/UserMenu';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { UserMenu } from '@/features/profile/components/UserMenu';
 
 export const Header = () => {
   const location = useLocation();

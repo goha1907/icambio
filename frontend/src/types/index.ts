@@ -1,4 +1,3 @@
-// frontend/src/types/index.ts
 // Базовые типы пользователя
 export interface User {
   id: number;
@@ -68,8 +67,8 @@ export interface Currency {
 }
 
 export const CURRENCY_DECIMALS = {
-  fiat: 2,      // для фиатных валют (USD, EUR, RUB и т.д.)
-  crypto: 8      // значение по умолчанию для криптовалют
+  fiat: 2, // для фиатных валют (USD, EUR, RUB и т.д.)
+  crypto: 8, // значение по умолчанию для криптовалют
 } as const;
 
 export interface ExchangeRate {

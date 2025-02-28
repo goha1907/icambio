@@ -1,4 +1,3 @@
-// frontend/src/layouts/MainLayout.tsx
 import { Outlet } from 'react-router-dom';
 import { Header } from '@/layouts/components/Header';
 import { Main } from '@/layouts/components/Main';
