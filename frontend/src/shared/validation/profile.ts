@@ -9,13 +9,13 @@ export const profileSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  firstName: z
+  first_name: z
     .string()
     .min(2, 'Имя должно содержать минимум 2 символа')
     .optional()
     .or(z.literal('')),
 
-  lastName: z
+  last_name: z
     .string()
     .min(2, 'Фамилия должна содержать минимум 2 символа')
     .optional()

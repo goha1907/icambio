@@ -11,6 +11,7 @@ import type { AppDispatch } from '@/store';
 import type { LoginCredentials } from '@/types';
 import { Loader } from '@/shared/ui/Loader';
 import { Alert } from '@/shared/ui/Alert';
+import { logger } from '@/lib/utils/logger';
 
 export const LoginForm = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,9 +38,16 @@ export const LoginForm = () => {
         navigate('/profile');
       }
     } catch (err: any) {
-      error(err.message || 'Ошибка входа');
+      if (err.status === 401) {
+        error('Неверный email или пароль');
+      } else if (err.status === 429) {
+        error('Слишком много попыток входа. Пожалуйста, попробуйте позже.');
+      } else {
+        error(err.message || 'Произошла ошибка при входе. Пожалуйста, попробуйте снова.');
+      }
+      logger.error('Login failed', err);
     }
-  };
+}
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -16,10 +16,10 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
   const [copying, setCopying] = useState(false);
 
   const handleCopyLink = async () => {
-    if (user.referralLink) {
+    if (user.referral_link) {
       try {
         setCopying(true);
-        await navigator.clipboard.writeText(user.referralLink);
+        await navigator.clipboard.writeText(user.referral_link);
         success('Реферальная ссылка скопирована');
       } catch (err) {
       } finally {
@@ -37,24 +37,18 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
         <div>
           <label className="text-sm font-medium text-gray-500">Реферальная ссылка</label>
           <div className="mt-2 flex items-center justify-between">
-            <div className="flex-1 p-2 bg-gray-50 rounded-md text-sm truncate">
-              {user.referralLink}
-            </div>
-            {/* <Button
-              variant="secondary"
-              onClick={handleCopyLink}
-              disabled={copying}
-            >
-              {copying ? 'Копирование...' : 'Копировать'}
-            </Button> */}
+            <span className="text-xl font-semibold">
+              {user.referral_link ? user.referral_link.split('=')[1] || user.referral_link : 'Не доступен'}
+            </span>
             <Button
               variant="secondary"
               onClick={handleCopyLink}
-              disabled={copying || !user.referralLink}
-              className="copy-button"
+              disabled={copying || !user.referral_link}
             >
-              <Copy className="w-4 h-4 mr-2" />
-              {copying ? 'Копирование...' : 'Копировать'}
+              <div className="flex items-center">
+               <Copy className="w-4 h-4 mr-2" />
+               {copying ? 'Скопировано' : 'Копировать'}
+              </div>
             </Button>
           </div>
         </div>
@@ -62,7 +56,9 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
         <div>
           <label className="text-sm font-medium text-gray-500">Бонусный баланс</label>
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-xl font-semibold">{user.referralBalance || 0} USDT</span>
+            <span className="text-xl font-semibold">
+              {user.referralBalance || 0} USDT
+            </span>
             <Button
               variant="primary"
               onClick={() => navigate('/profile/withdraw')}

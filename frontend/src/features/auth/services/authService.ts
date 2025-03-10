@@ -1,3 +1,5 @@
+import { logger } from "@/lib/utils/logger";
+
 // Ключи для хранения данных в localStorage
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
@@ -22,7 +24,7 @@ export const getUser = (): any | null => {
     try {
       return JSON.parse(userData);
     } catch (e) {
-      console.error('Error parsing user data from localStorage:', e);
+      logger.error('Error parsing user data from localStorage', e);
       return null;
     }
   }

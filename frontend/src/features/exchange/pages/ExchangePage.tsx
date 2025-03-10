@@ -159,24 +159,12 @@ export function ExchangePage() {
                   <div key={index} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Отдаете*
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Отдаете*</label>
                         <div className="flex">
-                          <Input
-                            type="number"
-                            value={pair.fromAmount || ''}
-                            onChange={(e) =>
-                              handlePairChange(index, 'fromAmount', Number(e.target.value))
-                            }
-                            className="rounded-r-none w-2/3"
-                          />
                           <select
                             value={pair.fromCurrency}
-                            onChange={(e) =>
-                              handlePairChange(index, 'fromCurrency', e.target.value)
-                            }
-                            className="form-input rounded-l-none w-1/3 border-l-0"
+                            onChange={(e) => handlePairChange(index, 'fromCurrency', e.target.value)}
+                            className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
                             {currencies.map((currency) => (
@@ -185,26 +173,22 @@ export function ExchangePage() {
                               </option>
                             ))}
                           </select>
+                          <Input
+                            type="number"
+                            value={pair.fromAmount || ''}
+                            onChange={(e) => handlePairChange(index, 'fromAmount', Number(e.target.value))}
+                            className="rounded-l-none w-2/3"
+                          />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Получаете*
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Получаете*</label>
                         <div className="flex">
-                          <Input
-                            type="number"
-                            value={pair.toAmount || ''}
-                            onChange={(e) =>
-                              handlePairChange(index, 'toAmount', Number(e.target.value))
-                            }
-                            className="rounded-r-none w-2/3"
-                          />
                           <select
                             value={pair.toCurrency}
                             onChange={(e) => handlePairChange(index, 'toCurrency', e.target.value)}
-                            className="form-input rounded-l-none w-1/3 border-l-0"
+                            className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
                             {currencies.map((currency) => (
@@ -213,6 +197,12 @@ export function ExchangePage() {
                               </option>
                             ))}
                           </select>
+                          <Input
+                            type="number"
+                            value={pair.toAmount || ''}
+                            onChange={(e) => handlePairChange(index, 'toAmount', Number(e.target.value))}
+                            className="rounded-l-none w-2/3"
+                          />
                         </div>
                       </div>
                     </div>

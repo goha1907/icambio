@@ -10,6 +10,27 @@ import { PageTitle } from '@/shared/ui/PageTitle';
 import { profileAPI } from '@/lib/api/services/profile';
 import { profileSchema, ProfileFormData } from '@/shared/validation/profile';
 
+// Функция для форматирования WhatsApp (извлечение номера из URL)
+const formatWhatsApp = (url: string | undefined): string => {
+  if (!url) return '';
+  if (url.startsWith('https://wa.me/')) {
+    return url.replace('https://wa.me/', '');
+  }
+  return url;
+};
+
+// Функция для форматирования Telegram (извлечение имени пользователя из URL)
+const formatTelegram = (url: string | undefined): string => {
+  if (!url) return '';
+  if (url.startsWith('https://t.me/')) {
+    return '@' + url.replace('https://t.me/', '');
+  }
+  if (!url.startsWith('@') && url !== '') {
+    return '@' + url;
+  }
+  return url;
+};
+
 export const EditProfilePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -23,17 +44,28 @@ export const EditProfilePage = () => {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username || '',
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      whatsapp: user?.whatsapp || '',
-      telegram: user?.telegram || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      whatsapp: formatWhatsApp(user?.whatsapp),
+      telegram: formatTelegram(user?.telegram),
     },
   });
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
+      // Обработка WhatsApp и Telegram
+      const formattedData = {
+        ...data,
+        whatsapp: data.whatsapp ? (
+          data.whatsapp.startsWith('https://') ? data.whatsapp : `https://wa.me/${data.whatsapp.replace(/\D/g, '')}`
+        ) : '',
+        telegram: data.telegram ? (
+          data.telegram.startsWith('https://') ? data.telegram : `https://t.me/${data.telegram.replace('@', '')}`
+        ) : ''
+      };
+      
       // Вызов API для обновления профиля
-      await profileAPI.updateProfile(data);
+      await profileAPI.updateProfile(formattedData);
       success('Профиль успешно обновлен');
       navigate('/profile');
     } catch (err: any) {
@@ -68,8 +100,8 @@ export const EditProfilePage = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Имя" {...register('firstName')} error={errors.firstName?.message} />
-                <Input label="Фамилия" {...register('lastName')} error={errors.lastName?.message} />
+                <Input label="Имя" {...register('first_name')} error={errors.first_name?.message} />
+                <Input label="Фамилия" {...register('last_name')} error={errors.last_name?.message} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
@@ -77,12 +109,14 @@ export const EditProfilePage = () => {
                   placeholder="+79123456789"
                   {...register('whatsapp')}
                   error={errors.whatsapp?.message}
+                  helperText="Введите номер телефона с кодом страны"
                 />
                 <Input
                   label="Telegram"
                   placeholder="@username"
                   {...register('telegram')}
                   error={errors.telegram?.message}
+                  helperText="Введите ваш @username в Telegram"
                 />
               </div>
 

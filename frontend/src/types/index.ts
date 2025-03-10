@@ -3,11 +3,11 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  first_name?: string;
+  last_name?: string;
   whatsapp?: string;
   telegram?: string;
-  referralLink?: string;
+  referral_link?: string;
   referralBalance?: number;
 }
 
@@ -34,8 +34,8 @@ export interface AuthState {
 // Типы для обновления профиля
 export interface ProfileUpdateData {
   username?: string;
-  firstName?: string;
-  lastName?: string;
+  first_name?: string;
+  last_name?: string;
   whatsapp?: string;
   telegram?: string;
 }

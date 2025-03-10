@@ -45,6 +45,14 @@ export const ExchangeRow = ({
   return (
     <div className="exchange-row">
       <div className="exchange-currency-group">
+        <div className="exchange-currency">
+          <Dropdown
+            options={currencyOptions}
+            value={fromCurrency || ''}
+            onChange={(value) => setValue(`exchangePairs.${index}.fromCurrency`, value)}
+            label="Валюта отправления"
+          />
+        </div>
         <div className="exchange-amount">
           <Input
             type="number"
@@ -59,17 +67,17 @@ export const ExchangeRow = ({
             })}
           />
         </div>
-        <div className="exchange-currency">
-          <Dropdown
-            options={currencyOptions}
-            value={fromCurrency || ''}
-            onChange={(value) => setValue(`exchangePairs.${index}.fromCurrency`, value)}
-            label="Валюта отправления"
-          />
-        </div>
       </div>
 
       <div className="exchange-currency-group">
+        <div className="exchange-currency">
+          <Dropdown
+            options={currencyOptions}
+            value={toCurrency || ''}
+            onChange={(value) => setValue(`exchangePairs.${index}.toCurrency`, value)}
+            label="Валюта получения"
+          />
+        </div>
         <div className="exchange-amount">
           <Input
             type="number"
@@ -82,14 +90,6 @@ export const ExchangeRow = ({
                 }
               },
             })}
-          />
-        </div>
-        <div className="exchange-currency">
-          <Dropdown
-            options={currencyOptions}
-            value={toCurrency || ''}
-            onChange={(value) => setValue(`exchangePairs.${index}.toCurrency`, value)}
-            label="Валюта получения"
           />
         </div>
       </div>

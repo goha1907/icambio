@@ -98,18 +98,10 @@ export const ExchangeCalculator = ({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Вы отдаете</label>
           <div className="flex">
-            <Input
-              type="number"
-              value={fromAmount || ''}
-              onChange={(e) => setFromAmount(Number(e.target.value))}
-              className="rounded-r-none w-2/3"
-              placeholder="0.00"
-              min="0"
-            />
             <select
               value={fromCurrency}
               onChange={(e) => setFromCurrency(e.target.value)}
-              className="form-input rounded-l-none w-1/3 border-l-0"
+              className="form-input rounded-r-none w-1/3 border-r-0"
             >
               <option value="">Выберите...</option>
               {currencies.map((currency) => (
@@ -118,24 +110,24 @@ export const ExchangeCalculator = ({
                 </option>
               ))}
             </select>
+            <Input
+              type="number"
+              value={fromAmount || ''}
+              onChange={(e) => setFromAmount(Number(e.target.value))}
+              className="rounded-l-none w-2/3"
+              placeholder="0.00"
+              min="0"
+            />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Вы получаете</label>
           <div className="flex">
-            <Input
-              type="number"
-              value={toAmount || ''}
-              onChange={(e) => handleToAmountChange(Number(e.target.value))}
-              className="rounded-r-none w-2/3"
-              placeholder="0.00"
-              min="0"
-            />
             <select
               value={toCurrency}
               onChange={(e) => setToCurrency(e.target.value)}
-              className="form-input rounded-l-none w-1/3 border-l-0"
+              className="form-input rounded-r-none w-1/3 border-r-0"
             >
               <option value="">Выберите...</option>
               {currencies.map((currency) => (
@@ -144,6 +136,14 @@ export const ExchangeCalculator = ({
                 </option>
               ))}
             </select>
+            <Input
+              type="number"
+              value={toAmount || ''}
+              onChange={(e) => handleToAmountChange(Number(e.target.value))}
+              className="rounded-l-none w-2/3"
+              placeholder="0.00"
+              min="0"
+            />
           </div>
         </div>
       </div>

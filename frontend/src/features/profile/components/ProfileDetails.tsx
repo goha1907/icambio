@@ -27,19 +27,41 @@ export const ProfileDetails = ({ user }: ProfileDetailsProps) => {
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">Имя</label>
-            <p className="mt-1">{user.firstName || '-'}</p>
+            <p className="mt-1">{user.first_name || '-'}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">Фамилия</label>
-            <p className="mt-1">{user.lastName || '-'}</p>
+            <p className="mt-1">{user.last_name || '-'}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">WhatsApp</label>
-            <p className="mt-1">{user.whatsapp || '-'}</p>
+            <p className="mt-1">
+              {user.whatsapp ? (
+                <a 
+                  href={user.whatsapp.startsWith('https://') ? user.whatsapp : `https://wa.me/${user.whatsapp.replace(/\D/g, '')}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {user.whatsapp.startsWith('https://') ? user.whatsapp.replace('https://wa.me/', '') : user.whatsapp}
+                </a>
+              ) : '-'}
+            </p>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">Telegram</label>
-            <p className="mt-1">{user.telegram || '-'}</p>
+            <p className="mt-1">
+              {user.telegram ? (
+                <a 
+                  href={user.telegram.startsWith('https://') ? user.telegram : `https://t.me/${user.telegram.replace('@', '')}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {user.telegram.startsWith('https://') ? user.telegram.replace('https://t.me/', '@') : user.telegram}
+                </a>
+              ) : '-'}
+            </p>
           </div>
         </div>
 
