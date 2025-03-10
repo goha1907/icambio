@@ -22,7 +22,6 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
         await navigator.clipboard.writeText(user.referralLink);
         success('Реферальная ссылка скопирована');
       } catch (err) {
-        console.error('Failed to copy:', err);
       } finally {
         setCopying(false);
       }

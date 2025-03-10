@@ -117,8 +117,6 @@ export function ExchangePage() {
 
     try {
       // Здесь будет отправка данных на сервер
-      console.log('Order data:', { pairs, contactInfo });
-
       success('Заказ успешно создан');
       // Здесь должен быть редирект на страницу с уникальной ссылкой
       // navigate(`/order/${orderId}`);
