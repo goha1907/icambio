@@ -9,31 +9,32 @@ interface AuthResponse {
   user: User;
 }
 
-// Обработка ошибок от API
-const handleApiError = (error: any) => {
-  if (error.response) {
-    // Ошибка от сервера
-    const status = error.response.status;
-    const errorData = error.response.data;
-    
-    if (status === 400) {
-      // Ошибки валидации
-      const validationErrors = errorData.errors || {};
-      const firstError = Object.values(validationErrors)[0];
-      return firstError ? String(firstError) : 'Ошибка валидации данных';
-    } else if (status === 401) {
-      return 'Неверный email или пароль';
-    } else if (status === 403) {
-      return 'Недостаточно прав для выполнения действия';
-    } else if (status === 429) {
-      return 'Слишком много попыток. Попробуйте позже';
-    } else {
-      return errorData.message || 'Ошибка сервера';
-    }
+const handleLoginError = (error: any) => {
+  if (!error.response) {
+    return 'Ошибка соединения с сервером. Проверьте интернет-подключение.';
   }
   
-  // Сетевая ошибка или другие проблемы
-  return error.message || 'Произошла ошибка при выполнении запроса';
+  const status = error.response.status;
+  
+  switch (status) {
+    case 400:
+      // Проверим наличие специфичных полей
+      if (error.response.data.email) {
+        return `Ошибка email: ${error.response.data.email[0]}`;
+      }
+      if (error.response.data.password) {
+        return `Ошибка пароля: ${error.response.data.password[0]}`;
+      }
+      return 'Неверные данные для входа';
+    case 401:
+      return 'Неверный email или пароль';
+    case 403:
+      return 'Доступ запрещен. У вас нет прав для выполнения этого действия';
+    case 429:
+      return 'Слишком много попыток входа. Пожалуйста, попробуйте позже';
+    default:
+      return 'Произошла ошибка при входе. Пожалуйста, попробуйте позже';
+  }
 };
 
 // Получение текущего пользователя
@@ -74,7 +75,7 @@ export const login = createAsyncThunk<AuthResponse, LoginCredentials>(
       };
     } catch (error: any) {
       clearAuthData();
-      return rejectWithValue(handleApiError(error));
+      return rejectWithValue(handleLoginError(error));
     }
   }
 );
@@ -160,7 +161,9 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string || 'Ошибка входа';
+        state.error = typeof action.payload === 'string' 
+          ? action.payload 
+          : handleLoginError(action.payload);
       })
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;

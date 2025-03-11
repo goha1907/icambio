@@ -1,0 +1,13 @@
+@layer base {
+  body {
+    @apply text-gray-900 antialiased bg-gray-50;
+  }
+
+  h1 {
+    @apply text-3xl font-bold text-gray-900 mb-6;
+  }
+
+  #root {
+    @apply flex flex-col min-h-screen;
+  }
+}

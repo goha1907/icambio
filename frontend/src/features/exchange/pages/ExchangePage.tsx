@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { useNotification } from '@/lib/hooks/useNotification';
 import { mockCurrencies, calculateToAmount, calculateFromAmount } from '@/mocks/exchange-data';
+import { logger } from '@/lib/utils/logger';
 
 export function ExchangePage() {
   const { success, error } = useNotification();
@@ -35,7 +36,7 @@ export function ExchangePage() {
           localStorage.removeItem('exchangeCalculatorData');
         }
       } catch (e) {
-        console.error('Error parsing exchangeCalculatorData:', e);
+        logger.error('Error parsing exchangeCalculatorData', e);
       }
     }
   }, []);

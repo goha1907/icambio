@@ -1,14 +1,14 @@
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { profileSchema, ProfileFormData } from '@/shared/validation/profile';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
-import { useNotification } from '@/lib/hooks/useNotification';
 import { PageTitle } from '@/shared/ui/PageTitle';
+import { useFormSubmit } from '@/lib/hooks/useFormSubmit';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { profileAPI } from '@/lib/api/services/profile';
-import { profileSchema, ProfileFormData } from '@/shared/validation/profile';
 
 // Функция для форматирования WhatsApp (извлечение номера из URL)
 const formatWhatsApp = (url: string | undefined): string => {
@@ -34,12 +34,11 @@ const formatTelegram = (url: string | undefined): string => {
 export const EditProfilePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { success, error } = useNotification();
 
   const {
     register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
+    handleSubmit: handleFormSubmit,
+    formState: { errors }
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -51,27 +50,29 @@ export const EditProfilePage = () => {
     },
   });
 
-  const onSubmit = async (data: ProfileFormData) => {
-    try {
+  const { handleSubmit, isSubmitting } = useFormSubmit<ProfileFormData>({
+    onSubmit: async (data) => {
       // Обработка WhatsApp и Telegram
       const formattedData = {
         ...data,
         whatsapp: data.whatsapp ? (
-          data.whatsapp.startsWith('https://') ? data.whatsapp : `https://wa.me/${data.whatsapp.replace(/\D/g, '')}`
+          data.whatsapp.startsWith('https://') ? 
+            data.whatsapp : 
+            `https://wa.me/${data.whatsapp.replace(/\D/g, '')}`
         ) : '',
         telegram: data.telegram ? (
-          data.telegram.startsWith('https://') ? data.telegram : `https://t.me/${data.telegram.replace('@', '')}`
+          data.telegram.startsWith('https://') ? 
+            data.telegram : 
+            `https://t.me/${data.telegram.replace('@', '')}`
         ) : ''
       };
       
-      // Вызов API для обновления профиля
-      await profileAPI.updateProfile(formattedData);
-      success('Профиль успешно обновлен');
-      navigate('/profile');
-    } catch (err: any) {
-      error(err.response?.data?.message || 'Не удалось обновить профиль');
-    }
-  };
+      return await profileAPI.updateProfile(formattedData);
+    },
+    successMessage: 'Профиль успешно обновлен',
+    errorMessage: 'Не удалось обновить профиль',
+    redirectPath: '/profile'
+  });
 
   if (!user) return null;
 
@@ -85,7 +86,7 @@ export const EditProfilePage = () => {
             <CardTitle>Личные данные</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleFormSubmit(handleSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Неизменяемое поле */}
                 <div className="space-y-4">
@@ -96,12 +97,24 @@ export const EditProfilePage = () => {
                 </div>
 
                 {/* Редактируемые поля */}
-                <Input label="Никнейм" {...register('username')} error={errors.username?.message} />
+                <Input
+                  label="Никнейм"
+                  {...register('username')}
+                  error={errors.username?.message}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Имя" {...register('first_name')} error={errors.first_name?.message} />
-                <Input label="Фамилия" {...register('last_name')} error={errors.last_name?.message} />
+                <Input
+                  label="Имя"
+                  {...register('first_name')}
+                  error={errors.first_name?.message}
+                />
+                <Input
+                  label="Фамилия"
+                  {...register('last_name')}
+                  error={errors.last_name?.message}
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
@@ -121,10 +134,18 @@ export const EditProfilePage = () => {
               </div>
 
               <div className="flex justify-between space-x-4">
-                <Button type="button" variant="secondary" onClick={() => navigate('/profile')}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => navigate('/profile')}
+                >
                   Отмена
                 </Button>
-                <Button type="submit" variant="primary" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
                 </Button>
               </div>

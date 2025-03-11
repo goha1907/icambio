@@ -1,132 +1,166 @@
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
-import type { Currency, ExchangeRate } from '@/types';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Input } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
+import { Currency } from '@/types';
+import { mockCurrencies, calculateToAmount, calculateFromAmount } from '@/mocks/exchange-data';
 
-interface ExchangeRatesTableProps {
-  rates: ExchangeRate[];
-  currencies: Currency[];
+interface ExchangeCalculatorProps {
+  onCreateOrder?: () => void;
+  simplified?: boolean;
+  currencies?: Currency[];
 }
 
-export const ExchangeRatesTable = ({ rates, currencies }: ExchangeRatesTableProps) => {
-  const [sortField, setSortField] = useState<string>('fromCurrency');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+export const ExchangeCalculator = ({
+  onCreateOrder,
+  simplified = false,
+  currencies = mockCurrencies,
+}: ExchangeCalculatorProps) => {
+  const navigate = useNavigate();
+  const [fromCurrency, setFromCurrency] = useState<string>('');
+  const [toCurrency, setToCurrency] = useState<string>('');
+  const [fromAmount, setFromAmount] = useState<number>(0);
+  const [toAmount, setToAmount] = useState<number>(0);
 
-  // Получение названия валюты по коду
-  const getCurrencyName = (code: string): string => {
-    const currency = currencies.find((c) => c.code === code);
-    return currency ? `${currency.name} (${currency.symbol})` : code;
-  };
+  // Мемоизация опций валют
+  const currencyOptions = useMemo(() => {
+    return currencies.map((currency) => (
+      <option key={currency.code} value={currency.code}>
+        {currency.code} ({currency.symbol})
+      </option>
+    ));
+  }, [currencies]);
 
-  // Получение числа десятичных знаков для валюты
-  const getCurrencyDecimals = (code: string): number => {
-    const currency = currencies.find((c) => c.code === code);
-    return currency?.decimals || 2;
-  };
+  // Мемоизация обработчиков изменения валют
+  const handleFromCurrencyChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFromCurrency(e.target.value);
+  }, []);
 
-  // Функция сортировки
-  const sortRates = (a: ExchangeRate, b: ExchangeRate): number => {
-    let valueA: string | number = a[sortField as keyof ExchangeRate] as string | number;
-    let valueB: string | number = b[sortField as keyof ExchangeRate] as string | number;
+  const handleToCurrencyChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setToCurrency(e.target.value);
+  }, []);
 
-    // Для числовых полей
-    if (typeof valueA === 'number' && typeof valueB === 'number') {
-      return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+  // Мемоизация обработчиков изменения сумм
+  const handleFromAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setFromAmount(value);
+  }, []);
+
+  const handleToAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setToAmount(value);
+    
+    if (fromCurrency && toCurrency && value > 0) {
+      const calculated = calculateFromAmount(fromCurrency, toCurrency, value);
+      if (calculated !== null) {
+        setFromAmount(calculated);
+      }
     }
+  }, [fromCurrency, toCurrency]);
 
-    // Для строковых полей
-    valueA = String(valueA).toLowerCase();
-    valueB = String(valueB).toLowerCase();
+  // Расчет суммы получения при изменении суммы отправления или валют
+  useEffect(() => {
+    if (fromCurrency && toCurrency && fromAmount > 0) {
+      const calculated = calculateToAmount(fromCurrency, toCurrency, fromAmount);
+      if (calculated !== null) {
+        setToAmount(calculated);
+      }
+    }
+  }, [fromCurrency, toCurrency, fromAmount]);
 
-    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
-    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  };
+  // Мемоизация отображения курса
+  const exchangeRateInfo = useMemo(() => {
+    if (fromCurrency && toCurrency && fromAmount > 0 && toAmount > 0) {
+      const rate = (toAmount / fromAmount).toFixed(6);
+      return (
+        <div className="exchange-rate-info text-sm text-gray-600 mb-4">
+          Курс: 1 {fromCurrency} = {rate} {toCurrency}
+        </div>
+      );
+    }
+    return null;
+  }, [fromCurrency, toCurrency, fromAmount, toAmount]);
 
-  // Обработчик клика по заголовку для сортировки
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      // Если поле уже выбрано, меняем направление
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  // Мемоизация обработчика создания заказа
+  const handleCreateOrder = useCallback(() => {
+    if (onCreateOrder) {
+      onCreateOrder();
     } else {
-      // Если выбрано новое поле, устанавливаем его и сортировку по возрастанию
-      setSortField(field);
-      setSortDirection('asc');
+      if (fromCurrency && toCurrency && fromAmount > 0) {
+        localStorage.setItem('exchangeCalculatorData', JSON.stringify({
+          fromCurrency,
+          toCurrency,
+          fromAmount,
+          toAmount
+        }));
+      }
+      navigate('/exchange');
     }
-  };
-
-  // Время последнего обновления
-  const lastUpdateTime = new Date().toLocaleTimeString();
+  }, [onCreateOrder, navigate, fromCurrency, toCurrency, fromAmount, toAmount]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Актуальные курсы обмена</CardTitle>
-        <p className="text-sm text-gray-500">Обновлено: {lastUpdateTime}</p>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('fromCurrency')}
-                >
-                  Валюта отдачи
-                  {sortField === 'fromCurrency' && (
-                    <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  )}
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('toCurrency')}
-                >
-                  Валюта получения
-                  {sortField === 'toCurrency' && (
-                    <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  )}
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('minAmount')}
-                >
-                  Мин. сумма
-                  {sortField === 'minAmount' && (
-                    <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  )}
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort('rate')}
-                >
-                  Курс
-                  {sortField === 'rate' && (
-                    <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                  )}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {[...rates].sort(sortRates).map((rate, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getCurrencyName(rate.fromCurrency)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getCurrencyName(rate.toCurrency)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {rate.minAmount} {rate.fromCurrency}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {rate.rate.toFixed(getCurrencyDecimals(rate.toCurrency))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="exchange-calculator">
+      {!simplified && <h3 className="text-xl font-semibold mb-4">Калькулятор обмена</h3>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Вы отдаете</label>
+          <div className="flex">
+            <select
+              value={fromCurrency}
+              onChange={handleFromCurrencyChange}
+              className="form-input rounded-r-none w-1/3 border-r-0"
+            >
+              <option value="">Выберите...</option>
+              {currencyOptions}
+            </select>
+            <Input
+              type="number"
+              value={fromAmount || ''}
+              onChange={handleFromAmountChange}
+              className="rounded-l-none w-2/3"
+              placeholder="0.00"
+              min="0"
+            />
+          </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Вы получаете</label>
+          <div className="flex">
+            <select
+              value={toCurrency}
+              onChange={handleToCurrencyChange}
+              className="form-input rounded-r-none w-1/3 border-r-0"
+            >
+              <option value="">Выберите...</option>
+              {currencyOptions}
+            </select>
+            <Input
+              type="number"
+              value={toAmount || ''}
+              onChange={handleToAmountChange}
+              className="rounded-l-none w-2/3"
+              placeholder="0.00"
+              min="0"
+            />
+          </div>
+        </div>
+      </div>
+
+      {exchangeRateInfo}
+
+      {!simplified && (
+        <div className="flex justify-end">
+          <Button 
+            variant="primary" 
+            onClick={handleCreateOrder}
+            disabled={!fromCurrency || !toCurrency || fromAmount <= 0}
+          >
+            Заказать обмен
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
