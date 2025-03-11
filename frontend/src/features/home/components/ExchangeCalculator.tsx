@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
-import type { Currency } from '@/types';
+import { Currency } from '@/types';
+import { mockCurrencies, calculateToAmount, calculateFromAmount } from '@/mocks/exchange-data';
 
 interface ExchangeCalculatorProps {
-  currencies: Currency[];
-  rates?: Record<string, Record<string, number>>;
   onCreateOrder?: () => void;
   simplified?: boolean;
+  currencies?: Currency[];
 }
 
 export const ExchangeCalculator = ({
-  currencies,
-  rates = {},
   onCreateOrder,
   simplified = false,
+  currencies = mockCurrencies,
 }: ExchangeCalculatorProps) => {
   const navigate = useNavigate();
   const [fromCurrency, setFromCurrency] = useState<string>('');
@@ -23,60 +22,23 @@ export const ExchangeCalculator = ({
   const [fromAmount, setFromAmount] = useState<number>(0);
   const [toAmount, setToAmount] = useState<number>(0);
 
-  // Получение курса обмена между двумя валютами
-  const getExchangeRate = (from: string, to: string): number => {
-    // В реальном приложении это будет получено из API или prop rates
-    // Временная заглушка с фиксированными курсами
-    const mockRates: Record<string, Record<string, number>> = {
-      USD: { EUR: 0.85, RUB: 75.5, BTC: 0.000026, ETH: 0.00041, USDT: 1 },
-      EUR: { USD: 1.18, RUB: 89.2, BTC: 0.000031, ETH: 0.00048, USDT: 1.18 },
-      RUB: { USD: 0.013, EUR: 0.011, BTC: 0.00000034, ETH: 0.0000054, USDT: 0.013 },
-      BTC: { USD: 38500, EUR: 32700, RUB: 2900000, ETH: 15.6, USDT: 38500 },
-      ETH: { USD: 2450, EUR: 2080, RUB: 184600, BTC: 0.064, USDT: 2450 },
-      USDT: { USD: 1, EUR: 0.85, RUB: 75.5, BTC: 0.000026, ETH: 0.00041 },
-    };
-
-    const rateSource = Object.keys(rates).length > 0 ? rates : mockRates;
-
-    if (from && to && from !== to) {
-      return rateSource[from]?.[to] || 0;
-    }
-    return 0;
-  };
-
   // Расчет суммы получения при изменении суммы отправления
   useEffect(() => {
     if (fromCurrency && toCurrency && fromAmount > 0) {
-      const rate = getExchangeRate(fromCurrency, toCurrency);
-      if (rate > 0) {
-        const calculated = fromAmount * rate;
-        // Форматируем с учетом типа валюты
-        const targetCurrency = currencies.find((c) => c.code === toCurrency);
-        if (targetCurrency) {
-          const decimals = targetCurrency.decimals || 2;
-          setToAmount(parseFloat(calculated.toFixed(decimals)));
-        } else {
-          setToAmount(calculated);
-        }
+      const calculated = calculateToAmount(fromCurrency, toCurrency, fromAmount);
+      if (calculated !== null) {
+        setToAmount(calculated);
       }
     }
-  }, [fromCurrency, toCurrency, fromAmount, currencies]);
+  }, [fromCurrency, toCurrency, fromAmount]);
 
   // Расчет суммы отправления при изменении суммы получения
   const handleToAmountChange = (value: number) => {
     setToAmount(value);
     if (fromCurrency && toCurrency && value > 0) {
-      const rate = getExchangeRate(fromCurrency, toCurrency);
-      if (rate > 0) {
-        const calculated = value / rate;
-        // Форматируем с учетом типа валюты
-        const sourceCurrency = currencies.find((c) => c.code === fromCurrency);
-        if (sourceCurrency) {
-          const decimals = sourceCurrency.decimals || 2;
-          setFromAmount(parseFloat(calculated.toFixed(decimals)));
-        } else {
-          setFromAmount(calculated);
-        }
+      const calculated = calculateFromAmount(fromCurrency, toCurrency, value);
+      if (calculated !== null) {
+        setFromAmount(calculated);
       }
     }
   };
@@ -86,7 +48,20 @@ export const ExchangeCalculator = ({
     if (onCreateOrder) {
       onCreateOrder();
     } else {
-      navigate('/exchange');
+      if (fromCurrency && toCurrency && fromAmount > 0) {
+        // Сохраняем только в localStorage
+        localStorage.setItem('exchangeCalculatorData', JSON.stringify({
+          fromCurrency,
+          toCurrency,
+          fromAmount,
+          toAmount
+        }));
+        
+        // Простой переход без передачи state
+        navigate('/exchange');
+      } else {
+        navigate('/exchange');
+      }
     }
   };
 
@@ -98,18 +73,18 @@ export const ExchangeCalculator = ({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Вы отдаете</label>
           <div className="flex">
-            <select
-              value={fromCurrency}
-              onChange={(e) => setFromCurrency(e.target.value)}
-              className="form-input rounded-r-none w-1/3 border-r-0"
-            >
-              <option value="">Выберите...</option>
-              {currencies.map((currency) => (
-                <option key={currency.code} value={currency.code}>
-                  {currency.code} ({currency.symbol})
-                </option>
-              ))}
-            </select>
+          <select
+            value={fromCurrency}
+            onChange={(e) => setFromCurrency(e.target.value)}
+            className="form-input rounded-r-none w-1/3 border-r-0"
+          >
+            <option value="">Выберите...</option>
+            {currencies.map((currency) => (
+              <option key={currency.code} value={currency.code}>
+                {currency.code} ({currency.symbol})
+              </option>
+            ))}
+          </select>
             <Input
               type="number"
               value={fromAmount || ''}
@@ -150,14 +125,17 @@ export const ExchangeCalculator = ({
 
       {fromCurrency && toCurrency && fromAmount > 0 && (
         <div className="exchange-rate-info text-sm text-gray-600 mb-4">
-          Курс: 1 {fromCurrency} = {getExchangeRate(fromCurrency, toCurrency).toFixed(6)}{' '}
-          {toCurrency}
+          Курс: 1 {fromCurrency} = {(toAmount / fromAmount).toFixed(6)} {toCurrency}
         </div>
       )}
 
       {!simplified && (
         <div className="flex justify-end">
-          <Button variant="primary" onClick={handleCreateOrder}>
+          <Button 
+            variant="primary" 
+            onClick={handleCreateOrder}
+            disabled={!fromCurrency || !toCurrency || fromAmount <= 0}
+          >
             Заказать обмен
           </Button>
         </div>

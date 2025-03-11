@@ -1,18 +1,40 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '@/lib/api/services/auth';
 import { setAuthToken } from '@/lib/api/client';
-import {
-  saveAuthData,
-  clearAuthData,
-  getToken,
-  getUser,
-} from '@/features/auth/services/authService';
+import { saveAuthData, clearAuthData, getToken, getUser } from '@/features/auth/services/authService';
 import type { AuthState, LoginCredentials, RegisterData, User } from '@/types';
 
 interface AuthResponse {
   token: string;
   user: User;
 }
+
+// Обработка ошибок от API
+const handleApiError = (error: any) => {
+  if (error.response) {
+    // Ошибка от сервера
+    const status = error.response.status;
+    const errorData = error.response.data;
+    
+    if (status === 400) {
+      // Ошибки валидации
+      const validationErrors = errorData.errors || {};
+      const firstError = Object.values(validationErrors)[0];
+      return firstError ? String(firstError) : 'Ошибка валидации данных';
+    } else if (status === 401) {
+      return 'Неверный email или пароль';
+    } else if (status === 403) {
+      return 'Недостаточно прав для выполнения действия';
+    } else if (status === 429) {
+      return 'Слишком много попыток. Попробуйте позже';
+    } else {
+      return errorData.message || 'Ошибка сервера';
+    }
+  }
+  
+  // Сетевая ошибка или другие проблемы
+  return error.message || 'Произошла ошибка при выполнении запроса';
+};
 
 // Получение текущего пользователя
 export const getCurrentUser = createAsyncThunk(
@@ -30,29 +52,29 @@ export const getCurrentUser = createAsyncThunk(
 // Логин
 export const login = createAsyncThunk<AuthResponse, LoginCredentials>(
   'auth/login',
-  async (credentials) => {
+  async (credentials, { rejectWithValue }) => {
     try {
       // Получаем токен
       const response = await authAPI.login(credentials);
       const token = response.data.access;
-
+      
       // Устанавливаем токен
       setAuthToken(token);
-
+      
       // Получаем данные пользователя
       const userResponse = await authAPI.getCurrentUser();
       const user = userResponse.data;
-
+      
       // Сохраняем данные
       saveAuthData(token, user);
-
+      
       return {
         token,
-        user,
+        user
       };
-    } catch (error) {
+    } catch (error: any) {
       clearAuthData();
-      throw error;
+      return rejectWithValue(handleApiError(error));
     }
   }
 );
@@ -118,7 +140,10 @@ const authSlice = createSlice({
       clearAuthData();
       setAuthToken(null);
     },
-  },
+    clearError: (state) => {
+      state.error = null;
+    }
+},
   extraReducers: (builder) => {
     builder
       // Login
@@ -131,15 +156,11 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Произошла ошибка';
-      })
-      // Register
-      .addCase(register.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.error = action.payload as string || 'Ошибка входа';
       })
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
@@ -160,5 +181,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 export default authSlice.reducer;

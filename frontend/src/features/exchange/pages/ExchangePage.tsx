@@ -1,47 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { useNotification } from '@/lib/hooks/useNotification';
-import { useNavigate } from 'react-router-dom';
-import type { Currency } from '@/types';
-
-// Временные данные для демонстрации
-const currencies: Currency[] = [
-  { code: 'USD', name: 'US Dollar', symbol: '$', type: 'fiat', decimals: 2 },
-  { code: 'EUR', name: 'Euro', symbol: '€', type: 'fiat', decimals: 2 },
-  { code: 'RUB', name: 'Russian Ruble', symbol: '₽', type: 'fiat', decimals: 2 },
-  { code: 'BTC', name: 'Bitcoin', symbol: '₿', type: 'crypto', decimals: 8 },
-  { code: 'ETH', name: 'Ethereum', symbol: 'Ξ', type: 'crypto', decimals: 6 },
-  { code: 'USDT', name: 'Tether', symbol: '₮', type: 'crypto', decimals: 6 },
-];
-
-// Интерфейс для валютной пары
-interface ExchangePair {
-  fromCurrency: string;
-  toCurrency: string;
-  fromAmount: number;
-  toAmount: number;
-}
-
-// Интерфейс для контактных данных
-interface ContactInfo {
-  whatsapp: string;
-  telegram: string;
-  delivery: boolean;
-  address: string;
-  comment: string;
-}
+import { mockCurrencies, calculateToAmount, calculateFromAmount } from '@/mocks/exchange-data';
 
 export function ExchangePage() {
   const { success, error } = useNotification();
-  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [pairs, setPairs] = useState<ExchangePair[]>([
-    { fromCurrency: '', toCurrency: '', fromAmount: 0, toAmount: 0 },
+  
+  // Инициализируем состояние с пустыми значениями
+  const [pairs, setPairs] = useState([
+    { fromCurrency: '', toCurrency: '', fromAmount: 0, toAmount: 0 }
   ]);
-  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+  
+  // Загружаем данные из localStorage при монтировании компонента
+  useEffect(() => {
+    const savedDataJson = localStorage.getItem('exchangeCalculatorData');
+    if (savedDataJson) {
+      try {
+        const savedData = JSON.parse(savedDataJson);
+        
+        // Проверяем данные
+        if (savedData && savedData.fromCurrency && savedData.toCurrency) {
+          setPairs([{
+            fromCurrency: savedData.fromCurrency,
+            toCurrency: savedData.toCurrency,
+            fromAmount: Number(savedData.fromAmount) || 0,
+            toAmount: Number(savedData.toAmount) || 0
+          }]);
+          
+          // Очищаем localStorage после использования
+          localStorage.removeItem('exchangeCalculatorData');
+        }
+      } catch (e) {
+        console.error('Error parsing exchangeCalculatorData:', e);
+      }
+    }
+  }, []);
+  
+  const [contactInfo, setContactInfo] = useState({
     whatsapp: '',
     telegram: '',
     delivery: false,
@@ -62,30 +61,40 @@ export function ExchangePage() {
   };
 
   // Обновление значения пары
-  const handlePairChange = (index: number, field: keyof ExchangePair, value: string | number) => {
+  const handlePairChange = (index: number, field: string, value: string | number) => {
     const newPairs = [...pairs];
-    newPairs[index] = { ...newPairs[index], [field]: value };
-
-    // Здесь можно добавить логику расчета курса
-    if (field === 'fromAmount' && newPairs[index].fromCurrency && newPairs[index].toCurrency) {
-      // Пример расчета (в реальности будет использоваться API)
-      newPairs[index].toAmount = Number(value) * 0.95; // Пример: курс с комиссией 5%
-    } else if (field === 'toAmount' && newPairs[index].fromCurrency && newPairs[index].toCurrency) {
-      // Расчет в обратную сторону
-      newPairs[index].fromAmount = Number(value) / 0.95;
+    const pair = { ...newPairs[index], [field]: value };
+    
+    // Автоматический расчет при изменении валюты или суммы
+    if (field === 'fromAmount' && pair.fromCurrency && pair.toCurrency) {
+      const calculated = calculateToAmount(pair.fromCurrency, pair.toCurrency, Number(value));
+      if (calculated !== null) {
+        pair.toAmount = calculated;
+      }
+    } else if (field === 'toAmount' && pair.fromCurrency && pair.toCurrency) {
+      const calculated = calculateFromAmount(pair.fromCurrency, pair.toCurrency, Number(value));
+      if (calculated !== null) {
+        pair.fromAmount = calculated;
+      }
+    } else if ((field === 'fromCurrency' || field === 'toCurrency') && 
+               pair.fromCurrency && pair.toCurrency && pair.fromAmount > 0) {
+      const calculated = calculateToAmount(pair.fromCurrency, pair.toCurrency, pair.fromAmount);
+      if (calculated !== null) {
+        pair.toAmount = calculated;
+      }
     }
-
+    
+    newPairs[index] = pair;
     setPairs(newPairs);
   };
 
   // Обновление контактной информации
-  const handleContactChange = (field: keyof ContactInfo, value: string | boolean) => {
+  const handleContactChange = (field: string, value: string | boolean) => {
     setContactInfo({ ...contactInfo, [field]: value });
   };
 
   // Переход к шагу 2
   const handleContinue = () => {
-    // Проверка валидности данных перед переходом
     const isValid = pairs.every(
       (pair) => pair.fromCurrency && pair.toCurrency && pair.fromAmount > 0
     );
@@ -104,7 +113,6 @@ export function ExchangePage() {
 
   // Создание заказа
   const handleCreateOrder = () => {
-    // Проверка обязательных полей
     if (!contactInfo.whatsapp && !contactInfo.telegram) {
       error('Укажите хотя бы один способ связи (WhatsApp или Telegram)');
       return;
@@ -119,10 +127,6 @@ export function ExchangePage() {
       // Здесь будет отправка данных на сервер
       success('Заказ успешно создан');
       // Здесь должен быть редирект на страницу с уникальной ссылкой
-      // navigate(`/order/${orderId}`);
-
-      // Временно перенаправляем на главную
-      navigate('/');
     } catch (err: any) {
       error(err.message || 'Не удалось создать заказ');
     }
@@ -130,7 +134,7 @@ export function ExchangePage() {
 
   // Отмена и возврат на главную
   const handleCancel = () => {
-    navigate('/');
+    window.history.back();
   };
 
   return (
@@ -159,7 +163,9 @@ export function ExchangePage() {
                   <div key={index} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Отдаете*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Отдаете*
+                        </label>
                         <div className="flex">
                           <select
                             value={pair.fromCurrency}
@@ -167,7 +173,7 @@ export function ExchangePage() {
                             className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
-                            {currencies.map((currency) => (
+                            {mockCurrencies.map((currency) => (
                               <option key={currency.code} value={currency.code}>
                                 {currency.code} ({currency.symbol})
                               </option>
@@ -178,12 +184,15 @@ export function ExchangePage() {
                             value={pair.fromAmount || ''}
                             onChange={(e) => handlePairChange(index, 'fromAmount', Number(e.target.value))}
                             className="rounded-l-none w-2/3"
+                            min="0"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Получаете*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Получаете*
+                        </label>
                         <div className="flex">
                           <select
                             value={pair.toCurrency}
@@ -191,7 +200,7 @@ export function ExchangePage() {
                             className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
-                            {currencies.map((currency) => (
+                            {mockCurrencies.map((currency) => (
                               <option key={currency.code} value={currency.code}>
                                 {currency.code} ({currency.symbol})
                               </option>
@@ -202,6 +211,7 @@ export function ExchangePage() {
                             value={pair.toAmount || ''}
                             onChange={(e) => handlePairChange(index, 'toAmount', Number(e.target.value))}
                             className="rounded-l-none w-2/3"
+                            min="0"
                           />
                         </div>
                       </div>
@@ -252,7 +262,7 @@ export function ExchangePage() {
                         </span>
                         <span>→</span>
                         <span>
-                          {pair.toAmount.toFixed(2)} {pair.toCurrency}
+                          {pair.toAmount} {pair.toCurrency}
                         </span>
                       </div>
                     ))}
@@ -267,6 +277,7 @@ export function ExchangePage() {
                       value={contactInfo.whatsapp}
                       onChange={(e) => handleContactChange('whatsapp', e.target.value)}
                       placeholder="+7 XXX XXX XX XX"
+                      helperText="Введите номер телефона с кодом страны"
                     />
                   </div>
                   <div>
@@ -276,6 +287,7 @@ export function ExchangePage() {
                       value={contactInfo.telegram}
                       onChange={(e) => handleContactChange('telegram', e.target.value)}
                       placeholder="@username"
+                      helperText="Введите ваш @username в Telegram"
                     />
                   </div>
                 </div>
