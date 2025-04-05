@@ -1,7 +1,7 @@
+@import './globals.css';
+@import './components.css';
+
+/* Остальные стили */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Импорт других CSS файлов */
-@import './globals.css';
-@import './components.css';

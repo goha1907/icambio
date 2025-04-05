@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { profileSchema, ProfileFormData } from '@/shared/validation/profile';
+import { profileSchema } from '@/shared/validation/profile';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
@@ -8,7 +8,7 @@ import { Input } from '@/shared/ui/Input';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { useFormSubmit } from '@/lib/hooks/useFormSubmit';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { profileAPI } from '@/lib/api/services/profile';
+import { profileAPI, UpdateProfileData } from '@/lib/api/services/profile';
 
 // Функция для форматирования WhatsApp (извлечение номера из URL)
 const formatWhatsApp = (url: string | undefined): string => {
@@ -39,7 +39,7 @@ export const EditProfilePage = () => {
     register,
     handleSubmit: handleFormSubmit,
     formState: { errors }
-  } = useForm<ProfileFormData>({
+  } = useForm<UpdateProfileData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username || '',
@@ -50,7 +50,7 @@ export const EditProfilePage = () => {
     },
   });
 
-  const { handleSubmit, isSubmitting } = useFormSubmit<ProfileFormData>({
+  const { handleSubmit, isSubmitting } = useFormSubmit<UpdateProfileData>({
     onSubmit: async (data) => {
       // Обработка WhatsApp и Telegram
       const formattedData = {
@@ -67,11 +67,10 @@ export const EditProfilePage = () => {
         ) : ''
       };
       
-      return await profileAPI.updateProfile(formattedData);
+      await profileAPI.updateProfile(formattedData);
     },
     successMessage: 'Профиль успешно обновлен',
     errorMessage: 'Не удалось обновить профиль',
-    redirectPath: '/profile'
   });
 
   if (!user) return null;

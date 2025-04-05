@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
+import { Card, CardContent } from '@/shared/ui/Card';
 import { PageTitle } from '@/shared/ui/PageTitle';
 
 export const RulesPage = () => {

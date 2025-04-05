@@ -18,28 +18,50 @@ export function ExchangePage() {
   
   // Загружаем данные из localStorage при монтировании компонента
   useEffect(() => {
-    const savedDataJson = localStorage.getItem('exchangeCalculatorData');
-    if (savedDataJson) {
-      try {
-        const savedData = JSON.parse(savedDataJson);
+    try {
+      const savedDataJson = localStorage.getItem('exchangeCalculatorData');
+      if (savedDataJson) {
+        logger.info(`Loading saved data: ${savedDataJson}`);
         
-        // Проверяем данные
-        if (savedData && savedData.fromCurrency && savedData.toCurrency) {
-          setPairs([{
-            fromCurrency: savedData.fromCurrency,
-            toCurrency: savedData.toCurrency,
-            fromAmount: Number(savedData.fromAmount) || 0,
-            toAmount: Number(savedData.toAmount) || 0
-          }]);
-          
-          // Очищаем localStorage после использования
-          localStorage.removeItem('exchangeCalculatorData');
+        try {
+          const savedData = JSON.parse(savedDataJson);
+          logger.info(`Parsed saved data: ${JSON.stringify(savedData)}`);
+
+          // Проверяем, что все необходимые поля присутствуют
+          if (
+            savedData &&
+            typeof savedData === 'object' &&
+            'fromCurrency' in savedData &&
+            'toCurrency' in savedData &&
+            'fromAmount' in savedData &&
+            'toAmount' in savedData
+          ) {
+            logger.info(`Successfully loaded exchange data: fromCurrency=${savedData.fromCurrency}, toCurrency=${savedData.toCurrency}, fromAmount=${savedData.fromAmount}, toAmount=${savedData.toAmount}`);
+
+            // Устанавливаем состояние
+            setPairs([{
+              fromCurrency: savedData.fromCurrency,
+              toCurrency: savedData.toCurrency,
+              fromAmount: Number(savedData.fromAmount),
+              toAmount: Number(savedData.toAmount)
+            }]);
+
+            // Удаляем данные из localStorage после использования
+            localStorage.removeItem('exchangeCalculatorData');
+          } else {
+            logger.warn(`Invalid saved data format: ${JSON.stringify(savedData)}`);
+          }
+        } catch (error) {
+          logger.error(`Error parsing saved data: ${error}`);
         }
-      } catch (e) {
-        logger.error('Error parsing exchangeCalculatorData', e);
+      } else {
+        logger.info('No saved exchange data found');
       }
+    } catch (e) {
+      logger.error('Error loading exchange data', e);
+      error('Произошла ошибка при загрузке данных обмена');
     }
-  }, []);
+  }, [error]);
   
   const [contactInfo, setContactInfo] = useState({
     whatsapp: '',
@@ -128,8 +150,12 @@ export function ExchangePage() {
       // Здесь будет отправка данных на сервер
       success('Заказ успешно создан');
       // Здесь должен быть редирект на страницу с уникальной ссылкой
-    } catch (err: any) {
-      error(err.message || 'Не удалось создать заказ');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error(err.message);
+      } else {
+        error('Не удалось создать заказ');
+      }
     }
   };
 
@@ -140,7 +166,7 @@ export function ExchangePage() {
 
   return (
     <div className="page-container">
-      <div className="max-w-4xl mx-auto">
+      <div className="component-container">
         <PageTitle
           title="Заказать обмен"
           description={
@@ -150,7 +176,7 @@ export function ExchangePage() {
           }
         />
 
-        <Card className="mb-6">
+        <Card className="w-full bg-white">
           <CardHeader>
             <CardTitle>
               {currentStep === 1 ? 'Шаг 1: Детали обмена' : 'Шаг 2: Контактная информация'}
@@ -256,88 +282,95 @@ export function ExchangePage() {
                     {pairs.map((pair, index) => (
                       <div
                         key={index}
-                        className="flex justify-between py-2 border-b border-gray-200 last:border-b-0"
+                        className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"
                       >
-                        <span>
+                        <span className="font-medium">
                           {pair.fromAmount} {pair.fromCurrency}
                         </span>
-                        <span>→</span>
-                        <span>
+                        <span className="text-gray-500">→</span>
+                        <span className="font-medium">
                           {pair.toAmount} {pair.toCurrency}
                         </span>
                       </div>
                     ))}
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        WhatsApp
+                        <span className="text-gray-500 text-xs ml-1">(опционально)</span>
+                      </label>
+                      <Input
+                        type="text"
+                        value={contactInfo.whatsapp}
+                        onChange={(e) => handleContactChange('whatsapp', e.target.value)}
+                        placeholder="+7 999 123-45-67"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Telegram
+                        <span className="text-gray-500 text-xs ml-1">(опционально)</span>
+                      </label>
+                      <Input
+                        type="text"
+                        value={contactInfo.telegram}
+                        onChange={(e) => handleContactChange('telegram', e.target.value)}
+                        placeholder="@username"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="flex items-center mb-4">
+                      <input
+                        type="checkbox"
+                        id="delivery"
+                        checked={contactInfo.delivery}
+                        onChange={(e) => handleContactChange('delivery', e.target.checked)}
+                        className="h-4 w-4 text-icmop-primary focus:ring-icmop-primary border-gray-300 rounded"
+                      />
+                      <label htmlFor="delivery" className="ml-2 block text-sm text-gray-900">
+                        Нужна доставка
+                      </label>
+                    </div>
+
+                    {contactInfo.delivery && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Адрес доставки*
+                        </label>
+                        <Input
+                          type="text"
+                          value={contactInfo.address}
+                          onChange={(e) => handleContactChange('address', e.target.value)}
+                          placeholder="Введите адрес доставки"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Комментарий
+                        <span className="text-gray-500 text-xs ml-1">(опционально)</span>
+                      </label>
+                      <textarea
+                        value={contactInfo.comment}
+                        onChange={(e) => handleContactChange('comment', e.target.value)}
+                        rows={3}
+                        className="form-input w-full rounded-md"
+                        placeholder="Дополнительная информация..."
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="form-label">WhatsApp</label>
-                    <Input
-                      type="text"
-                      value={contactInfo.whatsapp}
-                      onChange={(e) => handleContactChange('whatsapp', e.target.value)}
-                      placeholder="+7 XXX XXX XX XX"
-                      helperText="Введите номер телефона с кодом страны"
-                    />
-                  </div>
-                  <div>
-                    <label className="form-label">Telegram</label>
-                    <Input
-                      type="text"
-                      value={contactInfo.telegram}
-                      onChange={(e) => handleContactChange('telegram', e.target.value)}
-                      placeholder="@username"
-                      helperText="Введите ваш @username в Telegram"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="delivery"
-                    checked={contactInfo.delivery}
-                    onChange={(e) => handleContactChange('delivery', e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <label htmlFor="delivery" className="form-label m-0">
-                    Нужна доставка
-                  </label>
-                </div>
-
-                {contactInfo.delivery && (
-                  <div>
-                    <label className="form-label">Адрес доставки</label>
-                    <Input
-                      type="text"
-                      value={contactInfo.address}
-                      onChange={(e) => handleContactChange('address', e.target.value)}
-                      placeholder="Введите адрес доставки"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label className="form-label">Комментарий к заказу</label>
-                  <textarea
-                    value={contactInfo.comment}
-                    onChange={(e) => handleContactChange('comment', e.target.value)}
-                    placeholder="Дополнительная информация по заказу"
-                    className="form-input"
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-between">
-                  <div className="space-x-4">
-                    <Button variant="secondary" onClick={handleCancel} className="mr-2">
-                      Отмена
-                    </Button>
-                    <Button variant="secondary" onClick={handleBack}>
-                      Назад
-                    </Button>
-                  </div>
+                <div className="flex justify-between pt-4">
+                  <Button variant="secondary" onClick={handleBack} className="mr-2">
+                    Назад
+                  </Button>
                   <Button variant="primary" onClick={handleCreateOrder}>
                     Создать заказ
                   </Button>
