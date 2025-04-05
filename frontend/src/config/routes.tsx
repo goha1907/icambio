@@ -11,6 +11,10 @@ const HomePage = lazy(() => import('../pages/HomePage').then(module => ({ defaul
 const AboutPage = lazy(() => import('../pages/static/AboutPage').then(module => ({ default: module.AboutPage })));
 const RulesPage = lazy(() => import('../pages/static/RulesPage').then(module => ({ default: module.RulesPage })));
 const AMLKYCPage = lazy(() => import('../pages/static/AMLKYCPage').then(module => ({ default: module.AMLKYCPage })));
+const RatesPage = lazy(() => import('../pages/static/RatesPage').then(module => ({ default: module.RatesPage })));
+const ReviewsPage = lazy(() => import('../pages/static/ReviewsPage').then(module => ({ default: module.ReviewsPage })));
+const DeliveryPage = lazy(() => import('../pages/static/DeliveryPage').then(module => ({ default: module.DeliveryPage })));
+const WorkingHoursPage = lazy(() => import('../pages/static/WorkingHoursPage').then(module => ({ default: module.WorkingHoursPage })));
 
 // Компонент для оборачивания отложенной загрузки
 const LazyComponent = ({ component: Component }: { component: React.ComponentType<any> }) => (
@@ -25,6 +29,10 @@ const mainRoutes: RouteObject[] = [
   { path: 'about', element: <LazyComponent component={AboutPage} /> },
   { path: 'rules', element: <LazyComponent component={RulesPage} /> },
   { path: 'aml-kyc', element: <LazyComponent component={AMLKYCPage} /> },
+  { path: 'rates', element: <LazyComponent component={RatesPage} /> },
+  { path: 'reviews', element: <LazyComponent component={ReviewsPage} /> },
+  { path: 'delivery', element: <LazyComponent component={DeliveryPage} /> },
+  { path: 'working-hours', element: <LazyComponent component={WorkingHoursPage} /> },
 ];
 
 // Объединяем все маршруты

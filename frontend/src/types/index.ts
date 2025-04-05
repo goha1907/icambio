@@ -102,3 +102,11 @@ export interface ExchangeState {
   loading: boolean;
   error: string | null;
 }
+
+export interface Review {
+  id: string;
+  author: string;
+  date: string;
+  rating: number;
+  text: string;
+}

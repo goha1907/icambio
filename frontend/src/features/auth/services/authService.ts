@@ -1,43 +1,35 @@
-import { logger } from "@/lib/utils/logger";
+import { User } from '@/types';
 
 // Ключи для хранения данных в localStorage
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+const AUTH_TOKEN_KEY = 'auth_token';
+const USER_KEY = 'user';
 
 // Сохранение токена и пользователя
-export const saveAuthData = (token: string, user: any) => {
-  localStorage.setItem(TOKEN_KEY, token);
-  if (user) {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  }
-};
+export function saveAuthData(token: string, user: User): void {
+  localStorage.setItem(AUTH_TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
 
 // Получение токена
-export const getToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
-};
+export function getAuthData(): { token: string | null; user: User | null } {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const userStr = localStorage.getItem(USER_KEY);
+  const user = userStr ? JSON.parse(userStr) as User : null;
+  return { token, user };
+}
 
-// Получение сохраненного пользователя
-export const getUser = (): any | null => {
-  const userData = localStorage.getItem(USER_KEY);
-  if (userData) {
-    try {
-      return JSON.parse(userData);
-    } catch (e) {
-      logger.error('Error parsing user data from localStorage', e);
-      return null;
-    }
-  }
-  return null;
-};
+// Получение только токена
+export function getToken(): string | null {
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
 
 // Очистка данных аутентификации
-export const clearAuthData = () => {
-  localStorage.removeItem(TOKEN_KEY);
+export function clearAuthData(): void {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
-};
+}
 
 // Проверка аутентификации
-export const isAuthenticated = (): boolean => {
-  return !!getToken();
-};
+export function isAuthenticated(): boolean {
+  return !!getAuthData().token;
+}
