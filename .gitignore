@@ -89,3 +89,9 @@ lerna-debug.log*
 *.sw?
 
 .specstory/
+
+# Cursor
+.cursor/
+
+# Docs
+docs/archive/
