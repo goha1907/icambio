@@ -27,4 +27,4 @@ export const ChangePasswordPage = () => {
       </div>
     </ProtectedRoute>
   );
-};
+}; 

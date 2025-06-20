@@ -1,8 +1,8 @@
 import { RouteObject } from 'react-router-dom';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { RegisterPage } from '@/features/auth/pages/RegisterPage';
-import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
-import { ChangePasswordPage } from '@/features/auth/pages/ChangePasswordPage';
+import { LoginPage } from '@/pages/auth/LoginPage';
+import { RegisterPage } from '@/pages/auth/RegisterPage';
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage';
+import { ChangePasswordPage } from '@/pages/auth/ChangePasswordPage';
 import { ProtectedRoute } from '@/shared/ui/ProtectedRoute';
 
 export const authRoutes: RouteObject[] = [

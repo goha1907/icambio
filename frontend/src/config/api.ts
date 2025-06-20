@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
   auth: {
     login: '/auth/jwt/create/',
     register: '/auth/users/',
+    logout: '/auth/jwt/logout/',
     resetPassword: '/auth/users/reset_password/',
     profile: '/auth/users/me/',
     activate: '/auth/users/activation/', // добавляем endpoint для активации
