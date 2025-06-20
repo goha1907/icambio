@@ -1,6 +1,6 @@
 import { RouteObject } from 'react-router-dom';
-import { ProfilePage } from '@/features/profile/pages/ProfilePage';
-import { EditProfilePage } from '@/features/profile/pages/EditProfilePage';
+import { ProfilePage } from '@/pages/profile/ProfilePage';
+import { EditProfilePage } from '@/pages/profile/EditProfilePage';
 import { ProtectedRoute } from '@/shared/ui/ProtectedRoute';
 
 export const profileRoutes: RouteObject[] = [
