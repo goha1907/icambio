@@ -9,48 +9,48 @@
 Проект `icambio` представляет собой монорепозиторий, состоящий из двух основных частей: **Бэкенд** (на Django) и **Фронтенд** (на React).
 
 ```mermaid
-graph TD;
-    User((Пользователь)) -->|HTTP/HTTPS| Frontend[Фронтенд (React)];
-    Frontend -->|REST API (HTTP/HTTPS)| Backend[Бэкенд (Django)];
-    Backend -->|PostgreSQL (Supabase)| Database[(База данных)];
-    Backend -->|BIPIUM API| BIPIUM[BIPIUM (CRM)];
-    Backend -->|Email Service| Email[Почтовый сервис];
+graph TD
+    User(("Пользователь")) -->|"HTTP / HTTPS"| Frontend["Фронтенд (React)"]
+    Frontend -->|"REST API"| Backend["Бэкенд (Django)"]
+    Backend -->|"PostgreSQL"| Database["База данных"]
+    Backend -->|"BIPIUM API"| BIPIUM["BIPIUM (CRM)"]
+    Backend -->|"Email Service"| Email["Почтовый сервис"]
 
-    subgraph Frontend (React + TypeScript)
-        FE_Pages[Страницы]
-        FE_Widgets[Виджеты]
-        FE_Features[Фичи]
-        FE_Entities[Сущности]
-        FE_Shared[Переиспользуемые компоненты]
+    subgraph "Frontend (React + TypeScript)"
+        FE_Pages["Страницы"]
+        FE_Widgets["Виджеты"]
+        FE_Features["Фичи"]
+        FE_Entities["Сущности"]
+        FE_Shared["Переиспользуемые компоненты"]
 
-        FE_Pages --> FE_Widgets;
-        FE_Widgets --> FE_Features;
-        FE_Features --> FE_Entities;
-        FE_Features --> FE_Shared;
-        FE_Entities --> FE_Shared;
+        FE_Pages --> FE_Widgets
+        FE_Widgets --> FE_Features
+        FE_Features --> FE_Entities
+        FE_Features --> FE_Shared
+        FE_Entities --> FE_Shared
     end
 
-    subgraph Backend (Django + DRF)
-        BE_Views[Views/API Endpoints]
-        BE_Serializers[Serializers]
-        BE_Models[Models (ORM)]
-        BE_Services[Services]
-        BE_Selectors[Selectors]
-        BE_Permissions[Permissions]
+    subgraph "Backend (Django + DRF)"
+        BE_Views["Views / API Endpoints"]
+        BE_Serializers["Serializers"]
+        BE_Models["Models (ORM)"]
+        BE_Services["Services"]
+        BE_Selectors["Selectors"]
+        BE_Permissions["Permissions"]
 
-        BE_Views --> BE_Serializers;
-        BE_Views --> BE_Services;
-        BE_Views --> BE_Selectors;
-        BE_Views --> BE_Permissions;
-        BE_Serializers --> BE_Models;
-        BE_Services --> BE_Models;
-        BE_Selectors --> BE_Models;
+        BE_Views --> BE_Serializers
+        BE_Views --> BE_Services
+        BE_Views --> BE_Selectors
+        BE_Views --> BE_Permissions
+        BE_Serializers --> BE_Models
+        BE_Services --> BE_Models
+        BE_Selectors --> BE_Models
     end
 
-    Frontend -- "Fetch/Update Data" --> Backend;
-    Backend -- "Store/Retrieve Data" --> Database;
-    Backend -- "Manage Orders/Users" --> BIPIUM;
-    Backend -- "Send Notifications" --> Email;
+    Frontend -- "Fetch / Update Data" --> Backend
+    Backend -- "Store / Retrieve Data" --> Database
+    Backend -- "Manage Orders / Users" --> BIPIUM
+    Backend -- "Send Notifications" --> Email
 ```
 
 ---
