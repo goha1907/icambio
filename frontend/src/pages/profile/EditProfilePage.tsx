@@ -8,9 +8,9 @@ import { Input } from '@/shared/ui/Input';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { useFormSubmit } from '@/lib/hooks/useFormSubmit';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { profileAPI, UpdateProfileData } from '@/lib/api/services/profile';
+import { profileAPI } from '@/lib/api/services/profile';
+import type { ProfileUpdateData } from '@/types';
 
-// Функция для форматирования WhatsApp (извлечение номера из URL)
 const formatWhatsApp = (url: string | undefined): string => {
   if (!url) return '';
   if (url.startsWith('https://wa.me/')) {
@@ -19,7 +19,6 @@ const formatWhatsApp = (url: string | undefined): string => {
   return url;
 };
 
-// Функция для форматирования Telegram (извлечение имени пользователя из URL)
 const formatTelegram = (url: string | undefined): string => {
   if (!url) return '';
   if (url.startsWith('https://t.me/')) {
@@ -38,8 +37,8 @@ export const EditProfilePage = () => {
   const {
     register,
     handleSubmit: handleFormSubmit,
-    formState: { errors }
-  } = useForm<UpdateProfileData>({
+    formState: { errors },
+  } = useForm<ProfileUpdateData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       username: user?.username || '',
@@ -50,24 +49,22 @@ export const EditProfilePage = () => {
     },
   });
 
-  const { handleSubmit, isSubmitting } = useFormSubmit<UpdateProfileData>({
+  const { handleSubmit, isSubmitting } = useFormSubmit<ProfileUpdateData>({
     onSubmit: async (data) => {
-      // Обработка WhatsApp и Telegram
-      const formattedData = {
+      const formatted = {
         ...data,
-        whatsapp: data.whatsapp ? (
-          data.whatsapp.startsWith('https://') ? 
-            data.whatsapp : 
-            `https://wa.me/${data.whatsapp.replace(/\D/g, '')}`
-        ) : '',
-        telegram: data.telegram ? (
-          data.telegram.startsWith('https://') ? 
-            data.telegram : 
-            `https://t.me/${data.telegram.replace('@', '')}`
-        ) : ''
+        whatsapp: data.whatsapp
+          ? data.whatsapp.startsWith('https://')
+            ? data.whatsapp
+            : `https://wa.me/${data.whatsapp.replace(/\D/g, '')}`
+          : '',
+        telegram: data.telegram
+          ? data.telegram.startsWith('https://')
+            ? data.telegram
+            : `https://t.me/${data.telegram.replace('@', '')}`
+          : '',
       };
-      
-      await profileAPI.updateProfile(formattedData);
+      await profileAPI.updateProfile(formatted);
     },
     successMessage: 'Профиль успешно обновлен',
     errorMessage: 'Не удалось обновить профиль',
@@ -87,7 +84,6 @@ export const EditProfilePage = () => {
           <CardContent>
             <form onSubmit={handleFormSubmit(handleSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Неизменяемое поле */}
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-500">Email</label>
@@ -95,26 +91,14 @@ export const EditProfilePage = () => {
                   </div>
                 </div>
 
-                {/* Редактируемые поля */}
-                <Input
-                  label="Никнейм"
-                  {...register('username')}
-                  error={errors.username?.message}
-                />
+                <Input label="Никнейм" {...register('username')} error={errors.username?.message} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Имя"
-                  {...register('first_name')}
-                  error={errors.first_name?.message}
-                />
-                <Input
-                  label="Фамилия"
-                  {...register('last_name')}
-                  error={errors.last_name?.message}
-                />
+                <Input label="Имя" {...register('first_name')} error={errors.first_name?.message} />
+                <Input label="Фамилия" {...register('last_name')} error={errors.last_name?.message} />
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="WhatsApp"
@@ -133,18 +117,10 @@ export const EditProfilePage = () => {
               </div>
 
               <div className="flex justify-between space-x-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => navigate('/profile')}
-                >
+                <Button type="button" variant="secondary" onClick={() => navigate('/profile')}>
                   Отмена
                 </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isSubmitting}
-                >
+                <Button type="submit" variant="primary" disabled={isSubmitting}>
                   {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
                 </Button>
               </div>
@@ -154,4 +130,4 @@ export const EditProfilePage = () => {
       </div>
     </div>
   );
-};
+}; 

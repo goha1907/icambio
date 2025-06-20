@@ -1,6 +1,6 @@
 import { RouteObject } from 'react-router-dom';
-import { ExchangePage } from '@/features/exchange/pages/ExchangePage.tsx';
-import { OrderDetailsPage } from '@/features/exchange/pages/OrderDetailsPage';
+import { ExchangePage } from '@/pages/exchange/ExchangePage';
+import { OrderDetailsPage } from '@/pages/exchange/OrderDetailsPage';
 
 export const exchangeRoutes: RouteObject[] = [
   {

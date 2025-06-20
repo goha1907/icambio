@@ -16,7 +16,7 @@ export function useAuth() {
     try {
       setIsLoading(true);
       const response = await authAPI.login(credentials);
-      saveAuthData(response.token, response.user);
+      saveAuthData(response.data.access, response.data.user);
       success('Вы успешно вошли в систему');
       navigate('/');
     } catch (err) {
@@ -34,7 +34,7 @@ export function useAuth() {
         ...data,
         re_password: data.password,
       });
-      saveAuthData(response.token, response.user);
+      saveAuthData(response.data.access, response.data.user);
       success('Регистрация успешно завершена');
       navigate('/');
     } catch (err) {

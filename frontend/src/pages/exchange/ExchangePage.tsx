@@ -5,29 +5,23 @@ import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { useNotification } from '@/lib/hooks/useNotification';
 import { mockCurrencies, calculateToAmount, calculateFromAmount } from '@/mocks/exchange-data';
-import { logger } from '@/lib/utils/logger';
+import { logger } from '@/lib/logger';
 
 export function ExchangePage() {
   const { success, error } = useNotification();
   const [currentStep, setCurrentStep] = useState(1);
-  
-  // Инициализируем состояние с пустыми значениями
   const [pairs, setPairs] = useState([
-    { fromCurrency: '', toCurrency: '', fromAmount: 0, toAmount: 0 }
+    { fromCurrency: '', toCurrency: '', fromAmount: 0, toAmount: 0 },
   ]);
-  
-  // Загружаем данные из localStorage при монтировании компонента
+
+  // Load draft data from localStorage on mount
   useEffect(() => {
     try {
       const savedDataJson = localStorage.getItem('exchangeCalculatorData');
       if (savedDataJson) {
         logger.info(`Loading saved data: ${savedDataJson}`);
-        
         try {
           const savedData = JSON.parse(savedDataJson);
-          logger.info(`Parsed saved data: ${JSON.stringify(savedData)}`);
-
-          // Проверяем, что все необходимые поля присутствуют
           if (
             savedData &&
             typeof savedData === 'object' &&
@@ -36,33 +30,26 @@ export function ExchangePage() {
             'fromAmount' in savedData &&
             'toAmount' in savedData
           ) {
-            logger.info(`Successfully loaded exchange data: fromCurrency=${savedData.fromCurrency}, toCurrency=${savedData.toCurrency}, fromAmount=${savedData.fromAmount}, toAmount=${savedData.toAmount}`);
-
-            // Устанавливаем состояние
-            setPairs([{
-              fromCurrency: savedData.fromCurrency,
-              toCurrency: savedData.toCurrency,
-              fromAmount: Number(savedData.fromAmount),
-              toAmount: Number(savedData.toAmount)
-            }]);
-
-            // Удаляем данные из localStorage после использования
+            setPairs([
+              {
+                fromCurrency: savedData.fromCurrency,
+                toCurrency: savedData.toCurrency,
+                fromAmount: Number(savedData.fromAmount),
+                toAmount: Number(savedData.toAmount),
+              },
+            ]);
             localStorage.removeItem('exchangeCalculatorData');
-          } else {
-            logger.warn(`Invalid saved data format: ${JSON.stringify(savedData)}`);
           }
-        } catch (error) {
-          logger.error(`Error parsing saved data: ${error}`);
+        } catch (parseErr) {
+          logger.error(`Error parsing saved data: ${parseErr}`);
         }
-      } else {
-        logger.info('No saved exchange data found');
       }
     } catch (e) {
       logger.error('Error loading exchange data', e);
       error('Произошла ошибка при загрузке данных обмена');
     }
   }, [error]);
-  
+
   const [contactInfo, setContactInfo] = useState({
     whatsapp: '',
     telegram: '',
@@ -71,99 +58,83 @@ export function ExchangePage() {
     comment: '',
   });
 
-  // Добавление новой валютной пары
+  // Pair helpers
   const handleAddPair = () => {
     setPairs([...pairs, { fromCurrency: '', toCurrency: '', fromAmount: 0, toAmount: 0 }]);
   };
 
-  // Удаление валютной пары
   const handleRemovePair = (index: number) => {
     const newPairs = [...pairs];
     newPairs.splice(index, 1);
     setPairs(newPairs);
   };
 
-  // Обновление значения пары
-  const handlePairChange = (index: number, field: string, value: string | number) => {
+  const handlePairChange = (
+    index: number,
+    field: string,
+    value: string | number,
+  ) => {
     const newPairs = [...pairs];
-    const pair = { ...newPairs[index], [field]: value };
-    
-    // Автоматический расчет при изменении валюты или суммы
+    const pair = { ...newPairs[index], [field]: value } as typeof newPairs[number];
+
+    // Auto-calculations
     if (field === 'fromAmount' && pair.fromCurrency && pair.toCurrency) {
-      const calculated = calculateToAmount(pair.fromCurrency, pair.toCurrency, Number(value));
-      if (calculated !== null) {
-        pair.toAmount = calculated;
-      }
+      const calc = calculateToAmount(pair.fromCurrency, pair.toCurrency, Number(value));
+      if (calc !== null) pair.toAmount = calc;
     } else if (field === 'toAmount' && pair.fromCurrency && pair.toCurrency) {
-      const calculated = calculateFromAmount(pair.fromCurrency, pair.toCurrency, Number(value));
-      if (calculated !== null) {
-        pair.fromAmount = calculated;
-      }
-    } else if ((field === 'fromCurrency' || field === 'toCurrency') && 
-               pair.fromCurrency && pair.toCurrency && pair.fromAmount > 0) {
-      const calculated = calculateToAmount(pair.fromCurrency, pair.toCurrency, pair.fromAmount);
-      if (calculated !== null) {
-        pair.toAmount = calculated;
-      }
+      const calc = calculateFromAmount(pair.fromCurrency, pair.toCurrency, Number(value));
+      if (calc !== null) pair.fromAmount = calc;
+    } else if (
+      (field === 'fromCurrency' || field === 'toCurrency') &&
+      pair.fromCurrency &&
+      pair.toCurrency &&
+      pair.fromAmount > 0
+    ) {
+      const calc = calculateToAmount(pair.fromCurrency, pair.toCurrency, pair.fromAmount);
+      if (calc !== null) pair.toAmount = calc;
     }
-    
+
     newPairs[index] = pair;
     setPairs(newPairs);
   };
 
-  // Обновление контактной информации
+  // Contact helpers
   const handleContactChange = (field: string, value: string | boolean) => {
     setContactInfo({ ...contactInfo, [field]: value });
   };
 
-  // Переход к шагу 2
+  // Navigation helpers
   const handleContinue = () => {
-    const isValid = pairs.every(
-      (pair) => pair.fromCurrency && pair.toCurrency && pair.fromAmount > 0
+    const valid = pairs.every(
+      (p) => p.fromCurrency && p.toCurrency && p.fromAmount > 0,
     );
-
-    if (isValid) {
-      setCurrentStep(2);
-    } else {
-      error('Пожалуйста, заполните все поля валютных пар корректно');
-    }
+    valid ? setCurrentStep(2) : error('Пожалуйста, заполните все поля валютных пар корректно');
   };
 
-  // Возврат к шагу 1
-  const handleBack = () => {
-    setCurrentStep(1);
-  };
+  const handleBack = () => setCurrentStep(1);
 
-  // Создание заказа
+  // Submit order
   const handleCreateOrder = () => {
     if (!contactInfo.whatsapp && !contactInfo.telegram) {
       error('Укажите хотя бы один способ связи (WhatsApp или Telegram)');
       return;
     }
-
     if (contactInfo.delivery && !contactInfo.address) {
       error('При выборе доставки необходимо указать адрес');
       return;
     }
 
     try {
-      // Здесь будет отправка данных на сервер
       success('Заказ успешно создан');
-      // Здесь должен быть редирект на страницу с уникальной ссылкой
+      // TODO: redirect to order page
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        error(err.message);
-      } else {
-        error('Не удалось создать заказ');
-      }
+      error(err instanceof Error ? err.message : 'Не удалось создать заказ');
     }
   };
 
-  // Отмена и возврат на главную
-  const handleCancel = () => {
-    window.history.back();
-  };
+  const handleCancel = () => window.history.back();
 
+  // ---- UI ----
   return (
     <div className="page-container">
       <div className="component-container">
@@ -179,16 +150,20 @@ export function ExchangePage() {
         <Card className="w-full bg-white">
           <CardHeader>
             <CardTitle>
-              {currentStep === 1 ? 'Шаг 1: Детали обмена' : 'Шаг 2: Контактная информация'}
+              {currentStep === 1
+                ? 'Шаг 1: Детали обмена'
+                : 'Шаг 2: Контактная информация'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {currentStep === 1 ? (
-              // Шаг 1: Выбор валют и сумм
+              /* Шаг 1: выбор валют */
               <div className="space-y-6">
                 {pairs.map((pair, index) => (
                   <div key={index} className="space-y-4">
+                    {/* From / To selectors */}
                     <div className="grid grid-cols-2 gap-4">
+                      {/* FROM */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Отдаете*
@@ -196,26 +171,30 @@ export function ExchangePage() {
                         <div className="flex">
                           <select
                             value={pair.fromCurrency}
-                            onChange={(e) => handlePairChange(index, 'fromCurrency', e.target.value)}
+                            onChange={(e) =>
+                              handlePairChange(index, 'fromCurrency', e.target.value)
+                            }
                             className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
-                            {mockCurrencies.map((currency) => (
-                              <option key={currency.code} value={currency.code}>
-                                {currency.code} ({currency.symbol})
+                            {mockCurrencies.map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.code} ({c.symbol})
                               </option>
                             ))}
                           </select>
                           <Input
                             type="number"
                             value={pair.fromAmount || ''}
-                            onChange={(e) => handlePairChange(index, 'fromAmount', Number(e.target.value))}
+                            onChange={(e) =>
+                              handlePairChange(index, 'fromAmount', Number(e.target.value))
+                            }
                             className="rounded-l-none w-2/3"
                             min="0"
                           />
                         </div>
                       </div>
-
+                      {/* TO */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Получаете*
@@ -223,20 +202,24 @@ export function ExchangePage() {
                         <div className="flex">
                           <select
                             value={pair.toCurrency}
-                            onChange={(e) => handlePairChange(index, 'toCurrency', e.target.value)}
+                            onChange={(e) =>
+                              handlePairChange(index, 'toCurrency', e.target.value)
+                            }
                             className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
-                            {mockCurrencies.map((currency) => (
-                              <option key={currency.code} value={currency.code}>
-                                {currency.code} ({currency.symbol})
+                            {mockCurrencies.map((c) => (
+                              <option key={c.code} value={c.code}>
+                                {c.code} ({c.symbol})
                               </option>
                             ))}
                           </select>
                           <Input
                             type="number"
                             value={pair.toAmount || ''}
-                            onChange={(e) => handlePairChange(index, 'toAmount', Number(e.target.value))}
+                            onChange={(e) =>
+                              handlePairChange(index, 'toAmount', Number(e.target.value))
+                            }
                             className="rounded-l-none w-2/3"
                             min="0"
                           />
@@ -274,14 +257,15 @@ export function ExchangePage() {
                 </div>
               </div>
             ) : (
-              // Шаг 2: Контактная информация
+              /* Шаг 2: Контакты */
               <div className="space-y-6">
+                {/* Order summary */}
                 <div>
                   <h3 className="text-lg font-medium mb-3">Ваш заказ</h3>
                   <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                    {pairs.map((pair, index) => (
+                    {pairs.map((pair, idx) => (
                       <div
-                        key={index}
+                        key={idx}
                         className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"
                       >
                         <span className="font-medium">
@@ -295,6 +279,7 @@ export function ExchangePage() {
                     ))}
                   </div>
 
+                  {/* Contacts */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -308,7 +293,6 @@ export function ExchangePage() {
                         placeholder="+7 999 123-45-67"
                       />
                     </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Telegram
@@ -336,7 +320,6 @@ export function ExchangePage() {
                         Нужна доставка
                       </label>
                     </div>
-
                     {contactInfo.delivery && (
                       <div className="mb-4">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -350,7 +333,6 @@ export function ExchangePage() {
                         />
                       </div>
                     )}
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Комментарий
@@ -367,6 +349,7 @@ export function ExchangePage() {
                   </div>
                 </div>
 
+                {/* Actions */}
                 <div className="flex justify-between pt-4">
                   <Button variant="secondary" onClick={handleBack} className="mr-2">
                     Назад
@@ -382,4 +365,4 @@ export function ExchangePage() {
       </div>
     </div>
   );
-}
+} 

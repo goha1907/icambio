@@ -1,23 +1,21 @@
 import { useEffect } from 'react';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { getCurrentUser } from '@/features/auth/store/authSlice';
 import { routes } from '@/config/routes';
 import { getToken } from '@/features/auth/services/authService';
 import { Toaster } from 'react-hot-toast';
-import type { AppDispatch } from '@/store';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 // Компонент для рендеринга маршрутов
 const AppRoutes = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  useAuth(); // Инициализация хука аутентификации
 
   // При загрузке приложения проверяем аутентификацию
   useEffect(() => {
     // Если есть токен, получаем данные пользователя
-    if (getToken()) {
-      dispatch(getCurrentUser());
-    }
-  }, [dispatch]);
+    // Здесь можно инициировать проверку токена или запрос текущего пользователя при необходимости
+    // Пока логика вынесена в кастомный хук useAuth или обрабатывается на уровне компонентов
+    void getToken();
+  }, []);
 
   const element = useRoutes(routes);
   return element;

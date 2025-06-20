@@ -11,15 +11,12 @@ export const ProfilePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Получаем активную вкладку из URL или используем 'profile' по умолчанию
   const activeTab = new URLSearchParams(location.search).get('tab') || 'profile';
 
-  // При изменении вкладки обновляем URL
   const handleTabChange = (tabId: string) => {
     navigate(`/profile?tab=${tabId}`, { replace: true });
   };
 
-  // Если пользователь не авторизован, нет смысла рендерить страницу
   if (!user) return null;
 
   const tabs = [
@@ -49,4 +46,4 @@ export const ProfilePage = () => {
       </div>
     </div>
   );
-};
+}; 

@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { User, Edit, Lock, LogOut } from 'lucide-react';
-import { logout } from '@/features/auth/store/authSlice';
-import type { AppDispatch } from '@/store';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { User as UserType } from '@/types';
 
 interface UserMenuProps {
@@ -12,8 +10,8 @@ interface UserMenuProps {
 
 export const UserMenu = ({ user }: UserMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const menuItems = [
     { id: 'profile', label: 'Профиль', icon: User, path: '/profile' },
@@ -22,7 +20,7 @@ export const UserMenu = ({ user }: UserMenuProps) => {
   ];
 
   const handleLogout = () => {
-    dispatch(logout());
+    void logout();
     navigate('/');
   };
 
