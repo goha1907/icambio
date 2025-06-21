@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
-from datetime import timedelta
 from dotenv import load_dotenv
-
-# Загружаем переменные окружения
-load_dotenv()
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = BASE_DIR.parent  # Корень проекта (icambio/)
+
+# Загружаем переменные окружения из корня проекта
+load_dotenv(PROJECT_ROOT / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
@@ -107,26 +107,40 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # URL фронтенда для генерации реферальных ссылок
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework settings
+# REST Framework settings with Supabase authentication
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'users.authentication.SupabaseAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
+# Authentication backends
 AUTHENTICATION_BACKENDS = [
+    'users.authentication.SupabaseBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Djoser Email settings
+# Supabase settings - READ FROM ENVIRONMENT VARIABLES
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
+SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+SUPABASE_JWT_SECRET = os.getenv('SUPABASE_JWT_SECRET')
+
+# Validate that required Supabase environment variables are set
+if not SUPABASE_URL:
+    raise ValueError("SUPABASE_URL environment variable is required")
+if not SUPABASE_JWT_SECRET:
+    raise ValueError("SUPABASE_JWT_SECRET environment variable is required")
+
+# Djoser settings (keeping for potential admin use)
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'USER_CREATE_PASSWORD_RETYPE': True,
@@ -160,31 +174,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_ALL_ORIGINS = True  # Только для разработки!
-
-# JWT settings
-SIMPLE_JWT = {
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # короткое время жизни access token
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # длительное время жизни refresh token
-    'ROTATE_REFRESH_TOKENS': True,                  # получение нового refresh token при обновлении
-    'BLACKLIST_AFTER_ROTATION': True,              # старый refresh token становится недействительным
-    'UPDATE_LAST_LOGIN': True,                     # обновление времени последнего входа
-
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-}
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # выводит письма в консоль

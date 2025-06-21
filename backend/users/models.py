@@ -1,7 +1,6 @@
 import shortuuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.core.validators import RegexValidator
 
 from django.conf import settings
 
@@ -37,6 +36,14 @@ class User(AbstractUser):
         null=True
     )
     email = models.EmailField('Email', unique=True)
+    supabase_user_id = models.CharField(
+        'Supabase User ID',
+        max_length=255,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text='UUID пользователя в Supabase'
+    )
     telegram = models.URLField('Telegram', blank=True, null=True)
     whatsapp = models.URLField('WhatsApp', blank=True, null=True)
     referral_code = models.CharField(

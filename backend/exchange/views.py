@@ -15,6 +15,7 @@ from exchange.serializers import (
     ExchangeOfficeSerializer,
     CurrencyBalanceSerializer
 )
+from exchange.services import calculate_exchange
 
 
 class CurrencyViewSet(viewsets.ModelViewSet):
@@ -44,36 +45,18 @@ class ExchangeRateViewSet(viewsets.ModelViewSet):
     def calculate(self, request, pk=None):
         """Расчет суммы обмена"""
         rate = self.get_object()
-        amount_from = request.data.get('amount_from')
-        amount_to = request.data.get('amount_to')
-
+        data = request.data
         try:
-            if amount_from is not None:
-                # Если указана сумма к обмену
-                amount_from = float(amount_from)
-                amount_to = rate.calculate_to_receive(amount_from)
-            elif amount_to is not None:
-                # Если указана сумма к получению
-                amount_to = float(amount_to)
-                amount_from = rate.calculate_to_exchange(amount_to)
-            else:
-                return Response(
-                    {'error': 'Необходимо указать amount_from или amount_to'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            return Response({
-                'from_currency': rate.from_currency.code,
-                'to_currency': rate.to_currency.code,
-                'amount_from': amount_from,
-                'amount_to': amount_to,
-                'rate': rate.rate,
-                'min_amount': rate.min_amount
-            })
-        except (TypeError, ValueError) as e:
+            result = calculate_exchange(
+                rate,
+                amount_from=data.get('amount_from'),
+                amount_to=data.get('amount_to'),
+            )
+            return Response(result)
+        except Exception as exc:
             return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
