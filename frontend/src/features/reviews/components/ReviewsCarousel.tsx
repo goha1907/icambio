@@ -12,8 +12,8 @@ export const ReviewsCarousel = ({ reviews }: ReviewsCarouselProps) => {
           <div key={review.id} className="review-card p-4 bg-gray-50 rounded-lg">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-medium text-gray-900">{review.author}</h3>
-                <p className="text-sm text-gray-500">{review.date}</p>
+                <h3 className="font-medium text-gray-900">{review.display_name}</h3>
+                <p className="text-sm text-gray-500">{review.created_at}</p>
               </div>
               <div className="flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (

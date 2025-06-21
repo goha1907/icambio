@@ -4,8 +4,43 @@ import { PageTitle } from '@/shared/ui/PageTitle';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { useNotification } from '@/lib/hooks/useNotification';
-import { mockCurrencies, calculateToAmount, calculateFromAmount } from '@/mocks/exchange-data';
-import { logger } from '@/lib/logger';
+
+// Temporary mock data until DB connection is ready
+const mockCurrencies = [
+  { code: 'USDT', symbol: '$', name: 'Tether' },
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'ARS', symbol: '$', name: 'Argentine Peso' },
+  { code: 'BTC', symbol: '₿', name: 'Bitcoin' },
+  { code: 'ETH', symbol: 'Ξ', name: 'Ethereum' },
+];
+
+const calculateToAmount = (fromCurrency: string, toCurrency: string, fromAmount: number) => {
+  // Mock calculation - replace with real API call when ready
+  const mockRates: Record<string, Record<string, number>> = {
+    'USDT': { 'ARS': 950, 'USD': 0.99, 'BTC': 0.000023, 'ETH': 0.00038 },
+    'USD': { 'ARS': 960, 'USDT': 1.01, 'BTC': 0.000023, 'ETH': 0.00038 },
+    'ARS': { 'USDT': 0.00105, 'USD': 0.00104, 'BTC': 0.000000024, 'ETH': 0.0000004 },
+    'BTC': { 'USDT': 43500, 'USD': 43000, 'ARS': 41280000, 'ETH': 16.5 },
+    'ETH': { 'USDT': 2630, 'USD': 2600, 'ARS': 2496000, 'BTC': 0.061 },
+  };
+  
+  const rate = mockRates[fromCurrency]?.[toCurrency];
+  return rate ? fromAmount * rate : null;
+};
+
+const calculateFromAmount = (fromCurrency: string, toCurrency: string, toAmount: number) => {
+  // Mock calculation - replace with real API call when ready
+  const mockRates: Record<string, Record<string, number>> = {
+    'USDT': { 'ARS': 950, 'USD': 0.99, 'BTC': 0.000023, 'ETH': 0.00038 },
+    'USD': { 'ARS': 960, 'USDT': 1.01, 'BTC': 0.000023, 'ETH': 0.00038 },
+    'ARS': { 'USDT': 0.00105, 'USD': 0.00104, 'BTC': 0.000000024, 'ETH': 0.0000004 },
+    'BTC': { 'USDT': 43500, 'USD': 43000, 'ARS': 41280000, 'ETH': 16.5 },
+    'ETH': { 'USDT': 2630, 'USD': 2600, 'ARS': 2496000, 'BTC': 0.061 },
+  };
+  
+  const rate = mockRates[fromCurrency]?.[toCurrency];
+  return rate ? toAmount / rate : null;
+};
 
 export function ExchangePage() {
   const { success, error } = useNotification();
@@ -19,7 +54,7 @@ export function ExchangePage() {
     try {
       const savedDataJson = localStorage.getItem('exchangeCalculatorData');
       if (savedDataJson) {
-        logger.info(`Loading saved data: ${savedDataJson}`);
+        console.log(`Loading saved data: ${savedDataJson}`);
         try {
           const savedData = JSON.parse(savedDataJson);
           if (
@@ -41,11 +76,11 @@ export function ExchangePage() {
             localStorage.removeItem('exchangeCalculatorData');
           }
         } catch (parseErr) {
-          logger.error(`Error parsing saved data: ${parseErr}`);
+          console.error(`Error parsing saved data: ${parseErr}`);
         }
       }
     } catch (e) {
-      logger.error('Error loading exchange data', e);
+      console.error('Error loading exchange data', e);
       error('Произошла ошибка при загрузке данных обмена');
     }
   }, [error]);
@@ -177,9 +212,9 @@ export function ExchangePage() {
                             className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
-                            {mockCurrencies.map((c) => (
-                              <option key={c.code} value={c.code}>
-                                {c.code} ({c.symbol})
+                            {mockCurrencies.map((currency) => (
+                              <option key={currency.code} value={currency.code}>
+                                {currency.code} ({currency.symbol})
                               </option>
                             ))}
                           </select>
@@ -208,9 +243,9 @@ export function ExchangePage() {
                             className="form-input rounded-r-none w-1/3 border-r-0"
                           >
                             <option value="">Выберите...</option>
-                            {mockCurrencies.map((c) => (
-                              <option key={c.code} value={c.code}>
-                                {c.code} ({c.symbol})
+                            {mockCurrencies.map((currency) => (
+                              <option key={currency.code} value={currency.code}>
+                                {currency.code} ({currency.symbol})
                               </option>
                             ))}
                           </select>

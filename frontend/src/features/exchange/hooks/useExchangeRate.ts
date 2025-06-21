@@ -1,70 +1,98 @@
 import { useState, useEffect } from 'react';
-import { 
-  getExchangeRate,
-  calculateToAmount,
-  calculateFromAmount
-} from '@/mocks/exchange-data';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { currencyService } from '../services/currencyService';
+import { exchangeRateService } from '../services/exchangeRateService';
+import { ExchangeRate } from '@/types';
 
-interface UseExchangeRateProps {
+export const useCurrencies = () => {
+  return useQuery({
+    queryKey: ['currencies'],
+    queryFn: currencyService.getAllCurrencies,
+  });
+};
+
+export const useExchangeRates = () => {
+  return useQuery({
+    queryKey: ['exchangeRates'],
+    queryFn: exchangeRateService.getAllExchangeRates,
+  });
+};
+
+interface UseExchangeCalculatorProps {
   fromCurrency: string;
   toCurrency: string;
   initialFromAmount?: number;
   initialToAmount?: number;
 }
 
-export const useExchangeRate = ({
+export const useExchangeCalculator = ({
   fromCurrency,
   toCurrency,
   initialFromAmount = 0,
-  initialToAmount = 0
-}: UseExchangeRateProps) => {
+  initialToAmount = 0,
+}: UseExchangeCalculatorProps) => {
+  const queryClient = useQueryClient();
+  const { data: rates, isLoading: isLoadingRates } = useExchangeRates();
+
   const [fromAmount, setFromAmount] = useState(initialFromAmount);
   const [toAmount, setToAmount] = useState(initialToAmount);
-  const [rate, setRate] = useState<number | null>(null);
+  const [currentRate, setCurrentRate] = useState<ExchangeRate | null>(null);
 
-  // Обновление курса при изменении валют
   useEffect(() => {
-    if (fromCurrency && toCurrency) {
-      const currentRate = getExchangeRate(fromCurrency, toCurrency);
-      setRate(currentRate);
-
-      // Если есть сумма отправления, пересчитываем сумму получения
-      if (fromAmount > 0 && currentRate !== null) {
-        const calculated = calculateToAmount(fromCurrency, toCurrency, fromAmount);
-        if (calculated !== null) {
-          setToAmount(calculated);
-        }
-      }
+    if (rates && fromCurrency && toCurrency) {
+      const rate = rates.find(
+        (r) => r.from_currency.code === fromCurrency && r.to_currency.code === toCurrency
+      );
+      setCurrentRate(rate || null);
     }
-  }, [fromCurrency, toCurrency, fromAmount]);
+  }, [rates, fromCurrency, toCurrency]);
 
-  // Обработчик изменения суммы отправления
-  const handleFromAmountChange = (value: number) => {
+  const { mutateAsync: calculateMutation, isPending: isCalculating } = useMutation({
+    mutationFn: ({ rateId, data }: { rateId: string; data: { amount_from?: number; amount_to?: number } }) =>
+      exchangeRateService.calculateExchange(rateId, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['exchangeRates'] });
+      setFromAmount(data.amount_from);
+      setToAmount(data.amount_to);
+    },
+    onError: (error) => {
+      console.error('Calculation error:', error);
+    },
+  });
+
+  const triggerCalculation = async (type: 'from' | 'to', amount: number) => {
+    if (!currentRate) return;
+    const rateId = currentRate.id.toString();
+    const data = type === 'from' ? { amount_from: amount } : { amount_to: amount };
+    await calculateMutation({ rateId, data });
+  };
+
+  useEffect(() => {
+    if (currentRate && initialFromAmount > 0) {
+      triggerCalculation('from', initialFromAmount);
+    }
+  }, [currentRate, initialFromAmount]);
+
+  const handleFromAmountChange = async (value: number) => {
     setFromAmount(value);
-    if (fromCurrency && toCurrency && value > 0 && rate !== null) {
-      const calculated = calculateToAmount(fromCurrency, toCurrency, value);
-      if (calculated !== null) {
-        setToAmount(calculated);
-      }
+    if (currentRate && value > 0) {
+      await triggerCalculation('from', value);
     }
   };
 
-  // Обработчик изменения суммы получения
-  const handleToAmountChange = (value: number) => {
+  const handleToAmountChange = async (value: number) => {
     setToAmount(value);
-    if (fromCurrency && toCurrency && value > 0 && rate !== null) {
-      const calculated = calculateFromAmount(fromCurrency, toCurrency, value);
-      if (calculated !== null) {
-        setFromAmount(calculated);
-      }
+    if (currentRate && value > 0) {
+      await triggerCalculation('to', value);
     }
   };
 
   return {
     fromAmount,
     toAmount,
-    rate,
+    currentRate,
     handleFromAmountChange,
-    handleToAmountChange
+    handleToAmountChange,
+    isLoading: isLoadingRates || isCalculating,
   };
 };

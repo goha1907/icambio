@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+// import { useMemo } from 'react';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { ExchangeRatesTable } from '@/features/exchange/components/ExchangeRatesTable';
-import { mockExchangeRates } from '@/mocks/exchange-data';
+import { useExchangeRates } from '@/features/exchange/hooks/useExchangeRate';
 
 export const RatesPage = () => {
-  const rates = useMemo(() => mockExchangeRates, []);
+  const { data: rates, isLoading, isError } = useExchangeRates();
 
   return (
     <div className="page-container">
@@ -13,7 +13,9 @@ export const RatesPage = () => {
           title="Текущие курсы обмена" 
           description="Актуальные курсы обмена валют на сегодня"
         />
-        <ExchangeRatesTable rates={rates} />
+        {isLoading && <p>Загрузка курсов...</p>}
+        {isError && <p>Ошибка загрузки курсов.</p>}
+        {rates && <ExchangeRatesTable rates={rates} />}
       </div>
     </div>
   );
