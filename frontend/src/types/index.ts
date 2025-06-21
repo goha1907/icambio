@@ -1,7 +1,10 @@
 // Базовые типы пользователя
-export interface User {
-  id: number;
-  username: string;
+import { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
+
+// Интерфейс для данных профиля, хранящихся в user_metadata или отдельной таблице
+export interface IUserProfile {
+  id: string; // ID пользователя из нашей БД Django
+  username?: string;
   email: string;
   first_name?: string;
   last_name?: string;
@@ -10,6 +13,11 @@ export interface User {
   referral_link?: string;
   referralBalance?: number;
 }
+
+// Объединенный тип пользователя для фронтенда
+export type TUser = SupabaseUser & IUserProfile;
+
+export type { SupabaseUser, SupabaseSession };
 
 // Типы для аутентификации
 export interface LoginCredentials {
@@ -24,8 +32,8 @@ export interface RegisterData {
 }
 
 export interface AuthState {
-  user: User | null;
-  token: string | null;
+  user: TUser | null;
+  session: SupabaseSession | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
@@ -73,8 +81,8 @@ export const CURRENCY_DECIMALS = {
 
 export interface ExchangeRate {
   id: number;
-  fromCurrency: string;
-  toCurrency: string;
+  from_currency: Currency;
+  to_currency: Currency;
   rate: number;
   minAmount: number;
   maxAmount?: number;
@@ -104,9 +112,9 @@ export interface ExchangeState {
 }
 
 export interface Review {
-  id: string;
-  author: string;
-  date: string;
+  id?: string;
+  display_name: string;
+  created_at: string;
   rating: number;
   text: string;
 }
