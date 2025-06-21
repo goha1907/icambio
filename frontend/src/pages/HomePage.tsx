@@ -1,36 +1,43 @@
-import { useMemo } from 'react';
+// import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/ui/Button';
 import { ExchangeCalculator } from '@/features/home/components/ExchangeCalculator';
 import { ExchangeRatesTable } from '@/features/exchange/components/ExchangeRatesTable';
 import { ReviewsCarousel } from '@/features/home/components/ReviewsCarousel';
-import { mockCurrencies, mockExchangeRates, mockReviews } from '@/mocks/exchange-data';
+import { useCurrencies, useExchangeRates } from '@/features/exchange/hooks/useExchangeRate';
+import { useReviews } from '@/features/reviews/hooks/useReviews';
 
 export const HomePage = () => {
   const navigate = useNavigate();
 
   // Мемоизация данных для предотвращения ненужных перерисовок
-  const currencies = useMemo(() => mockCurrencies, []);
-  const rates = useMemo(() => mockExchangeRates, []);
-  const reviews = useMemo(() => mockReviews, []);
+  const { data: currencies, isLoading: isLoadingCurrencies, isError: isErrorCurrencies } = useCurrencies();
+  const { data: rates, isLoading: isLoadingRates, isError: isErrorRates } = useExchangeRates();
+  const { data: reviews, isLoading: isLoadingReviews, isError: isErrorReviews } = useReviews();
 
   return (
     <div className="page-content">
       {/* Main Content */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
         <div className="md:col-span-3">
-          <ExchangeCalculator currencies={currencies} />
+          {isLoadingCurrencies && <p>Загрузка валют...</p>}
+          {isErrorCurrencies && <p>Ошибка загрузки валют.</p>}
+          {currencies && <ExchangeCalculator />}
         </div>
       </div>
 
       {/* Exchange Rates */}
       <div className="mb-12">
-        <ExchangeRatesTable rates={rates} />
+        {isLoadingRates && <p>Загрузка курсов...</p>}
+        {isErrorRates && <p>Ошибка загрузки курсов.</p>}
+        {rates && <ExchangeRatesTable rates={rates} />}
       </div>
 
       {/* Reviews */}
       <div className="mb-12">
-        <ReviewsCarousel reviews={reviews} />
+        {isLoadingReviews && <p>Загрузка отзывов...</p>}
+        {isErrorReviews && <p>Ошибка загрузки отзывов.</p>}
+        {reviews && <ReviewsCarousel reviews={reviews} />}
       </div>
 
       {/* Delivery Info */}
@@ -89,7 +96,7 @@ export const HomePage = () => {
           Создайте заказ сейчас и получите лучший курс для вашего обмена.
         </p>
         <Button 
-          variant="primary" 
+          variant="default" 
           className="text-lg px-8 py-3" 
           onClick={() => navigate('/exchange')}
         >

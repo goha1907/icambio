@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
-import type { User } from '@/types';
+import type { TUser } from '@/types';
 
 interface ProfileDetailsProps {
-  user: User;
+  user: TUser;
 }
 
 export const ProfileDetails = ({ user }: ProfileDetailsProps) => {
@@ -23,7 +23,7 @@ export const ProfileDetails = ({ user }: ProfileDetailsProps) => {
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">Никнейм</label>
-            <p className="mt-1">{user.username}</p>
+            <p className="mt-1">{user.username || '-'}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">Имя</label>

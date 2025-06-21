@@ -1,19 +1,16 @@
 import { useState, useEffect, memo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
+import { Review as GlobalReviewType } from '@/types';
 
-interface Review {
-  id: string | number;
-  username: string;
-  text: string;
-  rating: number;
-  date: string;
+interface Review extends GlobalReviewType {
+  // Дополнительные поля, если нужны для этого компонента, но лучше их не дублировать
 }
 
 // Мемоизированный компонент отзыва
 const ReviewItem = memo(({ review }: { review: Review }) => (
   <div className="bg-gray-50 p-4 rounded-lg">
     <div className="flex justify-between items-start mb-2">
-      <div className="font-medium">{review.username}</div>
+      <div className="font-medium">{review.display_name}</div>
       <div className="flex">
         {Array.from({ length: 5 }).map((_, i) => (
           <span
@@ -27,7 +24,7 @@ const ReviewItem = memo(({ review }: { review: Review }) => (
     </div>
     <p className="text-sm text-gray-600 mb-2">{review.text}</p>
     <div className="text-xs text-gray-500">
-      {new Date(review.date).toLocaleDateString()}
+      {new Date(review.created_at).toLocaleDateString()}
     </div>
   </div>
 ));

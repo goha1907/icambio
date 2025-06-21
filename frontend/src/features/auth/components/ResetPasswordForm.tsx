@@ -4,10 +4,11 @@ import { resetPasswordSchema, ResetPasswordFormData } from '@/shared/validation/
 import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
 import { useNotification } from '@/lib/hooks/useNotification';
-import { authAPI } from '@/lib/api/services/auth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export const ResetPasswordForm = () => {
   const { success, error } = useNotification();
+  const { resetPassword } = useAuth();
 
   const {
     register,
@@ -19,10 +20,14 @@ export const ResetPasswordForm = () => {
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     try {
-      await authAPI.resetPassword(data.email);
-      success('Инструкции по сбросу пароля отправлены на ваш email');
+      const result = await resetPassword(data.email);
+      if (result.error) {
+        error(result.error);
+      } else {
+        success('Инструкции по сбросу пароля отправлены на ваш email');
+      }
     } catch (err: any) {
-      error('Не удалось отправить инструкции по сбросу пароля');
+      error(err.message || 'Не удалось отправить инструкции по сбросу пароля');
     }
   };
 

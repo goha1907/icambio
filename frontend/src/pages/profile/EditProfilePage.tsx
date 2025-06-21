@@ -8,7 +8,6 @@ import { Input } from '@/shared/ui/Input';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { useFormSubmit } from '@/lib/hooks/useFormSubmit';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { profileAPI } from '@/lib/api/services/profile';
 import type { ProfileUpdateData } from '@/types';
 
 const formatWhatsApp = (url: string | undefined): string => {
@@ -31,7 +30,7 @@ const formatTelegram = (url: string | undefined): string => {
 };
 
 export const EditProfilePage = () => {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -51,6 +50,8 @@ export const EditProfilePage = () => {
 
   const { handleSubmit, isSubmitting } = useFormSubmit<ProfileUpdateData>({
     onSubmit: async (data) => {
+      if (!user) return; // Необходимо, чтобы пользователь существовал
+
       const formatted = {
         ...data,
         whatsapp: data.whatsapp
@@ -64,7 +65,7 @@ export const EditProfilePage = () => {
             : `https://t.me/${data.telegram.replace('@', '')}`
           : '',
       };
-      await profileAPI.updateProfile(formatted);
+      await updateProfile(user.id, formatted);
     },
     successMessage: 'Профиль успешно обновлен',
     errorMessage: 'Не удалось обновить профиль',

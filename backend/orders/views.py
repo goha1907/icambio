@@ -2,17 +2,22 @@ from rest_framework import viewsets, generics, status, permissions
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from users.permissions import IsOperator, IsAdministrator, IsOwner
-from orders.models import Order, Review
+from users.permissions import (
+    IsOperator,
+    IsAdministrator,
+    IsOwner,
+)
+from orders.models import Order
 from orders.serializers import (
     OrderSerializer,
+    ReviewPublicSerializer,
     OrderTrackingSerializer,
     OrderStatusUpdateSerializer,
     OrderDocumentSerializer,
     ReviewCreateSerializer,
     ReviewDetailSerializer,
-    ReviewPublicSerializer
 )
+from orders.selectors import orders_for_user, reviews_for_user
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -22,7 +27,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             permission_classes = [IsAuthenticated]
         elif self.action in ['update', 'partial_update']:
-            permission_classes = [IsAuthenticated & (IsOperator | IsAdministrator | IsOwner)]
+            permission_classes = [
+                IsAuthenticated & (IsOperator | IsAdministrator | IsOwner)
+            ]
         elif self.action == 'destroy':
             permission_classes = [IsAdministrator | IsOwner]
         else:
@@ -30,12 +37,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.groups.filter(
-            name__in=['Operators', 'Administrators', 'Owners']
-        ).exists():
-            return Order.objects.all().prefetch_related('items')
-        return Order.objects.filter(user=user).prefetch_related('items')
+        return orders_for_user(self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -80,8 +82,13 @@ class OrderViewSet(viewsets.ModelViewSet):
         """Запрещаем обновление статуса через общий update"""
         if 'status' in request.data:
             return Response(
-                {"detail": "Для изменения статуса используйте endpoint /update_status/"},
-                status=status.HTTP_400_BAD_REQUEST
+                {
+                    "detail": (
+                        "Для изменения статуса используйте endpoint "
+                        "/update_status/"
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
         return super().update(request, *args, **kwargs)
 
@@ -99,15 +106,7 @@ class OrderTrackingView(generics.RetrieveAPIView):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
-        user = self.request.user
-        if self.action == 'list_public':
-            # Для публичного списка только видимые отзывы
-            return Review.objects.filter(is_visible=True)
-        if user.groups.filter(name__in=['Administrators', 'Owners']).exists():
-            # Для персонала все отзывы
-            return Review.objects.all()
-        # Для обычных пользователей только свои отзывы
-        return Review.objects.filter(order__user=user)
+        return reviews_for_user(self.action, self.request.user)
 
     def get_serializer_class(self):
         if self.action == 'create':

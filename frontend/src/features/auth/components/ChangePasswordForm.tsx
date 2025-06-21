@@ -4,11 +4,12 @@ import { changePasswordSchema, ChangePasswordFormData } from '@/shared/validatio
 import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
 import { useNotification } from '@/lib/hooks/useNotification';
-import { authAPI } from '@/lib/api/services/auth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Alert } from '@/shared/ui/Alert';
 
 export const ChangePasswordForm = () => {
   const { success, error } = useNotification();
+  const { changePassword } = useAuth();
 
   const {
     register,
@@ -21,11 +22,15 @@ export const ChangePasswordForm = () => {
 
   const onSubmit = async (data: ChangePasswordFormData) => {
     try {
-      await authAPI.changePassword(data.oldPassword, data.newPassword);
-      success('Пароль успешно изменен');
-      reset();
+      const result = await changePassword(data.newPassword);
+      if (result.error) {
+        error(result.error);
+      } else {
+        success('Пароль успешно изменен');
+        reset();
+      }
     } catch (err: any) {
-      error(err.response?.data?.message || 'Не удалось изменить пароль');
+      error(err.message || 'Не удалось изменить пароль');
     }
   };
 

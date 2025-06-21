@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+// import { useMemo } from 'react';
 import { PageTitle } from '@/shared/ui/PageTitle';
 import { ReviewsCarousel } from '@/features/home/components/ReviewsCarousel';
-import { mockReviews } from '@/mocks/exchange-data';
+import { useReviews } from '@/features/reviews/hooks/useReviews';
 
 export const ReviewsPage = () => {
-  const reviews = useMemo(() => mockReviews, []);
+  const { data: reviews, isLoading, isError } = useReviews();
 
   return (
     <div className="page-container">
@@ -16,7 +16,9 @@ export const ReviewsPage = () => {
         
         <div className="space-y-8">
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
-            <ReviewsCarousel reviews={reviews} />
+            {isLoading && <p>Загрузка отзывов...</p>}
+            {isError && <p>Ошибка загрузки отзывов.</p>}
+            {reviews && <ReviewsCarousel reviews={reviews} />}
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Edit, Lock, LogOut } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import type { User as UserType } from '@/types';
+import type { TUser } from '@/types';
 
 interface UserMenuProps {
-  user: UserType;
+  user: TUser;
 }
 
 export const UserMenu = ({ user }: UserMenuProps) => {
@@ -32,10 +32,10 @@ export const UserMenu = ({ user }: UserMenuProps) => {
       >
         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
           <span className="text-primary font-medium">
-            {user.email.charAt(0).toUpperCase()}
+            {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
           </span>
         </div>
-        <span className="text-sm font-medium text-gray-700">{user.email}</span>
+        <span className="text-sm font-medium text-gray-700">{user.username || user.email}</span>
         <svg
           className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"

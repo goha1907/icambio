@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { useNotification } from '@/lib/hooks/useNotification';
-import type { User } from '@/types';
+import type { TUser } from '@/types';
 import { Copy } from 'lucide-react';
 
 interface ReferralProgramProps {
-  user: User;
+  user: TUser;
 }
 
 export const ReferralProgram = ({ user }: ReferralProgramProps) => {

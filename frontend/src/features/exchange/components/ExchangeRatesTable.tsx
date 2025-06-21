@@ -11,7 +11,7 @@ export const ExchangeRatesTable = ({ rates }: ExchangeRatesTableProps) => {
   // Группируем курсы по парам валют
   const groupedRates = useMemo(() => {
     const groups = rates.reduce((acc, rate) => {
-      const key = `${rate.fromCurrency}-${rate.toCurrency}`;
+      const key = `${rate.from_currency.code}-${rate.to_currency.code}`;
       if (!acc[key]) {
         acc[key] = [];
       }
@@ -27,8 +27,8 @@ export const ExchangeRatesTable = ({ rates }: ExchangeRatesTableProps) => {
     let processed = groupedRates.map(rateGroup => {
       return {
         id: rateGroup[0].id,
-        fromCurrency: rateGroup[0].fromCurrency,
-        toCurrency: rateGroup[0].toCurrency,
+        fromCurrency: rateGroup[0].from_currency.code,
+        toCurrency: rateGroup[0].to_currency.code,
         rates: rateGroup.sort((a, b) => a.minAmount - b.minAmount),
       };
     });
@@ -92,7 +92,7 @@ export const ExchangeRatesTable = ({ rates }: ExchangeRatesTableProps) => {
                         <span className="font-medium font-mono">
                           1 {group.fromCurrency} = {rate.rate} {group.toCurrency}
                         </span>
-                        {idx === 0 && rate.fromCurrency === 'USD' && rate.toCurrency === 'ARS' && (
+                        {idx === 0 && rate.from_currency.code === 'USD' && rate.to_currency.code === 'ARS' && (
                           <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 rounded text-xs">🔥</span>
                         )}
                       </div>
