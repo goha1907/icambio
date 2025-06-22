@@ -1,9 +1,9 @@
 import api from '@/shared/api/api';
-import { Currency } from '@/types';
+import { Currency } from '@/features/exchange/types';
 
 export const currencyService = {
   getAllCurrencies: async (): Promise<Currency[]> => {
-    const response = await api.get<Currency[]>('/v1/currencies/');
+    const response = await api.get<Currency[]>('/currencies/');
     return response.data;
   },
 }; 

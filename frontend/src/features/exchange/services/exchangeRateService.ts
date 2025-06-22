@@ -1,5 +1,5 @@
 import api from '@/shared/api/api';
-import { ExchangeRate } from '@/types';
+import { ExchangeRate } from '@/features/exchange/types';
 
 interface CalculateExchangeData {
   amount_from?: number;
@@ -17,7 +17,7 @@ interface CalculateExchangeResult {
 
 export const exchangeRateService = {
   getAllExchangeRates: async (): Promise<ExchangeRate[]> => {
-    const response = await api.get<ExchangeRate[]>('/v1/rates/');
+    const response = await api.get<ExchangeRate[]>('/rates/');
     return response.data;
   },
 
@@ -26,7 +26,7 @@ export const exchangeRateService = {
     data: CalculateExchangeData
   ): Promise<CalculateExchangeResult> => {
     const response = await api.post<CalculateExchangeResult>(
-      `/v1/rates/${rateId}/calculate/`,
+      `/rates/${rateId}/calculate/`,
       data
     );
     return response.data;

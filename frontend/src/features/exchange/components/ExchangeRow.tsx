@@ -1,5 +1,5 @@
 import { Control, UseFormSetValue, useWatch } from 'react-hook-form';
-import type { Currency } from '@/types';
+import type { Currency } from '@/features/exchange/types';
 import type { ExchangeOrderFormData } from '@/shared/validation/exchange';
 import { formatAmount } from '@/shared/validation/exchange';
 import { Input } from '@/shared/ui/Input';

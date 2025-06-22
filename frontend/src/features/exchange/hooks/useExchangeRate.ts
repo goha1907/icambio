@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { currencyService } from '../services/currencyService';
 import { exchangeRateService } from '../services/exchangeRateService';
-import { ExchangeRate } from '@/types';
+import { ExchangeRate } from '@/features/exchange/types';
 
 export const useCurrencies = () => {
   return useQuery({
