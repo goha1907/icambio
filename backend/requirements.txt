@@ -9,11 +9,18 @@ django-filter~=23.5
 PyJWT~=2.8
 cryptography~=41.0  # для RS256 алгоритма
 
-# # База данных
-# psycopg2-binary==2.9.9
+# База данных
+psycopg2-binary==2.9.9
+dj-database-url~=2.1
 
 # Работа с окружением
-python-dotenv~=1.0
+python-dotenv==1.0.1
+pytz==2024.1
+six==1.16.0
+sqlparse==0.5.0
+tzdata==2024.1
+urllib3==2.2.1
+whitenoise==6.7.0
 
 # Celery для асинхронных задач
 celery~=5.3
@@ -30,7 +37,16 @@ django-phonenumber-field~=7.3
 phonenumbers~=8.13
 
 # Утилиты
-Pillow~=10.4.0  # для работы с изображениями
+Pillow==10.3.0
 
 # ... остальные зависимости ...
 shortuuid~=1.0
+PyJWT==2.8.0
+python-jose==3.5.0
+django-cleanup==8.0.0
+
+# Testing dependencies
+pytest==7.4.4
+pytest-django==4.8.0
+pytest-cov==4.1.0
+factory-boy==3.3.0

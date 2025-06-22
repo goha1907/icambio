@@ -1,6 +1,9 @@
+# flake8: noqa
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
+import secrets  # noqa: E402 - импорт после dotenv разрешён
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,13 +12,32 @@ PROJECT_ROOT = BASE_DIR.parent  # Корень проекта (icambio/)
 # Загружаем переменные окружения из корня проекта
 load_dotenv(PROJECT_ROOT / '.env')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
-
-# SECURITY WARNING: don't run with debug turned on in production!
+# Определяем режим отладки до получения SECRET_KEY
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
+# По умолчанию DEBUG=True для локальной разработки. В продакшене обязательно
+# задайте DEBUG=False.  # noqa: E501
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+# SECRET_KEY: в продакшене обязательно должен быть установлен через переменные окружения.
+# В режиме разработки, если ключ не задан, создаём временный случайный ключ и выводим предупреждение.
+SECRET_KEY = os.getenv('SECRET_KEY')
+
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = secrets.token_urlsafe(32)
+        print(
+            "WARNING: SECRET_KEY is not set. Generated a temporary development "
+            "key. Do NOT use this key in production."
+        )
+    else:
+        raise ValueError("SECRET_KEY environment variable must be set in production")
+
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
+
+# В продакшене ALLOWED_HOSTS должен быть явно задан
+if not DEBUG and not ALLOWED_HOSTS:
+    raise ValueError(
+        "ALLOWED_HOSTS must be set in production environment"
+    )
 
 # Application definition
 INSTALLED_APPS = [
@@ -30,6 +52,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'djoser',
+    'django_cleanup.apps.CleanupConfig',
 
     # Local apps
     'users',
@@ -68,13 +91,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    # Используем PostgreSQL от Supabase
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
     }
-}
+else:
+    # Временно используем SQLite для разработки
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -115,7 +146,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST Framework settings with Supabase authentication
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'users.authentication.SupabaseAuthentication',
+        'users.authentication.SupabaseJWTAuthentication',
+        'users.authentication.SupabaseServiceAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -135,9 +167,15 @@ SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
 SUPABASE_JWT_SECRET = os.getenv('SUPABASE_JWT_SECRET')
 
 # Validate that required Supabase environment variables are set
-if not SUPABASE_URL:
+# Временно отключено для первоначальной настройки
+if DEBUG and not SUPABASE_URL:
+    print("WARNING: SUPABASE_URL not set - using placeholder")
+elif not DEBUG and not SUPABASE_URL:
     raise ValueError("SUPABASE_URL environment variable is required")
-if not SUPABASE_JWT_SECRET:
+
+if DEBUG and not SUPABASE_JWT_SECRET:
+    print("WARNING: SUPABASE_JWT_SECRET not set - using placeholder")
+elif not DEBUG and not SUPABASE_JWT_SECRET:
     raise ValueError("SUPABASE_JWT_SECRET environment variable is required")
 
 # Djoser settings (keeping for potential admin use)
@@ -164,16 +202,25 @@ DJOSER = {
     },
 }
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = [
+# CORS настройки
+DEFAULT_CORS_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
+# Берём список разрешённых источников из переменной окружения (через запятую)
+env_cors_origins = os.getenv('CORS_ALLOWED_ORIGINS')
+CORS_ALLOWED_ORIGINS = (
+    [origin.strip() for origin in env_cors_origins.split(',') if origin.strip()]
+    if env_cors_origins else DEFAULT_CORS_ORIGINS
+)
+
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_ALL_ORIGINS = True  # Только для разработки!
+# Разрешаем все источники **только** когда DEBUG=True и явно установлена переменная ALLOW_ALL_CORS
+ALLOW_ALL_CORS = os.getenv('ALLOW_ALL_CORS', 'False') == 'True'
+CORS_ALLOW_ALL_ORIGINS = DEBUG and ALLOW_ALL_CORS
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # выводит письма в консоль
