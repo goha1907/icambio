@@ -25,7 +25,7 @@ DATABASE_URL=postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/
 # DB_PORT=5432
 
 # Frontend URL (для генерации реферальных ссылок)
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3000
 
 # Email settings (опционально)
 EMAIL_HOST_USER=your-email@gmail.com
