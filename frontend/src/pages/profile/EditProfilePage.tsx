@@ -65,7 +65,7 @@ export const EditProfilePage = () => {
             : `https://t.me/${data.telegram.replace('@', '')}`
           : '',
       };
-      await updateProfile(user.id, formatted);
+      await updateProfile(formatted);
     },
     successMessage: 'Профиль успешно обновлен',
     errorMessage: 'Не удалось обновить профиль',
