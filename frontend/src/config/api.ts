@@ -13,8 +13,8 @@ export const API_ENDPOINTS = {
     resendActivation: '/auth/users/resend_activation/', // для повторной отправки активации
   },
   exchange: {
-    rates: '/v1/rates/',
-    orders: '/v1/orders/',
+      rates: '/rates/',
+  orders: '/orders/',
   },
 } as const;
 

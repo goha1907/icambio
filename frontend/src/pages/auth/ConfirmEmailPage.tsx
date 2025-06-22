@@ -28,7 +28,7 @@ export const ConfirmEmailPage: React.FC = () => {
             </h2>
             <p className="text-gray-600 mb-6">
               Мы отправили письмо с подтверждением на ваш email адрес.
-              Перейдите по ссылке в письме, чтобы активировать аккаунт.
+              Перейдите по ссылке в письме, чтобы активировать аккаунт и затем войдите в систему.
             </p>
           </div>
 
@@ -42,15 +42,15 @@ export const ConfirmEmailPage: React.FC = () => {
             </div>
 
             <Link
-              to="/auth/login"
-              className="w-full inline-block px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 text-center"
+              to="/login"
+              className="w-full inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 text-center"
             >
-              Вернуться к входу
+              Перейти к входу
             </Link>
 
             <Link
-              to="/auth/register"
-              className="w-full inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 text-center"
+              to="/register"
+              className="w-full inline-block px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 text-center"
             >
               Попробовать снова
             </Link>

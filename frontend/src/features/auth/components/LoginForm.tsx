@@ -90,7 +90,7 @@ export const LoginForm: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <Link
-                to="/auth/reset-password"
+                to="/reset-password"
                 className="text-sm text-blue-600 hover:text-blue-500"
               >
                 Забыли пароль?
@@ -110,7 +110,7 @@ export const LoginForm: React.FC = () => {
             <p className="text-sm text-gray-600">
               Нет аккаунта?{' '}
               <Link
-                to="/auth/register"
+                to="/register"
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Зарегистрироваться

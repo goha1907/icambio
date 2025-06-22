@@ -1,21 +1,20 @@
 import jwt
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.request import Request
 
 User = get_user_model()
 
 
-class SupabaseAuthentication(BaseAuthentication):
+class SupabaseJWTAuthentication(BaseAuthentication):
     """
-    Аутентификация через Supabase JWT токены
+    Аутентификация через JWT токены Supabase
     """
     
-    def authenticate(self, request: Request) -> Optional[Tuple[User, None]]:
+    def authenticate(self, request) -> Optional[Tuple[User, str]]:
         """
         Аутентифицирует пользователя по JWT токену от Supabase
         """
@@ -27,26 +26,24 @@ class SupabaseAuthentication(BaseAuthentication):
         token = auth_header.split(' ')[1]
         
         try:
-            # Валидируем и декодируем JWT токен
-            payload = self._verify_jwt_token(token)
+            # Декодируем JWT токен
+            payload = self._decode_jwt(token)
             
-            # Получаем пользователя
-            user = self._get_user_from_payload(payload)
+            # Получаем или создаём пользователя
+            user = self._get_or_create_user(payload)
             
-            return (user, None)
+            return (user, token)
             
-        except (jwt.InvalidTokenError, User.DoesNotExist, ValueError) as e:
+        except Exception as e:
             raise AuthenticationFailed(f'Invalid token: {str(e)}')
     
-    def _verify_jwt_token(self, token: str) -> dict:
+    def _decode_jwt(self, token: str) -> dict:
         """
-        Верифицирует JWT токен от Supabase
+        Декодирует JWT токен от Supabase
         """
         try:
-            # Получаем JWT секрет из настроек
-            jwt_secret = getattr(settings, 'SUPABASE_JWT_SECRET', None)
-            if not jwt_secret:
-                raise ValueError("SUPABASE_JWT_SECRET not configured")
+            # Получаем публичный ключ от Supabase
+            jwt_secret = settings.SUPABASE_JWT_SECRET
             
             # Декодируем токен
             payload = jwt.decode(
@@ -63,40 +60,68 @@ class SupabaseAuthentication(BaseAuthentication):
         except jwt.InvalidTokenError as e:
             raise AuthenticationFailed(f'Invalid token: {str(e)}')
     
-    def _get_user_from_payload(self, payload: dict) -> User:
+    def _get_or_create_user(self, payload: dict) -> User:
         """
-        Получает или создает пользователя на основе данных из JWT payload
+        Получает или создаёт пользователя на основе данных из JWT
         """
-        # Получаем email из payload
+        supabase_user_id = payload.get('sub')
         email = payload.get('email')
-        if not email:
-            raise ValueError("Email not found in token")
         
-        # Получаем Supabase user ID
-        supabase_user_id = payload.get('sub')  # 'sub' содержит user ID в JWT
-        if not supabase_user_id:
-            raise ValueError("User ID not found in token")
+        if not supabase_user_id or not email:
+            raise AuthenticationFailed('Invalid token payload')
         
+        # Пытаемся найти пользователя по supabase_user_id
         try:
-            # Пытаемся найти пользователя по email
-            user = User.objects.get(email=email)
-            
-            # Обновляем supabase_user_id если он изменился
-            if (not hasattr(user, 'supabase_user_id') or
-                    user.supabase_user_id != supabase_user_id):
-                user.supabase_user_id = supabase_user_id
-                user.save(update_fields=['supabase_user_id'])
-                
+            user = User.objects.get(supabase_user_id=supabase_user_id)
+            return user
         except User.DoesNotExist:
-            # Создаем нового пользователя
-            user = User.objects.create(
-                email=email,
-                username=email,  # используем email как username
-                supabase_user_id=supabase_user_id,
-                is_active=True
-            )
+            pass
+        
+        # Пытаемся найти по email
+        try:
+            user = User.objects.get(email=email)
+            # Обновляем supabase_user_id
+            user.supabase_user_id = supabase_user_id
+            user.save()
+            return user
+        except User.DoesNotExist:
+            pass
+        
+        # Создаём нового пользователя
+        user = User.objects.create(
+            email=email,
+            supabase_user_id=supabase_user_id,
+            is_active=True,
+            # Можем добавить дополнительные поля из payload
+            first_name=payload.get('user_metadata', {}).get('first_name', ''),
+            last_name=payload.get('user_metadata', {}).get('last_name', ''),
+        )
         
         return user
+
+
+class SupabaseServiceAuthentication(BaseAuthentication):
+    """
+    Аутентификация для сервисных запросов с service_role ключом
+    """
+    
+    def authenticate(self, request) -> Optional[Tuple[Any, str]]:
+        """
+        Проверяет service_role ключ для административных операций
+        """
+        auth_header = request.META.get('HTTP_AUTHORIZATION')
+        
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return None
+            
+        token = auth_header.split(' ')[1]
+        
+        # Проверяем, что это service_role ключ
+        if token == settings.SUPABASE_SERVICE_ROLE_KEY:
+            # Возвращаем специальный объект для service операций
+            return (None, token)
+        
+        return None
 
 
 class SupabaseBackend(BaseBackend):

@@ -41,12 +41,13 @@ cd icambio
     DEBUG=True
     ALLOWED_HOSTS=localhost,127.0.0.1
 
-    # Настройки базы данных (по умолчанию SQLite)
-    # Если используется PostgreSQL через Supabase, измените эти настройки:
-    # DATABASE_URL=postgresql://user:password@host:port/database_name
+    # Настройки для Supabase (используется как основная БД и для аутентификации)
+    SUPABASE_URL=https://your-supabase-project.supabase.co
+    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+    SUPABASE_JWT_SECRET=your_supabase_jwt_secret
 
-    # URL фронтенда (для генерации реферальных ссылок)
-    FRONTEND_URL=http://localhost:5173
+    # URL фронтенда (для генерации реферальных ссылок и email-ссылок)
+    FRONTEND_URL=http://localhost:3000
 
     # Настройки для отправки email (Djoser)
     EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend # Для разработки: выводит письма в консоль
@@ -85,7 +86,7 @@ cd icambio
 
     ```bash
     cd frontend
-    npm install # или yarn install
+    yarn install
     cd ..
     ```
 
@@ -93,17 +94,15 @@ cd icambio
 
     ```bash
     cd frontend
-    npm run dev # или yarn dev
-    # Приложение будет доступно по адресу: http://localhost:5173/
+    yarn dev
+    # Приложение будет доступно по адресу: http://localhost:3000/
     cd ..
     ```
 
     **Важно:** Если при запуске получаете ошибку "Port is already in use", освободите порт:
     ```bash
-    # Найти процесс на порту (например, 5173)
-    lsof -ti:5173
-    # Завершить процесс
-    lsof -ti:5173 | xargs kill -9
+    # Завершить процесс на порту 3000
+    lsof -ti:3000 | xargs kill -9
     # Затем запустить снова
     yarn dev
     ```

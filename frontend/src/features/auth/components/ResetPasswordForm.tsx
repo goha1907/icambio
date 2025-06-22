@@ -1,14 +1,16 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
 import { resetPasswordSchema, ResetPasswordFormData } from '@/shared/validation/auth';
 import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
-import { useNotification } from '@/lib/hooks/useNotification';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useState } from 'react';
 
 export const ResetPasswordForm = () => {
-  const { success, error } = useNotification();
+  const navigate = useNavigate();
   const { resetPassword } = useAuth();
+  const [error, setError] = useState<string>('');
 
   const {
     register,
@@ -20,20 +22,23 @@ export const ResetPasswordForm = () => {
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     try {
+      setError('');
       const result = await resetPassword(data.email);
       if (result.error) {
-        error(result.error);
+        setError(result.error);
       } else {
-        success('Инструкции по сбросу пароля отправлены на ваш email');
+        // Перенаправляем на страницу подтверждения
+        navigate('/reset-password-sent');
       }
     } catch (err: any) {
-      error(err.message || 'Не удалось отправить инструкции по сбросу пароля');
+      setError(err.message || 'Не удалось отправить инструкции по сбросу пароля');
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input label="Email" type="email" {...register('email')} error={errors.email?.message} />
+      {error && <p className="text-sm text-red-600">{error}</p>}
       <Button variant="primary" disabled={isSubmitting} className="w-full">
         {isSubmitting ? 'Отправка...' : 'Сбросить пароль'}
       </Button>

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { Currency } from '@/types';
-import { CURRENCY_DECIMALS } from '@/types';
+import type { Currency } from '@/features/exchange/types';
+import { CURRENCY_DECIMALS } from '@/features/exchange/types';
 
 // Функция для определения количества знаков после запятой
 const getDecimalPlaces = (currency: Currency): number => {

@@ -1,6 +1,6 @@
 import { supabase } from '@/config/supabase'
-import type { SupabaseSession, TUser, IUserProfile } from '@/types'
-import api from '@/shared/api/api'
+import type { SupabaseSession, TUser } from '@/types'
+import { AuthError } from '@supabase/supabase-js'
 
 export interface LoginCredentials {
   email: string
@@ -10,7 +10,9 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   email: string
   password: string
-  confirmPassword: string
+  username?: string
+  first_name?: string
+  last_name?: string
 }
 
 export interface AuthResponse {
@@ -20,192 +22,149 @@ export interface AuthResponse {
 }
 
 class AuthService {
-  private async getUserProfile(supabaseUserId: string, email: string): Promise<IUserProfile | null> {
-    try {
-      const response = await api.get(`/users/${supabaseUserId}/profile/`);
-      return { ...response.data, email: email, id: response.data.id };
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return null;
-    }
-  }
-
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password
-      })
+      const { data, error } = await supabase.auth.signInWithPassword(credentials)
 
       if (error) {
-        return {
-          user: null,
-          session: null,
-          error: this.getErrorMessage(error.message)
-        }
+        return { user: null, session: null, error: this.getErrorMessage(error.message) }
       }
 
       if (data.user && data.session) {
-        const userProfile = await this.getUserProfile(data.user.id, data.user.email || '');
-        const combinedUser: TUser | null = userProfile ? { ...data.user, ...userProfile } : null;
+        const user: TUser = {
+          ...data.user,
+          id: data.user.id,
+          email: data.user.email || '',
+          username: data.user.user_metadata?.username || undefined,
+          first_name: data.user.user_metadata?.first_name || undefined,
+          last_name: data.user.user_metadata?.last_name || undefined,
+          whatsapp: data.user.user_metadata?.whatsapp || undefined,
+          telegram: data.user.user_metadata?.telegram || undefined,
+          referral_link: undefined,
+          referralBalance: undefined,
+        }
 
         return {
-          user: combinedUser,
-          session: data.session
+          user,
+          session: data.session as SupabaseSession,
         }
       }
-      
-      return {
-        user: null,
-        session: null,
-        error: 'Неизвестная ошибка при входе'
-      }
 
+      return { user: null, session: null, error: 'Неизвестная ошибка' }
     } catch (error) {
-      return {
-        user: null,
-        session: null,
-        error: 'Произошла неизвестная ошибка'
-      }
+      return { user: null, session: null, error: 'Произошла ошибка при входе' }
     }
   }
 
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
     try {
-      if (credentials.password !== credentials.confirmPassword) {
-        return {
-          user: null,
-          session: null,
-          error: 'Пароли не совпадают'
-        }
-      }
-
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm`
-        }
+          data: {
+            username: credentials.username,
+            first_name: credentials.first_name,
+            last_name: credentials.last_name,
+          },
+        },
       })
 
       if (error) {
-        return {
-          user: null,
-          session: null,
-          error: this.getErrorMessage(error.message)
-        }
+        return { user: null, session: null, error: this.getErrorMessage(error.message) }
       }
 
-      // Для Supabase с подтверждением email - пользователь создается, но сессия пуста
-      if (data.user && !data.session) {
-        // Профиль может быть создан на бэкенде автоматически после регистрации
-        // Но мы не можем получить его сейчас, так как нет сессии для авторизации запроса
-        // Поэтому возвращаем только данные Supabase пользователя
-        const partialUser: TUser = {
+      if (data.user) {
+        const user: TUser = {
           ...data.user,
-          id: data.user.id, // Supabase user ID
+          id: data.user.id,
           email: data.user.email || '',
-          // Остальные поля IUserProfile будут пустыми или undefined
-          username: undefined,
-          first_name: undefined,
-          last_name: undefined,
+          username: credentials.username,
+          first_name: credentials.first_name,
+          last_name: credentials.last_name,
           whatsapp: undefined,
           telegram: undefined,
           referral_link: undefined,
           referralBalance: undefined,
-        };
+        }
+
         return {
-          user: partialUser,
-          session: null
+          user,
+          session: data.session as SupabaseSession,
         }
       }
 
-      if (data.user && data.session) {
-        const userProfile = await this.getUserProfile(data.user.id, data.user.email || '');
-        const combinedUser: TUser | null = userProfile ? { ...data.user, ...userProfile } : null;
-
-        return {
-          user: combinedUser,
-          session: data.session
-        }
-      }
-
-      return {
-        user: null,
-        session: null,
-        error: 'Неизвестная ошибка при регистрации'
-      }
+      return { user: null, session: null, error: 'Неизвестная ошибка' }
     } catch (error) {
-      return {
-        user: null,
-        session: null,
-        error: 'Произошла неизвестная ошибка'
-      }
+      return { user: null, session: null, error: 'Произошла ошибка при регистрации' }
     }
   }
 
-  async logout(): Promise<{ error?: string }> {
-    try {
-      const { error } = await supabase.auth.signOut()
-      
-      if (error) {
-        return { error: this.getErrorMessage(error.message) }
-      }
-
-      return {}
-    } catch (error) {
-      return { error: 'Произошла неизвестная ошибка' }
-    }
-  }
-
-  async getCurrentSession(): Promise<{ data: { session: SupabaseSession | null } }> {
-    return await supabase.auth.getSession()
+  async logout(): Promise<{ error: AuthError | null }> {
+    return await supabase.auth.signOut()
   }
 
   async refreshSession(): Promise<AuthResponse> {
     try {
-      const { data, error } = await supabase.auth.refreshSession()
+      // Добавляем таймаут для Supabase запроса
+      const sessionPromise = supabase.auth.getSession()
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Supabase getSession timeout')), 5000)
+      })
       
-      if (error) {
+      const { data: sessionData, error: sessionError } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]) as Awaited<ReturnType<typeof supabase.auth.getSession>>
+      
+      if (sessionError) {
         return {
           user: null,
           session: null,
-          error: this.getErrorMessage(error.message)
+          error: this.getErrorMessage(sessionError.message)
         }
       }
 
-      if (data.user && data.session) {
-        const userProfile = await this.getUserProfile(data.user.id, data.user.email || '');
-        const combinedUser: TUser | null = userProfile ? { ...data.user, ...userProfile } : null;
-
+      // Если сессии нет, возвращаем null без ошибки
+      if (!sessionData.session || !sessionData.session.user) {
         return {
-          user: combinedUser,
-          session: data.session
+          user: null,
+          session: null
         }
       }
 
+      // Преобразуем User в TUser
+      const user: TUser = {
+        ...sessionData.session.user,
+        id: sessionData.session.user.id,
+        email: sessionData.session.user.email || '',
+        username: sessionData.session.user.user_metadata?.username || undefined,
+        first_name: sessionData.session.user.user_metadata?.first_name || undefined,
+        last_name: sessionData.session.user.user_metadata?.last_name || undefined,
+        whatsapp: sessionData.session.user.user_metadata?.whatsapp || undefined,
+        telegram: sessionData.session.user.user_metadata?.telegram || undefined,
+        referral_link: undefined,
+        referralBalance: undefined,
+      }
+      
       return {
-        user: null,
-        session: null,
-        error: 'Неизвестная ошибка при обновлении сессии'
+        user,
+        session: sessionData.session as SupabaseSession,
       }
     } catch (error) {
       return {
         user: null,
         session: null,
-        error: 'Произошла неизвестная ошибка'
+        error: 'Ошибка при обновлении сессии'
       }
     }
   }
 
   async resetPassword(email: string): Promise<{ error?: string }> {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo: `${window.location.origin}/auth/reset-password`
-        }
-      )
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/set-new-password`,
+      })
 
       if (error) {
         return { error: this.getErrorMessage(error.message) }
@@ -213,52 +172,95 @@ class AuthService {
 
       return {}
     } catch (error) {
-      return { error: 'Произошла неизвестная ошибка' }
+      return { error: 'Произошла ошибка при сбросе пароля' }
     }
-  }
-
-  private getErrorMessage(errorMessage: string): string {
-    const errorMessages: Record<string, string> = {
-      'Invalid login credentials': 'Неверный email или пароль',
-      'Email not confirmed': 'Email не подтвержден',
-      'User already registered': 'Пользователь уже зарегистрирован',
-      'Password should be at least 6 characters': 'Пароль должен содержать минимум 6 символов',
-      'Invalid email': 'Неверный формат email',
-      'Email already registered': 'Email уже зарегистрирован',
-      'Signup not allowed for this instance': 'Регистрация отключена',
-      'Too many requests': 'Слишком много запросов, попробуйте позже'
-    }
-
-    return errorMessages[errorMessage] || errorMessage || 'Произошла ошибка'
   }
 
   async changePassword(newPassword: string): Promise<{ error?: string }> {
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
-      });
+      })
 
       if (error) {
-        return { error: this.getErrorMessage(error.message) };
+        return { error: this.getErrorMessage(error.message) }
       }
-      return {};
+
+      return {}
     } catch (error) {
-      return { error: 'Произошла неизвестная ошибка при смене пароля' };
+      return { error: 'Произошла ошибка при смене пароля' }
     }
   }
 
-  async updateProfile(userId: string, data: Partial<IUserProfile>): Promise<{ error?: string }> {
+  async changePasswordWithReauth(oldPassword: string, newPassword: string): Promise<{ error?: string }> {
     try {
-      // Отправляем только те поля, которые изменились
-      const response = await api.put(`/users/${userId}/profile/`, data);
-      if (response.status === 200) {
-        return {};
-      } else {
-        return { error: 'Не удалось обновить профиль' };
+      // Получаем текущего пользователя
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.email) {
+        return { error: 'Пользователь не найден' }
       }
-    } catch (error: any) {
-      return { error: error.response?.data?.detail || 'Произошла неизвестная ошибка при обновлении профиля' };
+
+      // Проверяем старый пароль через попытку входа
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword,
+      })
+
+      if (signInError) {
+        return { error: 'Неверный текущий пароль' }
+      }
+
+      // Если старый пароль верный, обновляем на новый
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
+
+      if (error) {
+        return { error: this.getErrorMessage(error.message) }
+      }
+
+      return {}
+    } catch (error) {
+      return { error: 'Произошла ошибка при смене пароля' }
     }
+  }
+
+  async updateProfile(updates: Partial<TUser>): Promise<{ error?: string }> {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          username: updates.username,
+          first_name: updates.first_name,
+          last_name: updates.last_name,
+          whatsapp: updates.whatsapp,
+          telegram: updates.telegram,
+        },
+      })
+
+      if (error) {
+        return { error: this.getErrorMessage(error.message) }
+      }
+
+      return {}
+    } catch (error) {
+      return { error: 'Произошла ошибка при обновлении профиля' }
+    }
+  }
+
+  private getErrorMessage(message: string): string {
+    const errorMessages: Record<string, string> = {
+      'Invalid login credentials': 'Неверный email или пароль',
+      'Email not confirmed': 'Email не подтвержден',
+      'Invalid email': 'Неверный формат email',
+      'Password should be at least 6 characters': 'Пароль должен содержать не менее 6 символов',
+      'User already registered': 'Пользователь уже зарегистрирован',
+      'Email already registered': 'Email уже зарегистрирован',
+      'Signup not allowed for this instance': 'Регистрация отключена',
+      'Too many requests': 'Слишком много запросов, попробуйте позже',
+      'user not found': 'Пользователь с таким email не найден',
+    }
+
+    return errorMessages[message] || 'Произошла неизвестная ошибка. Попробуйте снова.'
   }
 }
 

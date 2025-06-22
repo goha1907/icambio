@@ -2,20 +2,38 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { currencyService } from '../services/currencyService';
 import { exchangeRateService } from '../services/exchangeRateService';
-import { ExchangeRate } from '@/types';
+import { ExchangeRate } from '@/features/exchange/types';
 
 export const useCurrencies = () => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['currencies'],
     queryFn: currencyService.getAllCurrencies,
   });
+  
+  console.log('[DEBUG] useCurrencies:', {
+    isLoading: query.isLoading,
+    isError: query.isError,
+    data: query.data,
+    error: query.error,
+  });
+  
+  return query;
 };
 
 export const useExchangeRates = () => {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['exchangeRates'],
     queryFn: exchangeRateService.getAllExchangeRates,
   });
+  
+  console.log('[DEBUG] useExchangeRates:', {
+    isLoading: query.isLoading,
+    isError: query.isError,
+    data: query.data,
+    error: query.error,
+  });
+  
+  return query;
 };
 
 interface UseExchangeCalculatorProps {

@@ -44,7 +44,7 @@ export const RegisterForm: React.FC = () => {
     if (result.success) {
       if (result.needsConfirmation) {
         // Показать сообщение о необходимости подтверждения email
-        navigate('/auth/confirm-email')
+        navigate('/confirm-email')
       } else {
         navigate('/')
       }
@@ -129,7 +129,7 @@ export const RegisterForm: React.FC = () => {
             <p className="text-sm text-gray-600">
               Уже есть аккаунт?{' '}
               <Link
-                to="/auth/login"
+                to="/login"
                 className="font-medium text-blue-600 hover:text-blue-500"
               >
                 Войти

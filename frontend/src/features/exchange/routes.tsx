@@ -8,7 +8,7 @@ export const exchangeRoutes: RouteObject[] = [
     element: <ExchangePage />,
   },
   {
-    path: 'orders/:orderId',
+    path: 'order/:id',
     element: <OrderDetailsPage />,
   },
 ];

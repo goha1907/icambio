@@ -1,5 +1,7 @@
+/// <reference types="vitest" />
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import path from 'path';
 
 // https://vitejs.dev/config/
@@ -8,23 +10,21 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname, '..'), '');
   
   return {
-    plugins: [react()],
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-      },
-    },
+    plugins: [react(), tsconfigPaths()],
     // Указываем Vite где искать .env файлы
     envDir: path.resolve(__dirname, '..'), // Корень проекта
     // Настраиваем сервер разработки
     server: {
-      port: 5173,
+      port: 3000,
       host: true
     },
-    // Добавляем переменные окружения в процесс сборки
-    define: {
-      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
-    }
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/tests/setup.ts',
+      // you might want to disable it, if you don't have tests that rely on CSS
+      // since parsing CSS is slow
+      css: true,
+    },
   };
 });

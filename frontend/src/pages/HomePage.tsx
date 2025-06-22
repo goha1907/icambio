@@ -10,7 +10,7 @@ import { useReviews } from '@/features/reviews/hooks/useReviews';
 export const HomePage = () => {
   const navigate = useNavigate();
 
-  // Мемоизация данных для предотвращения ненужных перерисовок
+  // Подключаем хуки для получения данных через MSW
   const { data: currencies, isLoading: isLoadingCurrencies, isError: isErrorCurrencies } = useCurrencies();
   const { data: rates, isLoading: isLoadingRates, isError: isErrorRates } = useExchangeRates();
   const { data: reviews, isLoading: isLoadingReviews, isError: isErrorReviews } = useReviews();

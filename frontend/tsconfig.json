@@ -16,6 +16,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
+    "types": ["msw"],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/shared/ui/*"],

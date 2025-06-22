@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ExchangeRate } from '@/types';
+import { ExchangeRate } from '@/features/exchange/types';
 
 interface ExchangeRatesTableProps {
   rates: ExchangeRate[];

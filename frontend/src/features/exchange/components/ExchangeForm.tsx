@@ -6,7 +6,7 @@ import { Input } from '@/shared/ui/Input';
 import { Alert } from '@/shared/ui/Alert';
 import { ExchangeRow } from '@/features/exchange/components/ExchangeRow';
 import { useNotification } from '@/lib/hooks/useNotification';
-import type { Currency } from '@/types';
+import type { Currency } from '@/features/exchange/types';
 
 interface ExchangeFormProps {
   step: number;

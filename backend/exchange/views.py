@@ -25,6 +25,8 @@ class CurrencyViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             permission_classes = [IsAdministrator | IsOwner]
+        elif self.action in ['list', 'retrieve']:
+            permission_classes = []  # Публичный доступ для чтения
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -37,6 +39,8 @@ class ExchangeRateViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             permission_classes = [IsAdministrator | IsOwner]
+        elif self.action in ['list', 'retrieve']:
+            permission_classes = []  # Публичный доступ для чтения
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
