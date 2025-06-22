@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ConfirmEmailPage } from './pages/auth/ConfirmEmailPage';
+import { EmailConfirmedPage } from './pages/auth/EmailConfirmedPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { ChangePasswordPage } from './pages/auth/ChangePasswordPage';
 import { ExchangePage } from './pages/exchange/ExchangePage';
@@ -18,15 +19,17 @@ import { ReviewsPage } from './pages/static/ReviewsPage';
 
 import { MainLayout } from './layouts/MainLayout';
 import { ProtectedRoute } from './shared/ui/ProtectedRoute';
-import { useAuthStore } from './features/auth/store/useAuthStore';
+import { useAuth } from './features/auth/hooks/useAuth';
 
 const queryClient = new QueryClient();
 
 function App() {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuth();
 
+  // Временно отключаем блокировку загрузки для разработки
   if (isLoading) {
-    return <div>Загрузка приложения...</div>;
+    console.log('Auth is loading...');
+    // return <div>Загрузка приложения...</div>;
   }
 
   return (
@@ -38,6 +41,7 @@ function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route path="confirm-email" element={<ConfirmEmailPage />} />
+            <Route path="email-confirmed" element={<EmailConfirmedPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
             <Route path="change-password" element={<ChangePasswordPage />} />
             <Route path="rates" element={<RatesPage />} />

@@ -1,10 +1,11 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
+import { BASE_URL } from '@/config/api'
 import { useAuthStore } from '@/features/auth/store/useAuthStore'
 import toast from 'react-hot-toast'
 
 // Создаем инстанс axios
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api/v1/',
+  baseURL: `${BASE_URL}/v1`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
