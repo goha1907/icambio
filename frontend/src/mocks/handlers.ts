@@ -43,17 +43,20 @@ const reviews = [
 
 export const handlers = [
   // Currencies
-  http.get('/currencies/', () => {
+  http.get('http://localhost:8000/api/v1/currencies/', () => {
+    console.log('[MSW] Intercepted GET /currencies/');
     return HttpResponse.json(currencies);
   }),
 
   // Exchange rates
-  http.get('/rates/', () => {
+  http.get('http://localhost:8000/api/v1/rates/', () => {
+    console.log('[MSW] Intercepted GET /rates/');
     return HttpResponse.json(exchangeRates);
   }),
 
   // Calculate exchange
-  http.post('/rates/:id/calculate/', async ({ request, params }) => {
+  http.post('http://localhost:8000/api/v1/rates/:id/calculate/', async ({ request, params }) => {
+    console.log('[MSW] Intercepted POST /rates/:id/calculate/');
     const { id } = params;
     const rate = exchangeRates.find((r) => r.id === Number(id));
     if (!rate) {
@@ -79,7 +82,8 @@ export const handlers = [
   }),
 
   // Reviews
-  http.get('/reviews/list_public/', () => {
+  http.get('http://localhost:8000/api/v1/reviews/list_public/', () => {
+    console.log('[MSW] Intercepted GET /reviews/list_public/');
     return HttpResponse.json(reviews);
   }),
 ]; 

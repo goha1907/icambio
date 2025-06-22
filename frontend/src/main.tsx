@@ -7,17 +7,26 @@ import { queryClient } from '@/lib/react-query';
 import { Toaster } from 'react-hot-toast';
 
 // Start MSW in development
-if (import.meta.env.DEV) {
-  import('./mocks/browser').then(({ worker }) => {
-    worker.start();
-  });
+async function enableMocking() {
+  if (import.meta.env.DEV) {
+    const { worker } = await import('./mocks/browser');
+    
+    // Start the worker
+    await worker.start({
+      onUnhandledRequest: 'warn',
+    });
+    
+    console.log('[MSW] Mocking enabled.');
+  }
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <Toaster position="top-right" />
-      <App />
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+enableMocking().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Toaster position="top-right" />
+        <App />
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+});

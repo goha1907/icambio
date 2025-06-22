@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
-import { useNotification } from '@/lib/hooks/useNotification';
 import type { TUser } from '@/types';
 import { Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface ReferralProgramProps {
   user: TUser;
@@ -12,7 +12,6 @@ interface ReferralProgramProps {
 
 export const ReferralProgram = ({ user }: ReferralProgramProps) => {
   const navigate = useNavigate();
-  const { success } = useNotification();
   const [copying, setCopying] = useState(false);
 
   const handleCopyLink = async () => {
@@ -20,8 +19,9 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
       try {
         setCopying(true);
         await navigator.clipboard.writeText(user.referral_link);
-        success('Реферальная ссылка скопирована');
+        toast.success('Реферальная ссылка скопирована');
       } catch (err) {
+        toast.error('Не удалось скопировать ссылку');
       } finally {
         setCopying(false);
       }
