@@ -4,25 +4,16 @@ import { Button } from '@/shared/ui/Button';
 import { ExchangeCalculator } from '@/features/home/components/ExchangeCalculator';
 import { ExchangeRatesTable } from '@/features/exchange/components/ExchangeRatesTable';
 import { ReviewsCarousel } from '@/features/home/components/ReviewsCarousel';
+import { useCurrencies, useExchangeRates } from '@/features/exchange/hooks/useExchangeRate';
+import { useReviews } from '@/features/reviews/hooks/useReviews';
 
 export const HomePage = () => {
   const navigate = useNavigate();
 
-  // Временно отключаем автоматические запросы для тестирования авторизации
-  // const { data: currencies, isLoading: isLoadingCurrencies, isError: isErrorCurrencies } = useCurrencies();
-  // const { data: rates, isLoading: isLoadingRates, isError: isErrorRates } = useExchangeRates();
-  // const { data: reviews, isLoading: isLoadingReviews, isError: isErrorReviews } = useReviews();
-  
-  // Временные заглушки
-  const currencies = null;
-  const rates = null;
-  const reviews = null;
-  const isLoadingCurrencies = false;
-  const isLoadingRates = false;
-  const isLoadingReviews = false;
-  const isErrorCurrencies = false;
-  const isErrorRates = false;
-  const isErrorReviews = false;
+  // Подключаем хуки для получения данных через MSW
+  const { data: currencies, isLoading: isLoadingCurrencies, isError: isErrorCurrencies } = useCurrencies();
+  const { data: rates, isLoading: isLoadingRates, isError: isErrorRates } = useExchangeRates();
+  const { data: reviews, isLoading: isLoadingReviews, isError: isErrorReviews } = useReviews();
 
   return (
     <div className="page-content">
