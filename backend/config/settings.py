@@ -138,7 +138,7 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # URL фронтенда для генерации реферальных ссылок
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -204,7 +204,7 @@ DJOSER = {
 
 # CORS настройки
 DEFAULT_CORS_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5173",  # Оставляем для обратной совместимости
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
