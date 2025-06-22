@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
     envDir: path.resolve(__dirname, '..'), // Корень проекта
     // Настраиваем сервер разработки
     server: {
-      port: 5173,
+      port: 3000,
       host: true
     },
     test: {
