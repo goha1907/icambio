@@ -9,6 +9,8 @@
 - [03 – Style-guide](./03_style-guide.mdc)
 - [04 – Правила документации](./04_docs%20rules.mdc)
 - [05 – Управление переменными окружения](./05_environment-variables.mdc)
+- [06 – Тестирование фронтенда](./06_frontend-tests.mdc)
+- [07 – Тестирование бэкенда](./07_backend-tests.mdc)
 - [Git workflow](./git-workflow.mdc)
 
 ---
