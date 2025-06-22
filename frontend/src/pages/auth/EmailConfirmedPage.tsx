@@ -14,13 +14,51 @@ export const EmailConfirmedPage: React.FC = () => {
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
-        // Получаем токены из URL параметров
-        const access_token = searchParams.get('access_token')
-        const refresh_token = searchParams.get('refresh_token')
-        const type = searchParams.get('type')
+        // Проверяем оба формата: старый (hash) и новый (query params)
+        const urlParams = new URLSearchParams(window.location.search)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        
+        // Новый PKCE flow (query params)
+        const token = urlParams.get('token')
+        const type = urlParams.get('type')
+        
+        // Старый flow (hash params)
+        const access_token = hashParams.get('access_token') || searchParams.get('access_token')
+        const refresh_token = hashParams.get('refresh_token') || searchParams.get('refresh_token')
+        const hash_type = hashParams.get('type') || searchParams.get('type')
 
-        if (type === 'signup' && access_token && refresh_token) {
-          // Устанавливаем сессию в Supabase
+        console.log('Email confirmation params:', { 
+          token: token?.substring(0, 20) + '...', 
+          type, 
+          hash_type,
+          has_access_token: !!access_token 
+        })
+
+        // Новый PKCE flow
+        if (type === 'signup' && token) {
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'signup'
+          })
+
+          console.log('VerifyOtp result:', { data: !!data.user, error })
+
+          if (error) {
+            console.error('VerifyOtp error:', error)
+            setStatus('error')
+            setMessage('Ошибка подтверждения email. Попробуйте войти в систему.')
+          } else if (data.user) {
+            setStatus('success')
+            setMessage('Email успешно подтверждён! Теперь вы можете пользоваться системой.')
+            
+            // Перенаправляем на главную страницу через 3 секунды
+            setTimeout(() => {
+              navigate('/')
+            }, 3000)
+          }
+        }
+        // Старый flow (для совместимости)
+        else if (hash_type === 'signup' && access_token && refresh_token) {
           const { data, error } = await supabase.auth.setSession({
             access_token,
             refresh_token

@@ -163,7 +163,7 @@ class AuthService {
   async resetPassword(email: string): Promise<{ error?: string }> {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/set-new-password`,
       })
 
       if (error) {
@@ -178,6 +178,39 @@ class AuthService {
 
   async changePassword(newPassword: string): Promise<{ error?: string }> {
     try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
+
+      if (error) {
+        return { error: this.getErrorMessage(error.message) }
+      }
+
+      return {}
+    } catch (error) {
+      return { error: 'Произошла ошибка при смене пароля' }
+    }
+  }
+
+  async changePasswordWithReauth(oldPassword: string, newPassword: string): Promise<{ error?: string }> {
+    try {
+      // Получаем текущего пользователя
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.email) {
+        return { error: 'Пользователь не найден' }
+      }
+
+      // Проверяем старый пароль через попытку входа
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword,
+      })
+
+      if (signInError) {
+        return { error: 'Неверный текущий пароль' }
+      }
+
+      // Если старый пароль верный, обновляем на новый
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       })

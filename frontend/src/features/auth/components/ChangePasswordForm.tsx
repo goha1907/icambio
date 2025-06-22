@@ -3,13 +3,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { changePasswordSchema, ChangePasswordFormData } from '@/shared/validation/auth';
 import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
-import { useNotification } from '@/lib/hooks/useNotification';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Alert } from '@/shared/ui/Alert';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useState } from 'react';
 
 export const ChangePasswordForm = () => {
-  const { success, error } = useNotification();
-  const { changePassword } = useAuth();
+  const { changePasswordWithReauth } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string>('');
 
   const {
     register,
@@ -22,20 +25,31 @@ export const ChangePasswordForm = () => {
 
   const onSubmit = async (data: ChangePasswordFormData) => {
     try {
-      const result = await changePassword(data.newPassword);
+      setError('');
+
+      // Используем новый метод changePasswordWithReauth
+      const result = await changePasswordWithReauth(data.oldPassword, data.newPassword);
+      
       if (result.error) {
-        error(result.error);
+        setError(result.error);
+        toast.error(result.error);
       } else {
-        success('Пароль успешно изменен');
+        toast.success('Пароль успешно изменен');
         reset();
+        // Перенаправляем на профиль согласно требованиям
+        navigate('/profile');
       }
     } catch (err: any) {
-      error(err.message || 'Не удалось изменить пароль');
+      const errorMessage = err.message || 'Не удалось изменить пароль';
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {error && <Alert type="error">{error}</Alert>}
+      
       <div className="form-group">
         <Input
           type="password"

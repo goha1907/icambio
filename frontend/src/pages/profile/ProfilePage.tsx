@@ -17,7 +17,18 @@ export const ProfilePage = () => {
     navigate(`/profile?tab=${tabId}`, { replace: true });
   };
 
-  if (!user) return null;
+  console.log('ProfilePage: Rendering with user:', user?.email);
+
+  // Поскольку страница защищена AuthGuard, пользователь точно авторизован
+  if (!user) {
+    return (
+      <div className="page-container">
+        <div className="flex justify-center items-center min-h-64">
+          <p>Ошибка загрузки профиля</p>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = [
     {

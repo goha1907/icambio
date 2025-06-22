@@ -6,9 +6,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { PageTitle } from '@/shared/ui/PageTitle';
-import { useFormSubmit } from '@/lib/hooks/useFormSubmit';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { ProfileUpdateData } from '@/types';
+import toast from 'react-hot-toast';
+import { useState } from 'react';
 
 const formatWhatsApp = (url: string | undefined): string => {
   if (!url) return '';
@@ -32,10 +33,24 @@ const formatTelegram = (url: string | undefined): string => {
 export const EditProfilePage = () => {
   const { user, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  console.log('EditProfilePage: Rendering with user:', user?.email);
+
+  // Поскольку страница защищена AuthGuard, пользователь точно авторизован
+  if (!user) {
+    return (
+      <div className="page-container">
+        <div className="flex justify-center items-center min-h-64">
+          <p>Ошибка загрузки профиля</p>
+        </div>
+      </div>
+    );
+  }
 
   const {
     register,
-    handleSubmit: handleFormSubmit,
+    handleSubmit,
     formState: { errors },
   } = useForm<ProfileUpdateData>({
     resolver: zodResolver(profileSchema),
@@ -48,9 +63,11 @@ export const EditProfilePage = () => {
     },
   });
 
-  const { handleSubmit, isSubmitting } = useFormSubmit<ProfileUpdateData>({
-    onSubmit: async (data) => {
-      if (!user) return; // Необходимо, чтобы пользователь существовал
+  const onSubmit = async (data: ProfileUpdateData) => {
+    if (!user) return;
+
+    try {
+      setIsSubmitting(true);
 
       const formatted = {
         ...data,
@@ -65,13 +82,21 @@ export const EditProfilePage = () => {
             : `https://t.me/${data.telegram.replace('@', '')}`
           : '',
       };
-      await updateProfile(formatted);
-    },
-    successMessage: 'Профиль успешно обновлен',
-    errorMessage: 'Не удалось обновить профиль',
-  });
 
-  if (!user) return null;
+      const result = await updateProfile(formatted);
+      
+      if (result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success('Профиль успешно обновлен');
+        navigate('/profile');
+      }
+    } catch (error) {
+      toast.error('Не удалось обновить профиль');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="page-container">
@@ -83,7 +108,7 @@ export const EditProfilePage = () => {
             <CardTitle>Личные данные</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleFormSubmit(handleSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-4">
                   <div>

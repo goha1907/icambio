@@ -3,89 +3,129 @@ import { useAuthStore } from '../store/useAuthStore'
 import { authService, type LoginCredentials, type RegisterCredentials } from '../services/authService'
 import toast from 'react-hot-toast'
 import type { TUser, SupabaseSession } from '@/types'
+import { supabase } from '@/config/supabase'
+import { useNavigate } from 'react-router-dom'
 
 export const useAuth = () => {
   const { user, session, isAuthenticated, isLoading, setAuth, setLoading, logout: logoutStore } = useAuthStore()
+  const navigate = useNavigate()
+
+  // Добавляем дебаг информацию
+  console.log('useAuth state:', { 
+    user: user?.email, 
+    isAuthenticated, 
+    isLoading,
+    hasSession: !!session 
+  });
 
   // Инициализация состояния авторизации при загрузке приложения
   useEffect(() => {
-    let isMounted = true; // Флаг для предотвращения обновления состояния после размонтирования
+    let isMounted = true;
     
     const initializeAuth = async () => {
+      console.log('useAuth: Starting auth initialization...');
+      
       try {
-        setLoading(true)
+        // Сначала проверяем текущую сессию из Supabase
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        // Увеличиваем таймаут до 10 секунд и делаем его более умным
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Auth initialization timeout')), 10000)
-        })
+        if (!isMounted) return;
         
-        // Получаем текущую сессию и данные пользователя
-        const result = await Promise.race([
-          authService.refreshSession(),
-          timeoutPromise
-        ]) as Awaited<ReturnType<typeof authService.refreshSession>>
+        console.log('useAuth: Current session check:', { hasSession: !!currentSession, error });
         
-        // Проверяем, что компонент ещё смонтирован
-        if (!isMounted) {
-          return
-        }
-        
-        if (result.user && result.session) {
-          setAuth(result.user as TUser, result.session as SupabaseSession)
+        if (error) {
+          console.log('useAuth: Session error, clearing auth');
+          setAuth(null, null);
+        } else if (currentSession && currentSession.user) {
+          console.log('useAuth: Found valid session, setting user');
+          const user: TUser = {
+            ...currentSession.user,
+            id: currentSession.user.id,
+            email: currentSession.user.email || '',
+            username: currentSession.user.user_metadata?.username || undefined,
+            first_name: currentSession.user.user_metadata?.first_name || undefined,
+            last_name: currentSession.user.user_metadata?.last_name || undefined,
+            whatsapp: currentSession.user.user_metadata?.whatsapp || undefined,
+            telegram: currentSession.user.user_metadata?.telegram || undefined,
+            referral_link: undefined,
+            referralBalance: undefined,
+          };
+          setAuth(user, currentSession as SupabaseSession);
         } else {
-          setAuth(null, null)
+          console.log('useAuth: No valid session, clearing auth');
+          setAuth(null, null);
         }
       } catch (error) {
-        // Только сбрасываем состояние если компонент ещё смонтирован
+        console.log('useAuth: Auth initialization error:', error);
         if (isMounted) {
-          setAuth(null, null)
+          setAuth(null, null);
         }
       } finally {
         if (isMounted) {
-          setLoading(false)
+          console.log('useAuth: Setting loading to false');
+          setLoading(false);
         }
       }
-    }
+    };
 
-    // Запускаем инициализацию только один раз
-    initializeAuth()
+    // Запускаем инициализацию
+    initializeAuth();
+
+    // Подписка на изменения состояния аутентификации
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+
+      console.log('useAuth: Auth state change:', event, session?.user?.email);
+
+      if (event === 'SIGNED_IN' && session && session.user) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlType = urlParams.get('type');
+        
+        // Проверяем тип события
+        if (urlType === 'recovery') {
+          console.log('useAuth: Password recovery signin, redirecting to set-new-password');
+          navigate('/set-new-password');
+          return;
+        }
+
+        // Создаем пользователя из сессии
+        const user: TUser = {
+          ...session.user,
+          id: session.user.id,
+          email: session.user.email || '',
+          username: session.user.user_metadata?.username || undefined,
+          first_name: session.user.user_metadata?.first_name || undefined,
+          last_name: session.user.user_metadata?.last_name || undefined,
+          whatsapp: session.user.user_metadata?.whatsapp || undefined,
+          telegram: session.user.user_metadata?.telegram || undefined,
+          referral_link: undefined,
+          referralBalance: undefined,
+        };
+        
+        console.log('useAuth: Setting user from auth state change');
+        setAuth(user, session as SupabaseSession);
+
+        // Стандартная Supabase логика - если подтверждение email, сразу авторизуем и перенаправляем на главную
+        if (urlType === 'signup') {
+          toast.success('Email подтвержден! Добро пожаловать!');
+          navigate('/');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        console.log('useAuth: User signed out');
+        setAuth(null, null);
+      }
+    });
 
     // Cleanup функция
     return () => {
-      isMounted = false
+      console.log('useAuth: Cleaning up...');
+      isMounted = false;
+      subscription.unsubscribe();
     }
-
-    // Временно отключаем подписку на изменения состояния для тестирования
     
-    // const {
-    //   data: { subscription },
-    // } = supabase.auth.onAuthStateChange(async (event, session) => {
-    //   if (session && session.user) {
-    //     // При изменении состояния, создаём пользователя из данных сессии
-    //     const user: TUser = {
-    //       ...session.user,
-    //       id: session.user.id,
-    //       email: session.user.email || '',
-    //       username: session.user.user_metadata?.username || undefined,
-    //       first_name: session.user.user_metadata?.first_name || undefined,
-    //       last_name: session.user.user_metadata?.last_name || undefined,
-    //       whatsapp: session.user.user_metadata?.whatsapp || undefined,
-    //       telegram: session.user.user_metadata?.telegram || undefined,
-    //       referral_link: undefined,
-    //       referralBalance: undefined,
-    //     };
-    //     setAuth(user, session as SupabaseSession)
-    //   } else {
-    //     setAuth(null, null)
-    //   }
-      
-    //   setLoading(false)
-    // })
-
-    // return () => subscription.unsubscribe()
-    
-  }, []) // Убираем зависимости, чтобы useEffect выполнялся только один раз
+  }, [setAuth, setLoading, navigate])
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
@@ -123,17 +163,11 @@ export const useAuth = () => {
         return { success: false, error: result.error }
       }
 
-      // Для Supabase с подтверждением email
-      if (result.user && !result.session) {
-        setAuth(result.user, null) // Устанавливаем пользователя, но без сессии
+      // Для Supabase с подтверждением email - всегда считаем что нужно подтверждение
+      if (result.user) {
+        // НЕ устанавливаем auth состояние, так как пользователь должен сначала подтвердить email
         toast.success('Регистрация прошла успешно! Проверьте email для подтверждения.')
         return { success: true, needsConfirmation: true }
-      }
-
-      if (result.user && result.session) {
-        setAuth(result.user, result.session)
-        toast.success('Успешная регистрация!')
-        return { success: true }
       }
 
       return { success: false, error: 'Неизвестная ошибка' }
@@ -144,7 +178,7 @@ export const useAuth = () => {
     } finally {
       setLoading(false)
     }
-  }, [setAuth, setLoading])
+  }, [setLoading])
 
   const logout = useCallback(async () => {
     try {
@@ -183,6 +217,7 @@ export const useAuth = () => {
     resetPassword: authService.resetPassword,
     getAccessToken,
     changePassword: authService.changePassword,
+    changePasswordWithReauth: authService.changePasswordWithReauth,
     updateProfile: authService.updateProfile,
   }
 }
