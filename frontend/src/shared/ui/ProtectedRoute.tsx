@@ -18,22 +18,16 @@ export const ProtectedRoute = ({ isAuthenticated }: ProtectedRouteProps) => {
 
 // Новый компонент для использования в маршрутах
 export const AuthGuard = () => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  // Добавляем дебаг информацию
-  console.log('AuthGuard state:', { 
-    isAuthenticated, 
-    isLoading, 
-    user: user?.email, 
-    pathname: location.pathname 
-  });
+
 
   // Принудительный сброс loading через 3 секунды
   useEffect(() => {
     if (isLoading) {
       const timer = setTimeout(() => {
-        console.log('AuthGuard: Force redirecting to login after 3 seconds of loading');
+
         // Если все еще загружается через 3 секунды, считаем что не авторизован
         window.location.href = '/login';
       }, 3000);
@@ -43,7 +37,7 @@ export const AuthGuard = () => {
   }, [isLoading]);
 
   if (isLoading) {
-    console.log('AuthGuard: Still loading...');
+
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
@@ -55,10 +49,10 @@ export const AuthGuard = () => {
   }
 
   if (!isAuthenticated) {
-    console.log('AuthGuard: Not authenticated, redirecting to login');
+
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  console.log('AuthGuard: Authenticated, rendering outlet');
+
   return <Outlet />;
 };
