@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { ExchangeRate } from '@/features/exchange/types';
+import { MOCK_EXCHANGE_RATES } from '@/lib/mock-data';
 
 interface ExchangeRatesTableProps {
-  rates: ExchangeRate[];
+  // rates: ExchangeRate[]; // Убираем пропс
 }
 
-export const ExchangeRatesTable = ({ rates }: ExchangeRatesTableProps) => {
+export const ExchangeRatesTable = ({ /* rates */ }: ExchangeRatesTableProps) => {
+  const rates = MOCK_EXCHANGE_RATES;
   const [filterCurrency, setFilterCurrency] = useState<string>('');
 
   // Группируем курсы по парам валют
