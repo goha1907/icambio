@@ -2,7 +2,7 @@ import { RouteObject } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import { MainLayout } from '../layouts/MainLayout';
 import { Loader } from '@/shared/ui/Loader';
-import { AuthGuard } from '@/shared/ui/ProtectedRoute';
+import { ProtectedRoute } from '@/shared/ui/ProtectedRoute';
 import { authRoutes } from '@/features/auth/routes';
 import { exchangeRoutes } from '@/features/exchange/routes';
 import { profileRoutes } from '@/features/profile/routes';
@@ -19,7 +19,13 @@ const WorkingHoursPage = lazy(() => import('../pages/static/WorkingHoursPage').t
 
 // Компонент для оборачивания отложенной загрузки
 const LazyComponent = ({ component: Component }: { component: React.ComponentType<any> }) => (
-  <Suspense fallback={<Loader fullScreen />}>
+  <Suspense
+    fallback={
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <Loader size="lg" />
+      </div>
+    }
+  >
     <Component />
   </Suspense>
 );
@@ -42,7 +48,7 @@ const mainRoutes: RouteObject[] = [
 const protectedRoutes: RouteObject[] = [
   {
     path: '',
-    element: <AuthGuard />,
+    element: <ProtectedRoute />,
     children: [...profileRoutes],
   },
 ];

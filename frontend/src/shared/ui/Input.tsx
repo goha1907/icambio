@@ -1,53 +1,29 @@
 import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-  isTextarea?: boolean;
-}
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
-  ({ className, type, label, error, helperText, isTextarea = false, ...props }, ref) => {
-    const hasError = !!error;
-    const commonClasses = cn(
-      'form-input',
-      { 'border-red-500 focus:ring-red-500': hasError },
-      className
-    );
-
-    const inputProps = {
-      className: commonClasses,
-      ...props,
-    };
-
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
     return (
-      <div className="w-full">
-        {label && (
-          <label htmlFor={props.id} className="form-label">
-            {label}
-          </label>
+      <input
+        type={type}
+        className={cn(
+          'flex h-10 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground transition-all duration-200 ease-in-out hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          'focus:border-icmop-primary',
+          {
+            'border-destructive focus-visible:ring-destructive': props['aria-invalid'],
+          },
+          className
         )}
-        {isTextarea ? (
-          <textarea
-            ref={ref as React.ForwardedRef<HTMLTextAreaElement>}
-            {...(inputProps as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
-          />
-        ) : (
-          <input
-            type={type}
-            ref={ref as React.ForwardedRef<HTMLInputElement>}
-            {...inputProps}
-          />
-        )}
-        {helperText && !hasError && (
-          <p className="mt-1 text-xs text-gray-500">{helperText}</p>
-        )}
-        {hasError && <p className="form-error">{error}</p>}
-      </div>
+        ref={ref}
+        {...props}
+      />
     );
   }
 );
 
-Input.displayName = 'Input'; 
+Input.displayName = 'Input';
+
+export { Input }; 

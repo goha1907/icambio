@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { Button } from './Button';
 
 interface Props {
   children: ReactNode;
@@ -22,27 +23,34 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Логируем ошибку в сервис аналитики
-    console.error('Error caught by boundary:', error);
-    console.error('Error info:', errorInfo);
+    console.error('Error caught by boundary:', error, errorInfo);
   }
 
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Что-то пошло не так</h2>
-            <p className="text-gray-600 mb-4">
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-lg">
+            <h2 className="mb-4 text-2xl font-bold text-destructive">
+              Что-то пошло не так
+            </h2>
+            <p className="mb-4 text-muted-foreground">
               Произошла ошибка при загрузке страницы. Пожалуйста, попробуйте обновить страницу или
               вернитесь позже.
             </p>
-            <div className="text-sm text-gray-500 break-all">{this.state.error?.message}</div>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 btn btn-primary w-full"
+            <details className="text-xs text-muted-foreground">
+              <summary>Детали ошибки</summary>
+              <pre className="mt-2 whitespace-pre-wrap break-all">
+                {this.state.error?.stack}
+              </pre>
+            </details>
+            <Button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              variant="outline"
+              className="mt-4 w-full"
             >
-              Обновить страницу
-            </button>
+              Попробовать снова
+            </Button>
           </div>
         </div>
       );

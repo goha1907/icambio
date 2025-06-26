@@ -1,16 +1,8 @@
 import { SetNewPasswordForm } from '@/features/auth/components/SetNewPasswordForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/Card';
 import { PageTitle } from '@/shared/ui/PageTitle';
-import { useNavigate } from 'react-router-dom';
 
 export function SetNewPasswordPage() {
-  const navigate = useNavigate();
-
-  const handlePasswordSet = () => {
-    // В реальном приложении здесь может быть логика перенаправления на страницу входа
-    navigate('/auth/login');
-  };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <PageTitle
@@ -22,7 +14,7 @@ export function SetNewPasswordPage() {
           <CardTitle>Установка нового пароля</CardTitle>
         </CardHeader>
         <CardContent>
-          <SetNewPasswordForm onPasswordSet={handlePasswordSet} />
+          <SetNewPasswordForm />
         </CardContent>
       </Card>
     </div>

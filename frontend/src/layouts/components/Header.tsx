@@ -28,7 +28,7 @@ export const Header = () => {
       <div className="header-container">
         <div className="header-left">
           <div className="flex-shrink-0">
-            <Logo className="h-10" />
+            <Logo size="sm" />
           </div>
 
           {/* Десктопное меню */}

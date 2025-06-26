@@ -1,10 +1,16 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { PageTitle } from '@/shared/ui/PageTitle';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/shared/ui/TabPanel';
 import { ProfileDetails } from '@/features/profile/components/ProfileDetails';
 import { ExchangeHistory } from '@/features/profile/components/ExchangeHistory';
 import { ReferralProgram } from '@/features/profile/components/ReferralProgram';
-import { TabPanel } from '@/shared/ui/TabPanel';
-import { PageTitle } from '@/shared/ui/PageTitle';
+import { MOCK_EXCHANGE_HISTORY } from '@/lib/mock-data';
 
 export const ProfilePage = () => {
   const { user } = useAuth();
@@ -17,44 +23,34 @@ export const ProfilePage = () => {
     navigate(`/profile?tab=${tabId}`, { replace: true });
   };
 
-
-
-  // Поскольку страница защищена AuthGuard, пользователь точно авторизован
   if (!user) {
-    return (
-      <div className="page-container">
-        <div className="flex justify-center items-center min-h-64">
-          <p>Ошибка загрузки профиля</p>
-        </div>
-      </div>
-    );
+    // Можно заменить на более красивый скелет загрузки
+    return <div>Загрузка профиля...</div>;
   }
 
-  const tabs = [
-    {
-      id: 'profile',
-      label: 'Профиль',
-      content: <ProfileDetails user={user} />,
-    },
-    {
-      id: 'history',
-      label: 'История обменов',
-      content: <ExchangeHistory exchanges={[]} />,
-    },
-    {
-      id: 'referral',
-      label: 'Реферальная программа',
-      content: <ReferralProgram user={user} />,
-    },
-  ];
-
   return (
-    <div className="page-container">
-      <div className="max-w-4xl mx-auto">
-        <PageTitle title="Личный кабинет" description="Управление профилем и история обменов" />
-
-        <TabPanel tabs={tabs} defaultTab={activeTab} onChange={handleTabChange} />
-      </div>
+    <div className="container mx-auto max-w-4xl py-8">
+      <PageTitle title="Личный кабинет" />
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="mt-6"
+      >
+        <TabsList>
+          <TabsTrigger value="profile">Профиль</TabsTrigger>
+          <TabsTrigger value="history">История обменов</TabsTrigger>
+          <TabsTrigger value="referral">Реферальная программа</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile">
+          <ProfileDetails user={user} />
+        </TabsContent>
+        <TabsContent value="history">
+          <ExchangeHistory exchanges={MOCK_EXCHANGE_HISTORY} />
+        </TabsContent>
+        <TabsContent value="referral">
+          <ReferralProgram user={user} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }; 
