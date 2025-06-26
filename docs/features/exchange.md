@@ -71,9 +71,8 @@
 
 -   `pages/exchange/ExchangePage.tsx`: Главная страница обмена.
 -   `pages/exchange/OrderDetailsPage.tsx`: Страница деталей заказа.
--   `features/exchange/components/ExchangeForm.tsx`: Форма для ввода данных обмена.
+-   `features/exchange/components/CurrencyPairForm.tsx`: Переиспользуемая форма для ввода валютной пары, используется как в калькуляторе обмена, так и на странице создания заявки.
 -   `features/exchange/components/ExchangeRatesTable.tsx`: Таблица с отображением курсов обмена.
--   `features/exchange/components/ExchangeRow.tsx`: Отдельная строка в таблице курсов.
 -   `features/home/components/ExchangeCalculator.tsx`: Калькулятор обмена на главной странице.
 
 ---
