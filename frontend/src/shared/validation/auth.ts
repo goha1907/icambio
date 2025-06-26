@@ -32,6 +32,19 @@ export const resetPasswordSchema = z.object({
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
+// Схема для установки нового пароля (после сброса)
+export const setNewPasswordSchema = z
+  .object({
+    password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
+    confirmPassword: z.string().min(1, 'Подтвердите пароль'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Пароли не совпадают',
+    path: ['confirmPassword'],
+  });
+
+export type SetNewPasswordFormData = z.infer<typeof setNewPasswordSchema>;
+
 // Схема для изменения пароля
 export const changePasswordSchema = z
   .object({
@@ -45,3 +58,14 @@ export const changePasswordSchema = z
   });
 
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+
+// Схема для профиля
+export const profileSchema = z.object({
+  username: z.string().optional(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  whatsapp: z.string().optional(),
+  telegram: z.string().optional(),
+});
+
+export type ProfileFormData = z.infer<typeof profileSchema>; 

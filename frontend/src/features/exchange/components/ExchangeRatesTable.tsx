@@ -1,6 +1,16 @@
 import { useMemo, useState } from 'react';
 import { ExchangeRate } from '@/features/exchange/types';
 import { MOCK_EXCHANGE_RATES } from '@/lib/mock-data';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/Table';
+import { Input } from '@/shared/ui/Input';
+import { Badge } from '@/shared/ui/Badge';
 
 interface ExchangeRatesTableProps {
   // rates: ExchangeRate[]; // Убираем пропс
@@ -48,63 +58,63 @@ export const ExchangeRatesTable = ({ /* rates */ }: ExchangeRatesTableProps) => 
   }, [groupedRates, filterCurrency]);
 
   return (
-    <div className="exchange-rates bg-white rounded-xl shadow-lg p-6 sm:p-8">
-      <h2 className="text-2xl font-bold mb-6">Текущие курсы обмена</h2>
+    <div className="rounded-xl bg-white p-6 shadow-lg sm:p-8">
+      <h2 className="mb-6 text-2xl font-bold">Текущие курсы обмена</h2>
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder="Поиск по валюте..."
-          className="px-4 py-2 border rounded-lg w-full md:w-64"
+          className="w-full md:w-64 placeholder:text-icmop-primary"
           value={filterCurrency}
           onChange={(e) => setFilterCurrency(e.target.value)}
         />
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Направление обмена
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Курсы и лимиты
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Направление обмена</TableHead>
+              <TableHead>Курсы и лимиты</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {formattedGroups.map((group) => (
-              <tr key={group.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
+              <TableRow key={group.id}>
+                <TableCell>
                   <div className="flex items-center text-lg font-medium">
                     <span className="font-mono">{group.fromCurrency}</span>
                     <span className="mx-2">→</span>
                     <span className="font-mono">{group.toCurrency}</span>
                   </div>
-                </td>
-                <td className="px-6 py-4">
+                </TableCell>
+                <TableCell>
                   <div className="space-y-2">
                     {group.rates.map((rate, idx) => (
                       <div key={idx} className="flex items-center text-sm">
-                        <span className="text-gray-500 mr-2">
+                        <span className="mr-2 text-icmop-primary">
                           {rate.maxAmount 
                             ? `До ${rate.maxAmount} ${group.fromCurrency}:`
-                            : `От ${rate.minAmount} ${group.fromCurrency}:`
-                          }
+                            : `От ${rate.minAmount} ${group.fromCurrency}:`}
                         </span>
-                        <span className="font-medium font-mono">
-                          1 {group.fromCurrency} = {rate.rate} {group.toCurrency}
+                        <span className="font-mono font-medium">
+                          1 {group.fromCurrency} = {rate.rate}{' '}
+                          {group.toCurrency}
                         </span>
-                        {idx === 0 && rate.from_currency.code === 'USD' && rate.to_currency.code === 'ARS' && (
-                          <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 rounded text-xs">🔥</span>
+                        {idx === 0 &&
+                          rate.from_currency.code === 'USD' &&
+                          rate.to_currency.code === 'ARS' && (
+                            <Badge variant="secondary" className="ml-2">
+                              🔥
+                            </Badge>
                         )}
                       </div>
                     ))}
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

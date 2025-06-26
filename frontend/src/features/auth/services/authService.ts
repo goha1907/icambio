@@ -10,7 +10,6 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   email: string
   password: string
-  username?: string
   first_name?: string
   last_name?: string
 }
@@ -63,7 +62,6 @@ class AuthService {
         password: credentials.password,
         options: {
           data: {
-            username: credentials.username,
             first_name: credentials.first_name,
             last_name: credentials.last_name,
           },
@@ -79,7 +77,7 @@ class AuthService {
           ...data.user,
           id: data.user.id,
           email: data.user.email || '',
-          username: credentials.username,
+          username: undefined,
           first_name: credentials.first_name,
           last_name: credentials.last_name,
           whatsapp: undefined,

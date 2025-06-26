@@ -1,28 +1,42 @@
-interface LoaderProps {
-  size?: 'sm' | 'md' | 'lg';
-  fullScreen?: boolean;
-}
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
 
-export const Loader = ({ size = 'md', fullScreen = false }: LoaderProps) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-  };
+const loaderVariants = cva(
+  'animate-spin rounded-full border-4 border-current border-t-transparent text-primary',
+  {
+    variants: {
+      size: {
+        sm: 'h-4 w-4 border-2',
+        md: 'h-8 w-8',
+        lg: 'h-12 w-12',
+      },
+    },
+    defaultVariants: {
+      size: 'md',
+    },
+  },
+);
 
-  const containerClasses = fullScreen
-    ? 'fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50'
-    : 'flex items-center justify-center';
+export interface LoaderProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof loaderVariants> {}
 
-  return (
-    <div className={containerClasses}>
+const Loader = React.forwardRef<HTMLDivElement, LoaderProps>(
+  ({ className, size, ...props }, ref) => {
+    return (
       <div
-        className={`${sizeClasses[size]} animate-spin rounded-full border-4 border-blue-200 border-t-blue-600`}
+        ref={ref}
+        className={cn(loaderVariants({ size }), className)}
         role="status"
         aria-label="Загрузка"
+        {...props}
       >
         <span className="sr-only">Загрузка...</span>
       </div>
-    </div>
-  );
-};
+    );
+  },
+);
+Loader.displayName = 'Loader';
+
+export { Loader };

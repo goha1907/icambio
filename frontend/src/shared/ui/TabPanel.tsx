@@ -1,60 +1,55 @@
-import { useState, useEffect } from 'react';
+'use client';
 
-interface Tab {
-  id: string;
-  label: string;
-  content: React.ReactNode;
-}
+import * as React from 'react';
+import * as TabsPrimitive from '@radix-ui/react-tabs';
 
-interface TabPanelProps {
-  tabs: Tab[];
-  defaultTab?: string;
-  onChange?: (tabId: string) => void;
-}
+import { cn } from '@/lib/utils';
 
-export const TabPanel = ({ tabs, defaultTab, onChange }: TabPanelProps) => {
-  const [activeTab, setActiveTab] = useState(defaultTab || tabs[0].id);
+const Tabs = TabsPrimitive.Root;
 
-  // Обновляем activeTab при изменении defaultTab
-  useEffect(() => {
-    if (defaultTab) {
-      setActiveTab(defaultTab);
-    }
-  }, [defaultTab]);
+const TabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      'inline-flex items-center border-b border-gray-200',
+      className,
+    )}
+    {...props}
+  />
+));
+TabsList.displayName = TabsPrimitive.List.displayName;
 
-  const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId);
-    if (onChange) {
-      onChange(tabId);
-    }
-  };
+const TabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      'inline-flex items-center justify-center whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-gray-600 ring-offset-background transition-colors hover:text-icmop-primary focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-icmop-primary data-[state=active]:text-icmop-primary',
+      className,
+    )}
+    {...props}
+  />
+));
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
-  return (
-    <div>
-      {/* Навигация по вкладкам */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex -mb-px">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id)}
-              className={`
-                py-4 px-6 border-b-2 font-medium text-sm
-                ${
-                  activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+const TabsContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      'mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+      className,
+    )}
+    {...props}
+  />
+));
+TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-      {/* Содержимое вкладки */}
-      <div className="py-4">{tabs.find((tab) => tab.id === activeTab)?.content}</div>
-    </div>
-  );
-};
+export { Tabs, TabsList, TabsTrigger, TabsContent };

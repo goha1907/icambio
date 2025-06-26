@@ -1,124 +1,112 @@
-import React from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { Button } from '@/shared/ui/Button'
-import { Input } from '@/shared/ui/Input'
-
-const registerSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'Email обязателен')
-    .email('Введите корректный email'),
-  password: z
-    .string()
-    .min(6, 'Пароль должен содержать минимум 6 символов'),
-  confirmPassword: z
-    .string()
-    .min(6, 'Подтверждение пароля обязательно'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Пароли не совпадают',
-  path: ['confirmPassword'],
-})
-
-type RegisterFormData = z.infer<typeof registerSchema>
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import {
+  registerSchema,
+  RegisterFormData,
+} from '@/shared/validation/auth';
+import { Button } from '@/shared/ui/Button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/ui/Form';
+import { Input } from '@/shared/ui/Input';
 
 export const RegisterForm: React.FC = () => {
-  const navigate = useNavigate()
-  const { register: registerUser, isLoading } = useAuth()
+  const navigate = useNavigate();
+  const { register: registerUser, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
+  const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-  })
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
   const onSubmit = async (data: RegisterFormData) => {
-    const result = await registerUser(data)
-    
-    if (result.success) {
-      if (result.needsConfirmation) {
-        // Показать сообщение о необходимости подтверждения email
-        navigate('/confirm-email')
-      } else {
-        navigate('/')
-      }
+    setError(null);
+    const result = await registerUser(data);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      navigate('/confirm-email');
     }
-  }
+  };
 
   return (
-    <div className="auth-container">
-      <div className="auth-form">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Регистрация
-          </h2>
-          <p className="text-gray-600 mb-8">
-            Создайте новый аккаунт
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              {...register('email')}
-              placeholder="example@mail.com"
-              error={errors.email?.message}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password" className="form-label">
-              Пароль
-            </label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              {...register('password')}
-              placeholder="••••••••"
-              error={errors.password?.message}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">
-              Подтверждение пароля
-            </label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              {...register('confirmPassword')}
-              placeholder="••••••••"
-              error={errors.confirmPassword?.message}
-            />
-          </div>
-
-          <Button type="submit" className="btn-primary w-full" disabled={isLoading}>
+    <div className="space-y-4">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold">Регистрация</h1>
+        <p className="text-gray-500">
+          Уже есть аккаунт?{' '}
+          <Link
+            to="/login"
+            className="font-medium text-primary hover:underline"
+          >
+            Войти
+          </Link>
+        </p>
+      </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {error && <p className="text-destructive text-sm">{error}</p>}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="you@example.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Пароль</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Подтвердите пароль</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
           </Button>
         </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Уже есть аккаунт?{' '}
-            <Link to="/login" className="form-link font-medium">
-              Войти
-            </Link>
-          </p>
-        </div>
-      </div>
+      </Form>
     </div>
-  )
-}
+  );
+}; 

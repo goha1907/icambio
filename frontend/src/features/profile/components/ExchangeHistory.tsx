@@ -1,5 +1,13 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
-import { Table } from '@/shared/ui/Table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/Table';
+import { cn } from '@/lib/utils';
 
 interface Exchange {
   id: string;
@@ -15,43 +23,19 @@ interface ExchangeHistoryProps {
   exchanges: Exchange[];
 }
 
-export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
-  const columns = [
-    {
-      key: 'date' as keyof Exchange,
-      header: 'Дата',
-      render: (value: string | number) => new Date(value as string).toLocaleDateString(),
-    },
-    {
-      key: 'fromAmount' as keyof Exchange,
-      header: 'Отправлено',
-      render: (value: string | number, item: Exchange) => `${value} ${item.fromCurrency}`,
-    },
-    {
-      key: 'toAmount' as keyof Exchange,
-      header: 'Получено',
-      render: (value: string | number, item: Exchange) => `${value} ${item.toCurrency}`,
-    },
-    {
-      key: 'status' as keyof Exchange,
-      header: 'Статус',
-      render: (value: string | number) => {
-        const status = value as Exchange['status'];
-        const statusStyles = {
-          pending: 'text-yellow-600',
-          completed: 'text-green-600',
-          cancelled: 'text-red-600',
-        };
-        const statusText = {
-          pending: 'В обработке',
-          completed: 'Выполнен',
-          cancelled: 'Отменен',
-        };
-        return <span className={statusStyles[status]}>{statusText[status]}</span>;
-      },
-    },
-  ];
+const statusStyles: Record<Exchange['status'], string> = {
+  pending: 'text-amber-600 bg-amber-100/60',
+  completed: 'text-green-600 bg-green-100/60',
+  cancelled: 'text-red-600 bg-red-100/60',
+};
 
+const statusText: Record<Exchange['status'], string> = {
+  pending: 'В обработке',
+  completed: 'Выполнен',
+  cancelled: 'Отменен',
+};
+
+export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
   return (
     <Card>
       <CardHeader>
@@ -59,9 +43,47 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
       </CardHeader>
       <CardContent>
         {exchanges.length > 0 ? (
-          <Table data={exchanges} columns={columns} />
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Дата</TableHead>
+                  <TableHead>Отправлено</TableHead>
+                  <TableHead>Получено</TableHead>
+                  <TableHead className="text-right">Статус</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {exchanges.map((exchange) => (
+                  <TableRow key={exchange.id}>
+                    <TableCell>
+                      {new Date(exchange.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {exchange.fromAmount} {exchange.fromCurrency}
+                    </TableCell>
+                    <TableCell>
+                      {exchange.toAmount} {exchange.toCurrency}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-0.5 text-xs font-medium',
+                          statusStyles[exchange.status],
+                        )}
+                      >
+                        {statusText[exchange.status]}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         ) : (
-          <p className="text-center text-gray-500 py-4">У вас пока нет выполненных обменов</p>
+          <p className="py-4 text-center text-gray-500">
+            У вас пока нет выполненных обменов
+          </p>
         )}
       </CardContent>
     </Card>

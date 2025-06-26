@@ -55,4 +55,27 @@ export interface ExchangeState {
   rates: ExchangeRate[];
   loading: boolean;
   error: string | null;
+}
+
+export interface IExchangePair {
+  fromCurrency: string;
+  toCurrency: string;
+  amount: number;
+  result?: number;
+}
+
+export interface IOrder {
+  id: string;
+  status: 'new' | 'processing' | 'completed' | 'cancelled';
+  createdAt: string;
+  pairs: IExchangePair[];
+  totalFromAmount: number;
+  trackingUrl: string;
+  contactInfo: {
+    whatsapp?: string;
+    telegram?: string;
+    delivery: boolean;
+    address?: string;
+    comment?: string;
+  };
 } 

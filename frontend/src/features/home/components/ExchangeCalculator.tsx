@@ -1,42 +1,68 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
 import { Button } from '@/shared/ui/Button';
 import { CurrencyPairForm } from '@/features/exchange/components/CurrencyPairForm';
 
+const calculatorSchema = z.object({
+  pairs: z.array(
+    z.object({
+      fromCurrency: z.string(),
+      toCurrency: z.string(),
+      amount: z.number().optional(),
+      result: z.number().optional(),
+    })
+  ).min(1),
+});
+
+type CalculatorFormData = z.infer<typeof calculatorSchema>;
+
 interface ExchangeCalculatorProps {
-  onCreateOrder?: () => void;
   simplified?: boolean;
 }
 
 // Быстрые пары для обмена
 const QUICK_PAIRS = [
-  { from: 'USDT', to: 'ARS', name: 'USDT → ARS' },
-  { from: 'USDT', to: 'USD', name: 'USDT → USD cash' },
+  { fromCurrency: 'USDT', toCurrency: 'ARS', name: 'USDT → ARS' },
+  { fromCurrency: 'USDT', toCurrency: 'USD', name: 'USDT → USD cash' },
 ];
 
 export const ExchangeCalculator = ({
-  onCreateOrder,
   simplified = false,
 }: ExchangeCalculatorProps) => {
   const navigate = useNavigate();
-  const [activePair, setActivePair] = useState(QUICK_PAIRS[0]);
-  const [exchangeData, setExchangeData] = useState({ fromAmount: 0, toAmount: 0, rate: 0 });
+  const [activePairIndex, setActivePairIndex] = useState(0);
+  
+  const form = useForm<CalculatorFormData>({
+    resolver: zodResolver(calculatorSchema),
+    defaultValues: {
+      pairs: [QUICK_PAIRS[0]],
+    },
+  });
+  
+  const { watch, setValue, handleSubmit, formState } = form;
+  const pairs = watch("pairs");
+  const currentPair = pairs?.[0] || {};
 
-  const handleCreateOrder = () => {
-    if (onCreateOrder) {
-      onCreateOrder();
-    } else {
-      if (activePair.from && activePair.to && exchangeData.fromAmount > 0) {
-        localStorage.setItem('exchangeCalculatorData', JSON.stringify({
-          fromCurrency: activePair.from,
-          toCurrency: activePair.to,
-          fromAmount: exchangeData.fromAmount,
-          toAmount: exchangeData.toAmount,
-          rate: exchangeData.rate,
-          timestamp: new Date().toISOString(),
-        }));
-        navigate('/exchange');
-      }
+  useEffect(() => {
+    const selectedPair = QUICK_PAIRS[activePairIndex];
+    setValue("pairs.0.fromCurrency", selectedPair.fromCurrency);
+    setValue("pairs.0.toCurrency", selectedPair.toCurrency);
+    setValue("pairs.0.amount", undefined);
+    setValue("pairs.0.result", undefined);
+  }, [activePairIndex, setValue]);
+
+  const handleCreateOrder = (data: CalculatorFormData) => {
+    const orderData = data.pairs[0];
+    if (orderData.fromCurrency && orderData.toCurrency && (orderData.amount || 0) > 0) {
+      localStorage.setItem('exchangeCalculatorData', JSON.stringify({
+        ...orderData,
+        timestamp: new Date().toISOString(),
+      }));
+      navigate('/exchange');
     }
   };
 
@@ -49,8 +75,8 @@ export const ExchangeCalculator = ({
             {QUICK_PAIRS.map((pair, index) => (
               <Button
                 key={index}
-                variant={activePair.name === pair.name ? "primary" : "secondary"}
-                onClick={() => setActivePair(pair)}
+                variant={activePairIndex === index ? "primary" : "secondary"}
+                onClick={() => setActivePairIndex(index)}
               >
                 {pair.name}
               </Button>
@@ -58,25 +84,28 @@ export const ExchangeCalculator = ({
           </div>
         </>
       )}
+      
+      <FormProvider {...form}>
+        <form onSubmit={handleSubmit(handleCreateOrder)}>
+          <CurrencyPairForm
+            index={0}
+            isRemovable={false}
+            onRemove={() => {}}
+          />
 
-      <CurrencyPairForm
-        key={activePair.name} // rerender on pair change
-        initialFromCurrency={activePair.from}
-        initialToCurrency={activePair.to}
-        onRateUpdate={(data) => setExchangeData(data as any)}
-      />
-
-      {!simplified && (
-        <div className="flex justify-end mt-8">
-          <Button 
-            onClick={handleCreateOrder}
-            disabled={!activePair.from || !activePair.to || !exchangeData.fromAmount || exchangeData.fromAmount <= 0}
-            className="btn-primary w-full sm:w-auto"
-          >
-            Заказать обмен
-          </Button>
-        </div>
-      )}
+          {!simplified && (
+            <div className="flex justify-end mt-8">
+              <Button 
+                type="submit"
+                disabled={!currentPair.amount || currentPair.amount <= 0 || !formState.isValid}
+                className="w-full sm:w-auto"
+              >
+                Заказать обмен
+              </Button>
+            </div>
+          )}
+        </form>
+      </FormProvider>
     </div>
   );
 };
