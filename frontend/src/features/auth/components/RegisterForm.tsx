@@ -6,7 +6,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
-import { Card } from '@/shared/ui/Card'
 
 const registerSchema = z.object({
   email: z
@@ -52,91 +51,73 @@ export const RegisterForm: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <Card className="p-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Регистрация
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Создайте новый аккаунт
-            </p>
+    <div className="auth-container">
+      <div className="auth-form">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Регистрация
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Создайте новый аккаунт
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              {...register('email')}
+              placeholder="example@mail.com"
+              error={errors.email?.message}
+            />
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <Input
-                id="email"
-        type="email"
-                autoComplete="email"
-                {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
-                placeholder="example@mail.com"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Пароль
-              </label>
-              <Input
-                id="password"
-        type="password"
-                autoComplete="new-password"
-                {...register('password')}
-                className={errors.password ? 'border-red-500' : ''}
-                placeholder="••••••••"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Подтверждение пароля
-              </label>
-              <Input
-                id="confirmPassword"
-        type="password"
-                autoComplete="new-password"
-                {...register('confirmPassword')}
-                className={errors.confirmPassword ? 'border-red-500' : ''}
-                placeholder="••••••••"
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
-      </Button>
-    </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Уже есть аккаунт?{' '}
-              <Link
-                to="/login"
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Войти
-              </Link>
-            </p>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              Пароль
+            </label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              {...register('password')}
+              placeholder="••••••••"
+              error={errors.password?.message}
+            />
           </div>
-        </Card>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword" className="form-label">
+              Подтверждение пароля
+            </label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              {...register('confirmPassword')}
+              placeholder="••••••••"
+              error={errors.confirmPassword?.message}
+            />
+          </div>
+
+          <Button type="submit" className="btn-primary w-full" disabled={isLoading}>
+            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
+            Уже есть аккаунт?{' '}
+            <Link to="/login" className="form-link font-medium">
+              Войти
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
