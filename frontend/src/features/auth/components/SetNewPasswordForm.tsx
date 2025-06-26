@@ -1,93 +1,80 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Input } from '@/shared/ui/Input';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+
 import { Button } from '@/shared/ui/Button';
-import { Alert } from '@/shared/ui/Alert';
-import { Loader } from '@/shared/ui/Loader';
-import { supabase } from '@/config/supabase';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/ui/Form';
+import { Input } from '@/shared/ui/Input';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import {
+  setNewPasswordSchema,
+  SetNewPasswordFormData,
+} from '@/shared/validation/auth';
 
-const setNewPasswordSchema = z
-  .object({
-    token: z.string().min(1, 'Токен обязателен'),
-    uid: z.string().min(1, 'UID обязателен'),
-    newPassword: z.string().min(6, 'Новый пароль должен содержать минимум 6 символов'),
-    confirmNewPassword: z.string().min(1, 'Подтвердите новый пароль'),
-  })
-  .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: 'Пароли не совпадают',
-    path: ['confirmNewPassword'],
-  });
-
-type SetNewPasswordFormData = z.infer<typeof setNewPasswordSchema>;
-
-interface SetNewPasswordFormProps {
-  onPasswordSet: () => void;
-}
-
-export const SetNewPasswordForm = ({ onPasswordSet }: SetNewPasswordFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const SetNewPasswordForm = () => {
+  const navigate = useNavigate();
+  const { changePassword, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<SetNewPasswordFormData>({
+  const form = useForm<SetNewPasswordFormData>({
     resolver: zodResolver(setNewPasswordSchema),
+    defaultValues: { password: '', confirmPassword: '' },
   });
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setValue('token', params.get('token') || '');
-    setValue('uid', params.get('uid') || '');
-  }, [setValue]);
 
   const onSubmit = async (data: SetNewPasswordFormData) => {
-    setIsSubmitting(true);
     setError(null);
-    try {
-      const { error: supabaseError } = await supabase.auth.updateUser({
-        password: data.newPassword,
-      });
-
-      if (supabaseError) {
-        throw new Error(supabaseError.message);
-      }
-      setIsSuccess(true);
-      await supabase.auth.signOut();
-      onPasswordSet();
-    } catch (err: any) {
-      setError(err.message || 'Не удалось установить новый пароль');
-    } finally {
-      setIsSubmitting(false);
+    const result = await changePassword(data.password);
+    if (result.error) {
+      setError(result.error);
+    } else {
+      toast.success('Пароль успешно установлен!');
+      navigate('/login');
     }
   };
 
-  if (isSuccess) {
-    return (
-      <Alert type="success" className="text-center">
-        Ваш пароль успешно обновлен. Теперь вы можете войти, используя новый пароль.
-      </Alert>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <Input
-        label="Новый пароль"
-        type="password"
-        {...register('newPassword')}
-        error={errors.newPassword?.message}
-      />
-      <Input
-        label="Повторите новый пароль"
-        type="password"
-        {...register('confirmNewPassword')}
-        error={errors.confirmNewPassword?.message}
-      />
-      {error && <Alert type="destructive">{error}</Alert>}
-      <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? <Loader /> : 'Установить новый пароль'}
-      </Button>
-    </form>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {error && <p className="text-destructive text-sm">{error}</p>}
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Новый пароль</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Подтвердите пароль</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? 'Сохранение...' : 'Сохранить пароль'}
+        </Button>
+      </form>
+    </Form>
   );
 }; 

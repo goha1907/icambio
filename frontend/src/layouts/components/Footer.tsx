@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from '@/shared/ui/Link';
 
 export const Footer = () => {
   return (

@@ -1,73 +1,83 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, Link } from 'react-router-dom';
-import { resetPasswordSchema, ResetPasswordFormData } from '@/shared/validation/auth';
-import { Input } from '@/shared/ui/Input';
+import {
+  resetPasswordSchema,
+  ResetPasswordFormData,
+} from '@/shared/validation/auth';
+import { useAuth } from '../hooks/useAuth';
 import { Button } from '@/shared/ui/Button';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import { useState } from 'react';
-import { Alert } from '@/shared/ui/Alert';
+import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/Alert';
+import { Link } from '@/shared/ui/Link';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/ui/Form';
+import { Input } from '@/shared/ui/Input';
 
 export const ResetPasswordForm = () => {
-  const navigate = useNavigate();
-  const { resetPassword } = useAuth();
-  const [error, setError] = useState<string>('');
+  const { resetPassword, isLoading } = useAuth();
+  const [error] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<ResetPasswordFormData>({
+  const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { email: '' },
   });
 
   const onSubmit = async (data: ResetPasswordFormData) => {
-    try {
-      setError('');
-      const result = await resetPassword(data.email);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        // Перенаправляем на страницу подтверждения
-        // Примечание: Supabase не раскрывает информацию о существовании email из соображений безопасности
-        navigate('/reset-password-sent');
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Не удалось отправить инструкции по сбросу пароля');
-    }
+    void resetPassword(data.email);
   };
 
   return (
     <div className="auth-container">
       <div className="auth-form">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Восстановление пароля</h2>
-          <p className="text-gray-600">
-            Введите ваш email, и мы отправим инструкции для сброса пароля.
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Сброс пароля
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Введите ваш email, и мы вышлем инструкцию
           </p>
         </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="form-group">
-            <Input
-              label="Email"
-              type="email"
-              {...register('email')}
-              error={errors.email?.message}
-              placeholder="example@mail.com"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Ошибка</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="you@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          {error && <Alert type="destructive">{error}</Alert>}
-
-          <Button type="submit" className="btn-primary w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Отправка...' : 'Сбросить пароль'}
-          </Button>
-        </form>
-
+            
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Отправка...' : 'Сбросить пароль'}
+            </Button>
+          </form>
+        </Form>
         <div className="mt-6 text-center">
-          <Link to="/login" className="form-link">
-            Вернуться к входу
+          <Link to="/login" size="sm">
+            Вернуться ко входу
           </Link>
         </div>
       </div>

@@ -1,157 +1,125 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { profileSchema } from '@/shared/validation/profile';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
+import toast from 'react-hot-toast';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import {
+  profileSchema,
+  ProfileFormData,
+} from '@/shared/validation/profile';
 import { Button } from '@/shared/ui/Button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/ui/Form';
 import { Input } from '@/shared/ui/Input';
 import { PageTitle } from '@/shared/ui/PageTitle';
-import { useAuth } from '@/features/auth/hooks/useAuth';
-import type { ProfileUpdateData } from '@/types';
-import toast from 'react-hot-toast';
-import { useState } from 'react';
-
-const formatWhatsApp = (url: string | undefined): string => {
-  if (!url) return '';
-  if (url.startsWith('https://wa.me/')) {
-    return url.replace('https://wa.me/', '');
-  }
-  return url;
-};
-
-const formatTelegram = (url: string | undefined): string => {
-  if (!url) return '';
-  if (url.startsWith('https://t.me/')) {
-    return '@' + url.replace('https://t.me/', '');
-  }
-  if (!url.startsWith('@') && url !== '') {
-    return '@' + url;
-  }
-  return url;
-};
 
 export const EditProfilePage = () => {
-  const { user, updateProfile } = useAuth();
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user, updateProfile, isLoading } = useAuth();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ProfileUpdateData>({
+  const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      username: user?.username || '',
       first_name: user?.first_name || '',
       last_name: user?.last_name || '',
-      whatsapp: formatWhatsApp(user?.whatsapp),
-      telegram: formatTelegram(user?.telegram),
+      username: user?.username || '',
+      whatsapp: user?.whatsapp || '',
+      telegram: user?.telegram || '',
     },
   });
 
-  // Поскольку страница защищена AuthGuard, пользователь точно авторизован
-  if (!user) {
-    return (
-      <div className="page-container">
-        <div className="flex justify-center items-center min-h-64">
-          <p>Ошибка загрузки профиля</p>
-        </div>
-      </div>
-    );
-  }
-
-  const onSubmit = async (data: ProfileUpdateData) => {
-    if (!user) return;
-
-    try {
-      setIsSubmitting(true);
-
-      const formatted = {
-        ...data,
-        whatsapp: data.whatsapp
-          ? data.whatsapp.startsWith('https://')
-            ? data.whatsapp
-            : `https://wa.me/${data.whatsapp.replace(/\D/g, '')}`
-          : '',
-        telegram: data.telegram
-          ? data.telegram.startsWith('https://')
-            ? data.telegram
-            : `https://t.me/${data.telegram.replace('@', '')}`
-          : '',
-      };
-
-      const result = await updateProfile(formatted);
-      
-      if (result && result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success('Профиль успешно обновлен');
-        navigate('/profile');
-      }
-    } catch (error) {
-      toast.error('Не удалось обновить профиль');
-    } finally {
-      setIsSubmitting(false);
+  const onSubmit = async (data: ProfileFormData) => {
+    const result = await updateProfile(data);
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success('Профиль успешно обновлен!');
     }
   };
 
   return (
-    <div className="page-container">
-      <div className="max-w-2xl mx-auto">
-        <PageTitle title="Редактирование профиля" description="Измените ваши личные данные" />
+    <div className="container mx-auto py-8">
+      <PageTitle title="Редактирование профиля" />
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="mt-6 max-w-lg mx-auto space-y-4"
+        >
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Имя пользователя</FormLabel>
+                <FormControl>
+                  <Input placeholder="yourname" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="first_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Имя</FormLabel>
+                <FormControl>
+                  <Input placeholder="Иван" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="last_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Фамилия</FormLabel>
+                <FormControl>
+                  <Input placeholder="Иванов" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="whatsapp"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>WhatsApp</FormLabel>
+                <FormControl>
+                  <Input placeholder="+79991234567" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="telegram"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telegram</FormLabel>
+                <FormControl>
+                  <Input placeholder="@your_telegram" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Личные данные</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Email</label>
-                    <p className="mt-1 p-2 bg-gray-50 rounded-md">{user.email}</p>
-                  </div>
-                </div>
-
-                <Input label="Никнейм" {...register('username')} error={errors.username?.message} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Имя" {...register('first_name')} error={errors.first_name?.message} />
-                <Input label="Фамилия" {...register('last_name')} error={errors.last_name?.message} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="WhatsApp"
-                  placeholder="+79123456789"
-                  {...register('whatsapp')}
-                  error={errors.whatsapp?.message}
-                  helperText="Введите номер телефона с кодом страны"
-                />
-                <Input
-                  label="Telegram"
-                  placeholder="@username"
-                  {...register('telegram')}
-                  error={errors.telegram?.message}
-                  helperText="Введите ваш @username в Telegram"
-                />
-              </div>
-
-              <div className="flex justify-between space-x-4">
-                <Button type="button" variant="secondary" onClick={() => navigate('/profile')}>
-                  Отмена
-                </Button>
-                <Button type="submit" variant="primary" disabled={isSubmitting}>
-                  {isSubmitting ? 'Сохранение...' : 'Сохранить изменения'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 }; 
