@@ -18,7 +18,7 @@ export const ReviewsPage = () => {
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
             {isLoading && <p>Загрузка отзывов...</p>}
             {isError && <p>Ошибка загрузки отзывов.</p>}
-            {reviews && <ReviewsCarousel reviews={reviews} />}
+            {reviews && <ReviewsCarousel />}
           </div>
 
           <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">

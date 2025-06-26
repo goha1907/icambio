@@ -17,7 +17,7 @@ export const ProfilePage = () => {
     navigate(`/profile?tab=${tabId}`, { replace: true });
   };
 
-  console.log('ProfilePage: Rendering with user:', user?.email);
+
 
   // Поскольку страница защищена AuthGuard, пользователь точно авторизован
   if (!user) {

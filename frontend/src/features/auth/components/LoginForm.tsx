@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
-import { Card } from '@/shared/ui/Card'
+
 
 const loginSchema = z.object({
   email: z
@@ -41,9 +41,8 @@ export const LoginForm: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <Card className="p-8">
+    <div className="auth-container">
+      <div className="auth-form">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Вход в систему
@@ -54,44 +53,38 @@ export const LoginForm: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
                 Email
               </label>
               <Input
                 id="email"
-        type="email"
+                type="email"
                 autoComplete="email"
                 {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
                 placeholder="example@mail.com"
+                error={errors.email?.message}
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
                 Пароль
               </label>
               <Input
                 id="password"
-        type="password"
+                type="password"
                 autoComplete="current-password"
                 {...register('password')}
-                className={errors.password ? 'border-red-500' : ''}
                 placeholder="••••••••"
+                error={errors.password?.message}
               />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
             </div>
 
             <div className="flex items-center justify-between">
               <Link
                 to="/reset-password"
-                className="text-sm text-blue-600 hover:text-blue-500"
+                className="form-link"
               >
                 Забыли пароль?
               </Link>
@@ -99,11 +92,11 @@ export const LoginForm: React.FC = () => {
 
             <Button
               type="submit"
-              className="w-full"
+              className="btn-primary w-full"
               disabled={isLoading}
             >
               {isLoading ? 'Вход...' : 'Войти'}
-      </Button>
+            </Button>
     </form>
 
           <div className="mt-6 text-center">
@@ -111,14 +104,13 @@ export const LoginForm: React.FC = () => {
               Нет аккаунта?{' '}
               <Link
                 to="/register"
-                className="font-medium text-blue-600 hover:text-blue-500"
+                className="form-link font-medium"
               >
                 Зарегистрироваться
               </Link>
             </p>
           </div>
-        </Card>
-      </div>
+        </div>
     </div>
   )
 }

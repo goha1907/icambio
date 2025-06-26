@@ -2,11 +2,6 @@ import { z } from 'zod';
 import type { Currency } from '@/features/exchange/types';
 import { CURRENCY_DECIMALS } from '@/features/exchange/types';
 
-// Функция для определения количества знаков после запятой
-const getDecimalPlaces = (currency: Currency): number => {
-  return currency.type === 'fiat' ? CURRENCY_DECIMALS.fiat : CURRENCY_DECIMALS.crypto;
-};
-
 // Схема для одной пары обмена
 export const exchangePairSchema = z
   .object({
@@ -23,7 +18,16 @@ export const exchangePairSchema = z
 // Схема для заказа
 export const exchangeOrderSchema = z
   .object({
-    exchangePairs: z.array(exchangePairSchema).min(1, 'Добавьте хотя бы одну валютную пару'),
+    exchangePairs: z
+      .array(
+        z.object({
+          fromCurrency: z.string().min(1, 'Выберите валюту отправления'),
+          toCurrency: z.string().min(1, 'Выберите валюту получения'),
+          fromAmount: z.number().min(0.01, 'Введите сумму отправления'),
+          toAmount: z.number().min(0.01, 'Введите сумму получения'),
+        })
+      )
+      .min(1, 'Добавьте хотя бы одну валютную пару'),
 
     totalFromAmount: z.number().positive('Общая сумма должна быть больше 0'),
 
@@ -63,7 +67,7 @@ export type ExchangePairFormData = z.infer<typeof exchangePairSchema>;
 export type ExchangeOrderFormData = z.infer<typeof exchangeOrderSchema>;
 
 // Хелпер для форматирования суммы с учетом типа валюты
-export const formatAmount = (amount: number, currency: Currency): string => {
-  const decimals = getDecimalPlaces(currency);
-  return amount.toFixed(decimals);
+export const formatAmount = (amount: number, currency: Currency): number => {
+  const decimals = currency.is_crypto ? CURRENCY_DECIMALS.crypto : CURRENCY_DECIMALS.fiat;
+  return parseFloat(amount.toFixed(decimals));
 };

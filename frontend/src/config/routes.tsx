@@ -16,7 +16,6 @@ const RatesPage = lazy(() => import('../pages/static/RatesPage').then(module => 
 const ReviewsPage = lazy(() => import('../pages/static/ReviewsPage').then(module => ({ default: module.ReviewsPage })));
 const DeliveryPage = lazy(() => import('../pages/static/DeliveryPage').then(module => ({ default: module.DeliveryPage })));
 const WorkingHoursPage = lazy(() => import('../pages/static/WorkingHoursPage').then(module => ({ default: module.WorkingHoursPage })));
-const EmailConfirmedPage = lazy(() => import('../pages/auth/EmailConfirmedPage').then(module => ({ default: module.EmailConfirmedPage })));
 
 // Компонент для оборачивания отложенной загрузки
 const LazyComponent = ({ component: Component }: { component: React.ComponentType<any> }) => (
@@ -35,7 +34,8 @@ const mainRoutes: RouteObject[] = [
   { path: 'reviews', element: <LazyComponent component={ReviewsPage} /> },
   { path: 'delivery', element: <LazyComponent component={DeliveryPage} /> },
   { path: 'working-hours', element: <LazyComponent component={WorkingHoursPage} /> },
-  { path: 'email-confirmed', element: <LazyComponent component={EmailConfirmedPage} /> },
+  // Добавляем страницу обмена в публичные маршруты
+  ...exchangeRoutes,
 ];
 
 // Защищенные маршруты
@@ -43,7 +43,7 @@ const protectedRoutes: RouteObject[] = [
   {
     path: '',
     element: <AuthGuard />,
-    children: [...exchangeRoutes, ...profileRoutes],
+    children: [...profileRoutes],
   },
 ];
 

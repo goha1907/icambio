@@ -59,8 +59,12 @@ export type FormFieldProps<T extends FieldValues> = FormInputProps<T> & {
 
 export interface Review {
   id?: string;
-  display_name: string;
-  created_at: string;
+  user: {
+    id: string;
+    name: string;
+    lastname: string;
+  };
   rating: number;
-  text: string;
+  comment: string;
+  created_at: string;
 }

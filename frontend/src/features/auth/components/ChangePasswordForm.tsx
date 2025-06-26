@@ -5,7 +5,7 @@ import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Alert } from '@/shared/ui/Alert';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 
@@ -39,49 +39,66 @@ export const ChangePasswordForm = () => {
         // Перенаправляем на профиль согласно требованиям
         navigate('/profile');
       }
-    } catch (err: any) {
-      const errorMessage = err.message || 'Не удалось изменить пароль';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Не удалось изменить пароль';
       setError(errorMessage);
       toast.error(errorMessage);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {error && <Alert type="error">{error}</Alert>}
-      
-      <div className="form-group">
-        <Input
-          type="password"
-          label="Текущий пароль"
-          {...register('oldPassword')}
-          error={errors.oldPassword?.message}
-        />
+    <div className="auth-container">
+      <div className="auth-form">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Изменение пароля</h2>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && <Alert type="destructive">{error}</Alert>}
+
+          <div className="form-group">
+            <Input
+              type="password"
+              label="Текущий пароль"
+              {...register('oldPassword')}
+              error={errors.oldPassword?.message}
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div className="form-group">
+            <Input
+              type="password"
+              label="Новый пароль"
+              {...register('newPassword')}
+              error={errors.newPassword?.message}
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div className="form-group">
+            <Input
+              type="password"
+              label="Подтверждение нового пароля"
+              {...register('confirmNewPassword')}
+              error={errors.confirmNewPassword?.message}
+              placeholder="••••••••"
+            />
+          </div>
+
+          {errors.root && <Alert type="destructive">{errors.root.message}</Alert>}
+
+          <Button type="submit" className="btn-primary w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Изменение...' : 'Изменить пароль'}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <Link to="/profile" className="form-link">
+            Вернуться в профиль
+          </Link>
+        </div>
       </div>
-
-      <div className="form-group">
-        <Input
-          type="password"
-          label="Новый пароль"
-          {...register('newPassword')}
-          error={errors.newPassword?.message}
-        />
-      </div>
-
-      <div className="form-group">
-        <Input
-          type="password"
-          label="Подтверждение нового пароля"
-          {...register('confirmNewPassword')}
-          error={errors.confirmNewPassword?.message}
-        />
-      </div>
-
-      {errors.root && <Alert type="error">{errors.root.message}</Alert>}
-
-      <Button type="submit" variant="primary" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Изменение пароля...' : 'Изменить пароль'}
-      </Button>
-    </form>
+    </div>
   );
 };

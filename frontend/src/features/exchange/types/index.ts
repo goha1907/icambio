@@ -2,8 +2,22 @@ export interface Currency {
   code: string;
   name: string;
   symbol: string;
-  type: 'fiat' | 'crypto';
-  decimals: number;
+  is_crypto: boolean;
+  decimal_digits: number;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  lastname: string;
+}
+
+export interface Review {
+  id: string;
+  user: User;
+  rating: number;
+  comment: string;
+  created_at: string;
 }
 
 export const CURRENCY_DECIMALS = {

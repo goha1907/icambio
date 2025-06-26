@@ -1,22 +1,23 @@
 // import { useMemo } from 'react';
-import { PageTitle } from '@/shared/ui/PageTitle';
 import { ExchangeRatesTable } from '@/features/exchange/components/ExchangeRatesTable';
-import { useExchangeRates } from '@/features/exchange/hooks/useExchangeRate';
+import { PageTitle } from '@/shared/ui/PageTitle';
+import { Card, CardContent } from '@/shared/ui/Card';
+import { MOCK_EXCHANGE_RATES } from '@/lib/mock-data';
 
 export const RatesPage = () => {
-  const { data: rates, isLoading, isError } = useExchangeRates();
+  const rates = MOCK_EXCHANGE_RATES; // Использование моковых данных напрямую
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <PageTitle 
-          title="Текущие курсы обмена" 
-          description="Актуальные курсы обмена валют на сегодня"
-        />
-        {isLoading && <p>Загрузка курсов...</p>}
-        {isError && <p>Ошибка загрузки курсов.</p>}
-        {rates && <ExchangeRatesTable rates={rates} />}
-      </div>
+    <div className="container mx-auto py-8 px-4">
+      <PageTitle
+        title="Курсы обмена"
+        description="Актуальные курсы обмена и лимиты по различным направлениям."
+      />
+      <Card className="w-full max-w-6xl mx-auto bg-white shadow-lg rounded-xl">
+        <CardContent className="p-0">
+          {rates && <ExchangeRatesTable />}
+        </CardContent>
+      </Card>
     </div>
   );
 }; 

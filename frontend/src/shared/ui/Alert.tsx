@@ -1,38 +1,42 @@
-import { ReactNode } from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import { XCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
 
-type AlertType = 'info' | 'success' | 'warning' | 'error';
+const alertVariants = cva(
+  "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  {
+    variants: {
+      variant: {
+        default: "bg-background text-foreground",
+        destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        success: "border-emerald-500/50 text-emerald-700 dark:border-emerald-500 [&>svg]:text-emerald-500",
+        info: "border-blue-500/50 text-blue-700 dark:border-blue-500 [&>svg]:text-blue-500",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
-interface AlertProps {
-  type: AlertType;
-  children: ReactNode;
-  dismissible?: boolean;
-  onDismiss?: () => void;
+interface AlertProps extends VariantProps<typeof alertVariants> {
+  children: React.ReactNode;
+  type?: "default" | "destructive" | "success" | "info";
+  className?: string;
 }
 
-export const Alert = ({ type, children, dismissible, onDismiss }: AlertProps) => {
-  const styles = {
-    info: 'bg-blue-50 text-blue-800 border-blue-200',
-    success: 'bg-green-50 text-green-800 border-green-200',
-    warning: 'bg-yellow-50 text-yellow-800 border-yellow-200',
-    error: 'bg-red-50 text-red-800 border-red-200',
-  };
+export const Alert = ({ children, type = "default", className }: AlertProps) => {
+  const Icon = {
+    destructive: XCircle,
+    success: CheckCircle,
+    info: Info,
+    default: AlertTriangle,
+  }[type];
 
   return (
-    <div
-      className={`p-4 mb-4 border rounded-lg flex justify-between items-start ${styles[type]}`}
-      role="alert"
-    >
+    <div role="alert" className={cn(alertVariants({ variant: type }), className)}>
+      {Icon && <Icon className="h-4 w-4" />}
       <div>{children}</div>
-
-      {dismissible && (
-        <button
-          onClick={onDismiss}
-          className="ml-4 text-sm font-medium hover:opacity-75"
-          aria-label="Закрыть"
-        >
-          ×
-        </button>
-      )}
     </div>
   );
 };

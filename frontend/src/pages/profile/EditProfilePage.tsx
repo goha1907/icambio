@@ -35,19 +35,6 @@ export const EditProfilePage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log('EditProfilePage: Rendering with user:', user?.email);
-
-  // Поскольку страница защищена AuthGuard, пользователь точно авторизован
-  if (!user) {
-    return (
-      <div className="page-container">
-        <div className="flex justify-center items-center min-h-64">
-          <p>Ошибка загрузки профиля</p>
-        </div>
-      </div>
-    );
-  }
-
   const {
     register,
     handleSubmit,
@@ -62,6 +49,17 @@ export const EditProfilePage = () => {
       telegram: formatTelegram(user?.telegram),
     },
   });
+
+  // Поскольку страница защищена AuthGuard, пользователь точно авторизован
+  if (!user) {
+    return (
+      <div className="page-container">
+        <div className="flex justify-center items-center min-h-64">
+          <p>Ошибка загрузки профиля</p>
+        </div>
+      </div>
+    );
+  }
 
   const onSubmit = async (data: ProfileUpdateData) => {
     if (!user) return;
