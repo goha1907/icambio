@@ -12,8 +12,8 @@ export const ReviewsCarousel = ({ reviews }: ReviewsCarouselProps) => {
           <div key={review.id} className="review-card p-4 bg-gray-50 rounded-lg">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-medium text-gray-900">{review.display_name}</h3>
-                <p className="text-sm text-gray-500">{review.created_at}</p>
+                <h3 className="font-medium text-gray-900">{review.user.name} {review.user.lastname}</h3>
+                <p className="text-sm text-gray-500">{new Date(review.created_at).toLocaleDateString()}</p>
               </div>
               <div className="flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
@@ -23,7 +23,7 @@ export const ReviewsCarousel = ({ reviews }: ReviewsCarouselProps) => {
                 ))}
               </div>
             </div>
-            <p className="mt-3 text-gray-600">{review.text}</p>
+            <p className="mt-3 text-gray-600">{review.comment}</p>
           </div>
         ))}
       </div>

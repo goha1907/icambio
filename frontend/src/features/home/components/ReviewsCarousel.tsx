@@ -1,29 +1,30 @@
 import { useState, useEffect, memo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
-import { Review as GlobalReviewType } from '@/types';
-
-interface Review extends GlobalReviewType {
-  // Дополнительные поля, если нужны для этого компонента, но лучше их не дублировать
-}
+import { Review } from '@/features/exchange/types';
+import { MOCK_REVIEWS } from '@/lib/mock-data';
 
 // Мемоизированный компонент отзыва
 const ReviewItem = memo(({ review }: { review: Review }) => (
-  <div className="bg-gray-50 p-4 rounded-lg">
-    <div className="flex justify-between items-start mb-2">
-      <div className="font-medium">{review.display_name}</div>
-      <div className="flex">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <span
-            key={i}
-            className={i < review.rating ? 'text-yellow-500' : 'text-gray-300'}
-          >
-            ★
-          </span>
-        ))}
+  <div className="bg-gray-50 p-4 rounded-lg h-full flex flex-col justify-between">
+    <div>
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex items-center gap-2">
+          <div className="font-medium">{`${review.user.name} ${review.user.lastname}`}</div>
+        </div>
+        <div className="flex">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span
+              key={i}
+              className={i < review.rating ? 'text-yellow-500' : 'text-gray-300'}
+            >
+              ★
+            </span>
+          ))}
+        </div>
       </div>
+      <p className="text-sm text-gray-600 mb-2">{review.comment}</p>
     </div>
-    <p className="text-sm text-gray-600 mb-2">{review.text}</p>
-    <div className="text-xs text-gray-500">
+    <div className="text-xs text-gray-500 mt-2 text-right">
       {new Date(review.created_at).toLocaleDateString()}
     </div>
   </div>
@@ -32,16 +33,15 @@ const ReviewItem = memo(({ review }: { review: Review }) => (
 ReviewItem.displayName = 'ReviewItem';
 
 interface ReviewsCarouselProps {
-  reviews: Review[];
   autoplayInterval?: number;
   visibleItems?: number;
 }
 
 export const ReviewsCarousel = ({
-  reviews,
   autoplayInterval = 10000,
   visibleItems = 3,
 }: ReviewsCarouselProps) => {
+  const reviews = MOCK_REVIEWS;
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Автоматическое перелистывание
