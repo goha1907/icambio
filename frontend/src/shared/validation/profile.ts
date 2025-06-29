@@ -32,6 +32,12 @@ export const profileSchema = z.object({
     .regex(/^@?[a-zA-Z0-9_]{5,32}$/, 'Введите корректный username Telegram')
     .optional()
     .or(z.literal('')),
+
+  preferred_delivery_address: z
+    .string()
+    .min(5, 'Адрес должен содержать минимум 5 символов')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type ProfileFormData = z.infer<typeof profileSchema>;
