@@ -13,7 +13,7 @@ export const exchangeRoutes: RouteObject[] = [
     element: <CreateOrderPage />,
   },
   {
-    path: 'order/:id',
+    path: 'order/:orderId',
     element: <OrderDetailsPage />,
   },
 ];
