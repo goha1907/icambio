@@ -1,5 +1,6 @@
 # flake8: noqa
 import os
+import logging
 from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
@@ -24,8 +25,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
         SECRET_KEY = secrets.token_urlsafe(32)
-        print(
-            "WARNING: SECRET_KEY is not set. Generated a temporary development "
+        logging.warning(
+            "SECRET_KEY is not set. Generated a temporary development "
             "key. Do NOT use this key in production."
         )
     else:
@@ -51,7 +52,6 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
-    'djoser',
     'django_cleanup.apps.CleanupConfig',
 
     # Local apps
@@ -93,11 +93,18 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database configuration
 DATABASE_URL = os.getenv('DATABASE_URL')
+TEST_DATABASE_URL = os.getenv('TEST_DATABASE_URL')
+
 if DATABASE_URL:
     # Используем PostgreSQL от Supabase
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL)
     }
+    # Отдельная тестовая БД, если указана
+    if TEST_DATABASE_URL:
+        DATABASES['default']['TEST'] = {
+            'NAME': dj_database_url.parse(TEST_DATABASE_URL)['NAME']
+        }
 else:
     # Временно используем SQLite для разработки
     DATABASES = {
@@ -124,7 +131,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = 'ru'
+LANGUAGES = [
+    ('ru', 'Russian'),
+    ('en', 'English'),
+]
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_TZ = True
@@ -143,6 +153,22 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Logging configuration for development
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    }
+
 # REST Framework settings with Supabase authentication
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -160,6 +186,12 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# IMPORTANT: Supabase Auth Synchronization
+# Supabase manages auth.users table, but Django has separate users.User model.
+# Make sure to implement auto-creation of users.User in SupabaseJWTAuthentication
+# or SupabaseBackend to avoid AnonymousUser issues when JWT is valid.
+# Alternative: use UUID primary key in users.User that matches Supabase user ID.
+
 # Supabase settings - READ FROM ENVIRONMENT VARIABLES
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
@@ -169,38 +201,17 @@ SUPABASE_JWT_SECRET = os.getenv('SUPABASE_JWT_SECRET')
 # Validate that required Supabase environment variables are set
 # Временно отключено для первоначальной настройки
 if DEBUG and not SUPABASE_URL:
-    print("WARNING: SUPABASE_URL not set - using placeholder")
+    logging.warning("SUPABASE_URL not set - using placeholder")
 elif not DEBUG and not SUPABASE_URL:
     raise ValueError("SUPABASE_URL environment variable is required")
 
 if DEBUG and not SUPABASE_JWT_SECRET:
-    print("WARNING: SUPABASE_JWT_SECRET not set - using placeholder")
+    logging.warning("SUPABASE_JWT_SECRET not set - using placeholder")
 elif not DEBUG and not SUPABASE_JWT_SECRET:
     raise ValueError("SUPABASE_JWT_SECRET environment variable is required")
 
-# Djoser settings (keeping for potential admin use)
-DJOSER = {
-    'LOGIN_FIELD': 'email',
-    'USER_CREATE_PASSWORD_RETYPE': True,
-    'USERNAME_CHANGED_EMAIL_CONFIRMATION': False,
-    'PASSWORD_CHANGED_EMAIL_CONFIRMATION': False,
-    'SEND_CONFIRMATION_EMAIL': False,
-    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
-    'USERNAME_RESET_CONFIRM_URL': 'username/reset/confirm/{uid}/{token}',
-    'ACTIVATION_URL': 'activate/{uid}/{token}',
-    'SEND_ACTIVATION_EMAIL': False,
-    'SERIALIZERS': {
-        'user_create': 'users.serializers.UserCreateSerializer',
-        'user': 'users.serializers.UserSerializer',
-        'current_user': 'users.serializers.UserSerializer',
-    },
-    'EMAIL': {
-        'activation': 'users.email.ActivationEmail',
-        'confirmation': 'users.email.ConfirmationEmail',
-        'password_reset': 'users.email.PasswordResetEmail',
-        'password_changed_confirmation': 'users.email.PasswordChangedConfirmationEmail',
-    },
-}
+# Djoser removed - using Supabase Auth instead
+# All authentication is managed by Supabase, not Django
 
 # CORS настройки
 DEFAULT_CORS_ORIGINS = [
@@ -219,8 +230,14 @@ CORS_ALLOWED_ORIGINS = (
 CORS_ALLOW_CREDENTIALS = True
 
 # Разрешаем все источники **только** когда DEBUG=True и явно установлена переменная ALLOW_ALL_CORS
+# IMPORTANT: Всегда устанавливайте ALLOW_ALL_CORS=False в .env для production/staging
 ALLOW_ALL_CORS = os.getenv('ALLOW_ALL_CORS', 'False') == 'True'
 CORS_ALLOW_ALL_ORIGINS = DEBUG and ALLOW_ALL_CORS
+
+if DEBUG and ALLOW_ALL_CORS:
+    logging.warning("CORS_ALLOW_ALL_ORIGINS is enabled. Do NOT use in production!")
+elif not DEBUG and ALLOW_ALL_CORS:
+    raise ValueError("ALLOW_ALL_CORS cannot be True in production environment")
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # выводит письма в консоль
