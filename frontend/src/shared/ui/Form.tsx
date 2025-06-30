@@ -13,19 +13,50 @@ import {
 import { cn } from "@/lib/utils"
 import { Label } from "@/shared/ui/Label"
 
+/**
+ * Основной компонент Form - это псевдоним для FormProvider из React Hook Form
+ * Предоставляет контекст формы для всех дочерних компонентов
+ */
 const Form = FormProvider
 
+/**
+ * Тип значения контекста для FormField
+ * Содержит информацию о текущем поле формы
+ */
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 > = {
+  /** Имя поля в форме */
   name: TName
 }
 
+/**
+ * Контекст для передачи информации о поле между компонентами
+ */
 const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
 )
 
+/**
+ * Компонент FormField - обертка над Controller из React Hook Form
+ * Создает контекст для поля и управляет его состоянием
+ * 
+ * @example
+ * <FormField
+ *   control={form.control}
+ *   name="email"
+ *   render={({ field }) => (
+ *     <FormItem>
+ *       <FormLabel>Email</FormLabel>
+ *       <FormControl>
+ *         <Input {...field} />
+ *       </FormControl>
+ *       <FormMessage />
+ *     </FormItem>
+ *   )}
+ * />
+ */
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
@@ -39,6 +70,13 @@ const FormField = <
   )
 }
 
+/**
+ * Хук для получения состояния текущего поля формы
+ * Предоставляет доступ к ошибкам, значениям и ID элементов для accessibility
+ * 
+ * @returns Объект с информацией о поле: id, name, состояние ошибок и accessibility ID
+ * @throws Error если используется вне FormField
+ */
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
@@ -62,14 +100,25 @@ const useFormField = () => {
   }
 }
 
+/**
+ * Тип значения контекста для FormItem
+ */
 type FormItemContextValue = {
+  /** Уникальный ID для элемента формы */
   id: string
 }
 
+/**
+ * Контекст для передачи ID элемента между компонентами
+ */
 const FormItemContext = React.createContext<FormItemContextValue>(
   {} as FormItemContextValue
 )
 
+/**
+ * Компонент FormItem - контейнер для элемента формы
+ * Создает уникальный ID и предоставляет вертикальное spacing
+ */
 const FormItem = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -84,6 +133,10 @@ const FormItem = React.forwardRef<
 })
 FormItem.displayName = "FormItem"
 
+/**
+ * Компонент FormLabel - метка для поля формы
+ * Автоматически связывается с полем ввода и меняет цвет при ошибке
+ */
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
@@ -101,6 +154,10 @@ const FormLabel = React.forwardRef<
 })
 FormLabel.displayName = "FormLabel"
 
+/**
+ * Компонент FormControl - обертка для элемента управления (input, select, etc.)
+ * Автоматически устанавливает accessibility атрибуты и связывает с описанием и ошибками
+ */
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
@@ -123,6 +180,10 @@ const FormControl = React.forwardRef<
 })
 FormControl.displayName = "FormControl"
 
+/**
+ * Компонент FormDescription - описание поля формы
+ * Отображает дополнительную информацию о поле приглушенным текстом
+ */
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
@@ -140,6 +201,10 @@ const FormDescription = React.forwardRef<
 })
 FormDescription.displayName = "FormDescription"
 
+/**
+ * Компонент FormMessage - сообщение об ошибке поля
+ * Автоматически отображает ошибку валидации или кастомное сообщение
+ */
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
