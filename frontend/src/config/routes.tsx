@@ -9,6 +9,7 @@ import { profileRoutes } from '@/features/profile/routes';
 
 // Отложенная загрузка страниц
 const HomePage = lazy(() => import('../pages/HomePage').then(module => ({ default: module.HomePage })));
+const TestTablesPage = lazy(() => import('../pages/TestTablesPage').then(module => ({ default: module.TestTablesPage })));
 const AboutPage = lazy(() => import('../pages/static/AboutPage').then(module => ({ default: module.AboutPage })));
 const RulesPage = lazy(() => import('../pages/static/RulesPage').then(module => ({ default: module.RulesPage })));
 const AMLKYCPage = lazy(() => import('../pages/static/AMLKYCPage').then(module => ({ default: module.AMLKYCPage })));
@@ -33,6 +34,7 @@ const LazyComponent = ({ component: Component }: { component: React.ComponentTyp
 // Основные маршруты (публичные)
 const mainRoutes: RouteObject[] = [
   { index: true, element: <LazyComponent component={HomePage} /> },
+  { path: 'test-tables', element: <LazyComponent component={TestTablesPage} /> },
   { path: 'about', element: <LazyComponent component={AboutPage} /> },
   { path: 'rules', element: <LazyComponent component={RulesPage} /> },
   { path: 'aml-kyc', element: <LazyComponent component={AMLKYCPage} /> },

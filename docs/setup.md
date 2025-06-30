@@ -37,26 +37,29 @@ cd icambio
     В корневой директории проекта `icambio` создайте файл `.env`:
 
     ```dotenv
-    SECRET_KEY=your_django_secret_key_here # Сгенерируйте свою уникальную строку
+    # Django Backend Settings
+    SECRET_KEY=your-secret-key-here
     DEBUG=True
     ALLOWED_HOSTS=localhost,127.0.0.1
 
-    # Настройки для Supabase (используется как основная БД и для аутентификации)
-    SUPABASE_URL=https://your-supabase-project.supabase.co
-    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-    SUPABASE_JWT_SECRET=your_supabase_jwt_secret
+    # Frontend URL
+    FRONTEND_URL=http://localhost:5173
 
-    # URL фронтенда (для генерации реферальных ссылок и email-ссылок)
-    FRONTEND_URL=http://localhost:3000
+    # Основной URL проекта Supabase
+    VITE_SUPABASE_URL=your_supabase_url_here
 
-    # Настройки для отправки email (Djoser)
-    EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend # Для разработки: выводит письма в консоль
-    # EMAIL_HOST=smtp.gmail.com
-    # EMAIL_PORT=587
-    # EMAIL_USE_TLS=True
-    # EMAIL_HOST_USER=your_email@gmail.com
-    # EMAIL_HOST_PASSWORD=your_email_password # Используйте App Password для Gmail
-    # DEFAULT_FROM_EMAIL=your_email@gmail.com
+    # Public anon key (безопасно для фронтенда)
+    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+    # Service role key (только для бэкенда)
+    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
+
+    # JWT Secret (только для бэкенда)
+    SUPABASE_JWT_SECRET=your_supabase_jwt_secret_here
+
+    EMAIL_HOST_USER=
+    EMAIL_HOST_PASSWORD=
+    DEFAULT_FROM_EMAIL=
     ```
 
 3.  **Применение миграций и создание суперпользователя:**

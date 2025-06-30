@@ -6,7 +6,7 @@ import { Footer } from '@/layouts/components/Footer';
 
 export const MainLayout = () => {
   return (
-    <div className="layout-container">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <Main>
         <Outlet />

@@ -32,7 +32,7 @@ export default {
         },
         muted: {
           DEFAULT: 'hsl(210 40% 96.1%)',
-          foreground: 'hsl(225.2 30.6% 51.2%)',
+          foreground: 'hsl(0 0% 60%)', // Нейтральный серый для лучшей читаемости
         },
         accent: {
           DEFAULT: 'hsl(210 40% 96.1%)',
@@ -61,7 +61,24 @@ export default {
         md: '0.375rem',
         lg: '0.5rem',
       },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: 0, transform: 'translateY(10px)' },
+          to: { opacity: 1, transform: 'translateY(0)' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '25%': { transform: 'translateX(-2px)' },
+          '75%': { transform: 'translateX(2px)' },
+        },
+      },
+      animation: {
+        fadeIn: 'fadeIn 0.5s ease-out',
+        shake: 'shake 0.5s ease-in-out',
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/line-clamp'),
+  ],
 }

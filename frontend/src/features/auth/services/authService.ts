@@ -39,6 +39,7 @@ class AuthService {
           last_name: data.user.user_metadata?.last_name || undefined,
           whatsapp: data.user.user_metadata?.whatsapp || undefined,
           telegram: data.user.user_metadata?.telegram || undefined,
+          preferred_delivery_address: data.user.user_metadata?.preferred_delivery_address || undefined,
           referral_link: undefined,
           referralBalance: undefined,
         }
@@ -82,6 +83,7 @@ class AuthService {
           last_name: credentials.last_name,
           whatsapp: undefined,
           telegram: undefined,
+          preferred_delivery_address: undefined,
           referral_link: undefined,
           referralBalance: undefined,
         }
@@ -141,6 +143,7 @@ class AuthService {
         last_name: sessionData.session.user.user_metadata?.last_name || undefined,
         whatsapp: sessionData.session.user.user_metadata?.whatsapp || undefined,
         telegram: sessionData.session.user.user_metadata?.telegram || undefined,
+        preferred_delivery_address: sessionData.session.user.user_metadata?.preferred_delivery_address || undefined,
         referral_link: undefined,
         referralBalance: undefined,
       }
@@ -232,6 +235,7 @@ class AuthService {
           last_name: updates.last_name,
           whatsapp: updates.whatsapp,
           telegram: updates.telegram,
+          preferred_delivery_address: updates.preferred_delivery_address,
         },
       })
 

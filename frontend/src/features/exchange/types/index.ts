@@ -32,6 +32,7 @@ export interface ExchangeRate {
   rate: number;
   minAmount: number;
   maxAmount?: number;
+  is_hot?: boolean;
 }
 
 export interface ExchangePair {

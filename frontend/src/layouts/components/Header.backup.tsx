@@ -4,6 +4,7 @@ import { UserMenu } from '@/features/profile/components/UserMenu';
 import { Logo } from '@/shared/ui/Logo';
 import { Button } from '@/shared/ui/Button';
 import { useState } from 'react';
+import { Phone, Clock, Plus } from 'lucide-react';
 
 export const Header = () => {
   const location = useLocation();
@@ -12,10 +13,8 @@ export const Header = () => {
 
   const menuItems = [
     { path: '/', label: 'Главная' },
-    { path: '/delivery', label: 'Доставка' },
-    { path: '/working-hours', label: 'График работы' },
-    { path: '/reviews', label: 'Отзывы' },
-    { path: '/about', label: 'О нас' },
+    { path: '/exchange', label: 'Обменник' },
+    { path: '/profile', label: 'Профиль', authRequired: true },
   ];
 
   const isActive = (path: string) => {
@@ -28,23 +27,46 @@ export const Header = () => {
       : 'text-gray-600 hover:text-icmop-primary transition-colors duration-200 px-3 py-2 text-sm sm:text-base rounded-md hover:bg-gray-50';
   };
 
-  const isAuthPage = (path: string) => {
-    return location.pathname === path;
-  };
+  // Фильтруем пункты меню в зависимости от статуса авторизации
+  const visibleMenuItems = menuItems.filter(item => 
+    !item.authRequired || (item.authRequired && isAuthenticated)
+  );
 
   return (
     <header className="sticky top-0 z-30 w-full border-b bg-white/95 backdrop-blur-sm transition-all duration-300 ease-in-out shadow-sm">
+      {/* Верхняя полоса с контактами - только на десктопе */}
+      <div className="hidden lg:block bg-gray-50 border-b border-gray-200">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="flex items-center justify-between py-2 text-sm">
+            <div className="flex items-center space-x-6 text-gray-600">
+              <div className="flex items-center space-x-2">
+                <Phone className="w-4 h-4" />
+                <span>+7 999 123-45-67</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>Пн-Пт: 9:00-17:00, Сб: 9:00-15:00</span>
+              </div>
+            </div>
+            <div className="text-gray-500">
+              Быстрый и безопасный обмен валют
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Основной хедер */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-        <div className="flex h-24 items-center justify-between">
+        <div className="flex h-16 items-center justify-between">
           {/* Левая часть - Логотип и навигация */}
           <div className="flex items-center space-x-8">
             <div className="flex-shrink-0">
-              <Logo size="lg" />
+              <Logo size="sm" />
             </div>
 
             {/* Десктопная навигация */}
             <nav className="hidden lg:flex items-center space-x-1">
-              {menuItems.map(item => (
+              {visibleMenuItems.map(item => (
                 <Link 
                   key={item.path}
                   to={item.path} 
@@ -56,28 +78,34 @@ export const Header = () => {
             </nav>
           </div>
 
-          {/* Правая часть - Авторизация */}
+          {/* Правая часть - CTA и авторизация */}
           <div className="flex items-center space-x-4">
+            {/* Кнопка создания заявки - скрыта на мобильных */}
+            <div className="hidden sm:block">
+              <Button 
+                asChild
+                size="sm"
+                className="bg-icmop-primary hover:bg-icmop-primary/90"
+              >
+                <Link to="/exchange">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Создать заявку
+                </Link>
+              </Button>
+            </div>
+
             {/* Авторизация */}
             {isAuthenticated && user ? (
               <UserMenu user={user} />
             ) : (
               <div className="flex items-center space-x-3">
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  size="sm"
-                  className={isAuthPage('/login') ? 'ring-2 ring-icmop-primary ring-offset-2' : ''}
+                <Link 
+                  to="/login" 
+                  className="text-gray-600 hover:text-icmop-primary transition-colors duration-200 text-sm font-medium"
                 >
-                  <Link to="/login">
-                    Вход
-                  </Link>
-                </Button>
-                <Button 
-                  asChild 
-                  size="sm"
-                  className={`bg-icmop-primary hover:bg-icmop-primary/90 ${isAuthPage('/register') ? 'ring-2 ring-icmop-primary ring-offset-2' : ''}`}
-                >
+                  Вход
+                </Link>
+                <Button asChild size="sm" variant="outline">
                   <Link to="/register">
                     Регистрация
                   </Link>
@@ -125,7 +153,7 @@ export const Header = () => {
           <div className="container mx-auto px-4 py-4 space-y-4">
             {/* Навигация */}
             <nav className="space-y-2">
-              {menuItems.map(item => (
+              {visibleMenuItems.map(item => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -136,6 +164,32 @@ export const Header = () => {
                 </Link>
               ))}
             </nav>
+
+            {/* CTA кнопка для мобильных */}
+            <div className="pt-2 border-t">
+              <Button 
+                asChild
+                className="w-full bg-icmop-primary hover:bg-icmop-primary/90"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Link to="/exchange">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Создать заявку
+                </Link>
+              </Button>
+            </div>
+
+            {/* Контакты для мобильных */}
+            <div className="pt-2 border-t space-y-3 text-sm text-gray-600">
+              <div className="flex items-center space-x-2">
+                <Phone className="w-4 h-4" />
+                <span>+7 999 123-45-67</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>Пн-Пт: 9:00-17:00, Сб: 9:00-15:00</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

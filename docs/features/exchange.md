@@ -80,4 +80,316 @@
 ## 6. Состояние (Фронтенд)
 
 -   **React Query:** Используется для получения и кеширования данных о валютах, курсах, обменных пунктах и их балансах (`useQuery`). Например, `features/exchange/hooks/useExchangeRate.ts`.
--   **Zustand:** Может использоваться для временного хранения данных формы обмена или выбора валют, если они нужны между разными компонентами или этапами. Это обеспечивает гибкое управление клиентским состоянием, не связанным с сервером. 
+-   **Zustand:** Может использоваться для временного хранения данных формы обмена или выбора валют, если они нужны между разными компонентами или этапами. Это обеспечивает гибкое управление клиентским состоянием, не связанным с сервером.
+
+## 📊 Таблица курсов обмена (ExchangeRatesTable)
+
+### Обновленная структура таблицы
+
+Таблица курсов обмена была переработана для улучшения пользовательского опыта:
+
+#### Новая структура колонок
+- **Отдаете** - валюта, которую пользователь отдает
+- **Получаете** - валюта, которую пользователь получает  
+- **Лимиты** - минимальные и максимальные суммы обмена
+- **Курсы** - актуальные курсы обмена с отметками "горячих" предложений
+
+#### Расширенная система фильтрации
+
+Таблица теперь поддерживает мощную систему фильтрации:
+
+```tsx
+const filterConfigs: FilterConfig[] = [
+  {
+    key: 'fromCurrency',
+    label: 'Отдаете',
+    type: 'select',
+    options: currencies.map(c => ({ value: c.code, label: c.code })),
+    placeholder: 'Все валюты'
+  },
+  {
+    key: 'toCurrency', 
+    label: 'Получаете',
+    type: 'select',
+    options: currencies.map(c => ({ value: c.code, label: c.code })),
+    placeholder: 'Все валюты'
+  },
+  {
+    key: 'limits',
+    label: 'Лимиты',
+    type: 'number-range',
+    placeholder: 'Диапазон сумм'
+  },
+  {
+    key: 'isHot',
+    label: 'Горячие предложения',
+    type: 'select',
+    options: [
+      { value: 'true', label: 'Только горячие' },
+      { value: 'false', label: 'Обычные' }
+    ],
+    placeholder: 'Все предложения'
+  }
+];
+```
+
+#### Встроенные фильтры в заголовках
+
+Новая структура с фильтрами, встроенными прямо в заголовки колонок:
+
+```tsx
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead 
+        filterComponent={
+          <Select 
+            value={filters.fromCurrency || undefined} 
+            onValueChange={(value) => handleFilterChange('fromCurrency', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Все" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__clear__">Все</SelectItem>
+              {currencies.from.map(currency => (
+                <SelectItem key={currency} value={currency}>
+                  {currency}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      >
+        Отдаете
+      </TableHead>
+      
+      <TableHead 
+        filterComponent={
+          <Select 
+            value={filters.toCurrency || undefined} 
+            onValueChange={(value) => handleFilterChange('toCurrency', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Все" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__clear__">Все</SelectItem>
+              {currencies.to.map(currency => (
+                <SelectItem key={currency} value={currency}>
+                  {currency}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      >
+        Получаете
+      </TableHead>
+      
+      <TableHead 
+        filterComponent={
+          <Input
+            type="number"
+            placeholder="Введите сумму"
+            value={filters.amount}
+            onChange={(e) => handleFilterChange('amount', e.target.value)}
+          />
+        }
+      >
+        Сумма
+      </TableHead>
+      
+      <TableHead>Курсы</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {filteredGroups.map((group) => (
+      <TableRow key={group.id}>
+        <TableCell>{group.fromCurrency}</TableCell>
+        <TableCell>{group.toCurrency}</TableCell>
+        <TableCell>
+          {group.rates.map((rate, idx) => (
+            <div key={idx}>
+              До {rate.maxAmount.toLocaleString()} {group.fromCurrency}
+            </div>
+          ))}
+        </TableCell>
+        <TableCell>
+          {group.rates.map((rate, idx) => (
+            <div key={idx} className="flex items-center">
+              <span className="font-mono">
+                1 {group.fromCurrency} = {rate.rate} {group.toCurrency}
+              </span>
+              {rate.is_hot && <Badge variant="secondary">🔥</Badge>}
+            </div>
+          ))}
+        </TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+```
+
+#### Изменения в структуре:
+- **Отдаете/Получаете** - разделили колонку "Направление обмена" на две отдельные
+- **Сумма** - вместо "Лимиты", теперь пользователь вводит конкретную сумму для проверки доступности
+- **Убрали фильтр "Горячие предложения"** - для упрощения интерфейса
+- **Встроенные фильтры** - фильтры теперь находятся прямо в заголовках колонок
+
+### Расширенные возможности Table
+
+Компонент `ExchangeRatesTable` использует все новые возможности Table:
+
+#### Сортировка курсов
+```tsx
+// Добавление сортировки по направлению обмена
+<TableHead 
+  sortable 
+  sortDirection={sortField === 'direction' ? sortDirection : null}
+  onSort={() => handleSort('direction')}
+>
+  Направление обмена
+</TableHead>
+
+// Сортировка по курсу
+<TableHead 
+  sortable 
+  sortDirection={sortField === 'rate' ? sortDirection : null}
+  onSort={() => handleSort('rate')}
+>
+  Курс
+</TableHead>
+```
+
+#### Интерактивные строки
+```tsx
+// Выделение "горячих" курсов
+<TableRow selected={rate.is_hot}>
+  <TableCell>
+    {rate.from_currency.code} → {rate.to_currency.code}
+  </TableCell>
+  <TableCell align="right" numeric>
+    {rate.rate}
+  </TableCell>
+</TableRow>
+
+// Кликабельные строки для быстрого создания заказа
+<TableRow 
+  clickable 
+  onClick={() => createOrderWithRate(rate)}
+>
+  <TableCell>Нажмите для создания заказа</TableCell>
+</TableRow>
+```
+
+#### Различные размеры для разных экранов
+```tsx
+// Компактная таблица для мобильных устройств
+<Table size="sm" variant="striped" className="md:hidden">
+  <TableHeader>
+    <TableRow>
+      <TableHead>Пара</TableHead>
+      <TableHead>Курс</TableHead>
+    </TableRow>
+  </TableHeader>
+</Table>
+
+// Полная таблица для десктопа
+<Table size="md" className="hidden md:block">
+  <TableHeader sticky>
+    <TableRow>
+      <TableHead>Направление обмена</TableHead>
+      <TableHead>Курсы и лимиты</TableHead>
+      <TableHead>Действия</TableHead>
+    </TableRow>
+  </TableHeader>
+</Table>
+```
+
+#### Подпись к таблице
+```tsx
+<Table>
+  <TableCaption>
+    Курсы обновляются каждые 30 секунд. 
+    Последнее обновление: {lastUpdateTime}
+  </TableCaption>
+  <TableHeader>...</TableHeader>
+</Table>
+```
+
+### Пример полной реализации
+
+```tsx
+const ExchangeRatesTable = () => {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  return (
+    <Table variant="striped">
+      <TableCaption>
+        Актуальные курсы валют на {new Date().toLocaleDateString()}
+      </TableCaption>
+      
+      <TableHeader sticky>
+        <TableRow>
+          <TableHead 
+            sortable 
+            sortDirection={sortField === 'pair' ? sortDirection : null}
+            onSort={() => handleSort('pair')}
+          >
+            Валютная пара
+          </TableHead>
+          <TableHead 
+            sortable 
+            sortDirection={sortField === 'rate' ? sortDirection : null}
+            onSort={() => handleSort('rate')}
+          >
+            Курс
+          </TableHead>
+          <TableHead>Действия</TableHead>
+        </TableRow>
+      </TableHeader>
+      
+      <TableBody>
+        {sortedRates.map((rate) => (
+          <TableRow 
+            key={rate.id}
+            selected={rate.is_hot}
+            clickable
+            onClick={() => selectRate(rate)}
+          >
+            <TableCell>
+              {rate.from_currency.code} → {rate.to_currency.code}
+            </TableCell>
+            <TableCell align="right" numeric>
+              {rate.rate}
+            </TableCell>
+            <TableCell>
+              <Button size="sm" onClick={() => createOrder(rate)}>
+                Обменять
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+      
+      <TableFooter>
+        <TableRow>
+          <TableCell>Всего пар:</TableCell>
+          <TableCell align="right">{rates.length}</TableCell>
+          <TableCell></TableCell>
+        </TableRow>
+      </TableFooter>
+    </Table>
+  );
+}; 

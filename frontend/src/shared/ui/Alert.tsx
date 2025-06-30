@@ -4,6 +4,10 @@ import { CheckCircle, Info, AlertTriangle } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * Варианты стилей для компонента Alert
+ * Определяет различные типы уведомлений с соответствующими цветами и стилями
+ */
 const alertVariants = cva(
   'relative w-full rounded-lg border p-4 [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg+div]:translate-y-[-3px] [&>svg~*]:pl-7',
   {
@@ -23,6 +27,10 @@ const alertVariants = cva(
   },
 );
 
+/**
+ * Мапинг иконок для каждого варианта Alert
+ * Каждый тип уведомления имеет соответствующую иконку
+ */
 const ICONS: Record<
   NonNullable<VariantProps<typeof alertVariants>['variant']>,
   React.ElementType
@@ -33,12 +41,20 @@ const ICONS: Record<
   info: Info,
 };
 
+/**
+ * Интерфейс пропсов для компонента Alert
+ */
 interface AlertProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof alertVariants> {
+  /** Показывать ли иконку в уведомлении */
   showIcon?: boolean;
 }
 
+/**
+ * Основной компонент Alert для отображения уведомлений
+ * Поддерживает различные варианты: default, destructive, success, info
+ */
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   ({ className, variant, showIcon = true, children, ...props }, ref) => {
     const Icon = variant ? ICONS[variant] : ICONS.default;
@@ -58,6 +74,9 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 );
 Alert.displayName = 'Alert';
 
+/**
+ * Компонент для заголовка уведомления
+ */
 const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
@@ -70,6 +89,9 @@ const AlertTitle = React.forwardRef<
 ));
 AlertTitle.displayName = 'AlertTitle';
 
+/**
+ * Компонент для описания/содержимого уведомления
+ */
 const AlertDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>

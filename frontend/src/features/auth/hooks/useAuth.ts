@@ -47,6 +47,7 @@ export const useAuth = () => {
             last_name: currentSession.user.user_metadata?.last_name || undefined,
             whatsapp: currentSession.user.user_metadata?.whatsapp || undefined,
             telegram: currentSession.user.user_metadata?.telegram || undefined,
+            preferred_delivery_address: currentSession.user.user_metadata?.preferred_delivery_address || undefined,
             referral_link: undefined,
             referralBalance: undefined,
           };
@@ -100,6 +101,7 @@ export const useAuth = () => {
           last_name: session.user.user_metadata?.last_name || undefined,
           whatsapp: session.user.user_metadata?.whatsapp || undefined,
           telegram: session.user.user_metadata?.telegram || undefined,
+          preferred_delivery_address: session.user.user_metadata?.preferred_delivery_address || undefined,
           referral_link: undefined,
           referralBalance: undefined,
         };
@@ -202,6 +204,95 @@ export const useAuth = () => {
     }
   }, [logoutStore, setLoading])
 
+  const changePasswordWithReauth = useCallback(async (oldPassword: string, newPassword: string) => {
+    try {
+      setLoading(true)
+      const result = await authService.changePasswordWithReauth(oldPassword, newPassword)
+      
+      if (result.error) {
+        toast.error(result.error)
+        return { success: false, error: result.error }
+      }
+
+      toast.success('Пароль успешно изменен!')
+      return { success: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }, [setLoading])
+
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      setLoading(true)
+      const result = await authService.resetPassword(email)
+      
+      if (result.error) {
+        toast.error(result.error)
+        return { success: false, error: result.error }
+      }
+
+      toast.success('Инструкции по восстановлению пароля отправлены на ваш email!')
+      return { success: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }, [setLoading])
+
+  const changePassword = useCallback(async (newPassword: string) => {
+    try {
+      setLoading(true)
+      const result = await authService.changePassword(newPassword)
+      
+      if (result.error) {
+        toast.error(result.error)
+        return { success: false, error: result.error }
+      }
+
+      toast.success('Пароль успешно установлен!')
+      return { success: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }, [setLoading])
+
+  const updateProfile = useCallback(async (data: any) => {
+    try {
+      setLoading(true)
+      const result = await authService.updateProfile(data)
+      
+      if (result.error) {
+        return { error: result.error }
+      }
+
+      // После успешного обновления, обновляем состояние пользователя
+      if (user) {
+        const updatedUser: TUser = {
+          ...user,
+          ...data,
+        }
+        setAuth(updatedUser, session)
+      }
+
+      return { success: true }
+    } catch (error) {
+      return { error: 'Произошла ошибка при обновлении профиля' }
+    } finally {
+      setLoading(false)
+    }
+  }, [user, session, setAuth, setLoading])
+
   const getAccessToken = useCallback((): string | null => {
     return session?.access_token || null
   }, [session])
@@ -214,10 +305,10 @@ export const useAuth = () => {
     login,
     register,
     logout,
-    resetPassword: authService.resetPassword,
+    resetPassword,
     getAccessToken,
-    changePassword: authService.changePassword,
-    changePasswordWithReauth: authService.changePasswordWithReauth,
-    updateProfile: authService.updateProfile,
+    changePassword,
+    changePasswordWithReauth,
+    updateProfile,
   }
 }

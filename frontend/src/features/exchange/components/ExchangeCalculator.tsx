@@ -6,14 +6,15 @@ import * as z from 'zod';
 
 import { Button } from '@/shared/ui/Button';
 import { CurrencyPairForm } from '@/features/exchange/components/CurrencyPairForm';
+import { MOCK_QUICK_PAIRS } from '@/lib/mock-data';
 
 const calculatorSchema = z.object({
   pairs: z.array(
     z.object({
       fromCurrency: z.string(),
       toCurrency: z.string(),
-      amount: z.number().optional(),
-      result: z.number().optional(),
+      amount: z.number(),
+      result: z.number(),
     })
   ).min(1),
 });
@@ -24,11 +25,8 @@ interface ExchangeCalculatorProps {
   simplified?: boolean;
 }
 
-// Быстрые пары для обмена
-const QUICK_PAIRS = [
-  { fromCurrency: 'USDT', toCurrency: 'ARS', name: 'USDT → ARS' },
-  { fromCurrency: 'USDT', toCurrency: 'USD', name: 'USDT → USD cash' },
-];
+// Фильтруем пары по visible флагу (определяется администратором)
+const VISIBLE_QUICK_PAIRS = MOCK_QUICK_PAIRS.filter(pair => pair.visible);
 
 export const ExchangeCalculator = ({
   simplified = false,
@@ -39,7 +37,7 @@ export const ExchangeCalculator = ({
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(calculatorSchema),
     defaultValues: {
-      pairs: [QUICK_PAIRS[0]],
+      pairs: [VISIBLE_QUICK_PAIRS[0]],
     },
   });
   
@@ -48,16 +46,35 @@ export const ExchangeCalculator = ({
   const currentPair = pairs?.[0] || {};
 
   useEffect(() => {
-    const selectedPair = QUICK_PAIRS[activePairIndex];
+    const selectedPair = VISIBLE_QUICK_PAIRS[activePairIndex];
     setValue("pairs.0.fromCurrency", selectedPair.fromCurrency);
     setValue("pairs.0.toCurrency", selectedPair.toCurrency);
-    setValue("pairs.0.amount", undefined);
-    setValue("pairs.0.result", undefined);
+    setValue("pairs.0.amount", 0);
+    setValue("pairs.0.result", 0);
   }, [activePairIndex, setValue]);
+
+  // Проверяем валидность данных
+  const isValidForOrder = () => {
+    const pair = currentPair;
+    if (!pair) return false;
+    
+    // Проверяем наличие валют
+    if (!pair.fromCurrency || !pair.toCurrency) return false;
+    
+    // Проверяем, что есть хотя бы одна введенная сумма больше 0
+    const hasValidAmount = (pair.amount && pair.amount > 0) || (pair.result && pair.result > 0);
+    if (!hasValidAmount) return false;
+    
+    // Проверяем отсутствие ошибок формы
+    const hasErrors = Object.keys(formState.errors).length > 0;
+    if (hasErrors) return false;
+    
+    return true;
+  };
 
   const handleCreateOrder = (data: CalculatorFormData) => {
     const orderData = data.pairs[0];
-    if (orderData.fromCurrency && orderData.toCurrency && (orderData.amount || 0) > 0) {
+    if (isValidForOrder()) {
       localStorage.setItem('exchangeCalculatorData', JSON.stringify({
         ...orderData,
         timestamp: new Date().toISOString(),
@@ -67,12 +84,14 @@ export const ExchangeCalculator = ({
   };
 
   return (
-    <div className="exchange-calculator bg-white rounded-xl shadow-lg p-6">
+    <div className="mx-auto w-full max-w-5xl rounded-xl bg-white p-6 shadow-lg sm:p-8">
       {!simplified && (
         <>
-          <h3 className="text-2xl font-bold mb-6">Калькулятор обмена</h3>
-          <div className="flex flex-wrap gap-3 mb-8">
-            {QUICK_PAIRS.map((pair, index) => (
+          <h3 className="mb-6 bg-gradient-to-r from-icmop-primary to-icmop-dark bg-clip-text text-xl font-semibold text-transparent">
+            Калькулятор обмена
+          </h3>
+          <div className="mb-8 flex flex-wrap gap-3">
+            {VISIBLE_QUICK_PAIRS.map((pair, index) => (
               <Button
                 key={index}
                 variant={activePairIndex === index ? "primary" : "secondary"}
@@ -97,7 +116,7 @@ export const ExchangeCalculator = ({
             <div className="flex justify-end mt-8">
               <Button 
                 type="submit"
-                disabled={!currentPair.amount || currentPair.amount <= 0 || !formState.isValid}
+                disabled={!isValidForOrder()}
                 className="w-full sm:w-auto"
               >
                 Заказать обмен
