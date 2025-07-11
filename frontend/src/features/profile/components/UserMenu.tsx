@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Edit, Lock, LogOut, Users } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import type { TUser } from '@/types';
 
 interface UserMenuProps {
@@ -82,13 +82,13 @@ export const UserMenu = ({ user }: UserMenuProps) => {
             setIsOpen(false);
           }
         }}
-        className="flex w-full items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm ring-offset-background transition-all duration-200 ease-in-out hover:border-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:border-icmop-primary focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex w-full items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm ring-offset-background transition-all duration-200 ease-in-out hover:border-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:border-icambio-primary focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-icmop-primary/10 rounded-full flex items-center justify-center">
-            <span className="text-icmop-primary font-medium">
+          <div className="w-8 h-8 bg-icambio-primary/10 rounded-full flex items-center justify-center">
+            <span className="text-icambio-primary font-medium">
               {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -135,21 +135,21 @@ export const UserMenu = ({ user }: UserMenuProps) => {
                     // Состояния наведения и фокуса
                     "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
                     // Активное состояние (как выбранный SelectItem)
-                    isActive && "bg-icmop-primary/10 text-icmop-primary font-medium"
+                    isActive && "bg-icambio-primary/10 text-icambio-primary font-medium"
                   )}
                   role="menuitem"
                 >
                   {/* Иконка индикатора активного элемента */}
                   <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
                     {isActive && (
-                      <div className="h-2 w-2 rounded-full bg-icmop-primary" />
+                      <div className="h-2 w-2 rounded-full bg-icambio-primary" />
                     )}
                   </span>
 
                   {/* Иконка и текст пункта меню */}
                   <Icon className={cn(
                     "w-4 h-4 mr-2",
-                    isActive ? "text-icmop-primary" : "text-gray-500"
+                    isActive ? "text-icambio-primary" : "text-gray-500"
                   )} />
                   <span>{label}</span>
                 </button>

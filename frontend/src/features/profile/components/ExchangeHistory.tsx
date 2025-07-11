@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { type DateRange } from 'react-day-picker';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import {
@@ -12,8 +13,8 @@ import {
 } from '@/shared/ui/Table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/Select';
 import { Input } from '@/shared/ui/Input';
-import { DatePicker, DateRange } from '@/shared/ui/DatePicker';
-import { cn } from '@/lib/utils';
+import { DatePicker } from '@/shared/ui/DatePicker';
+import { cn } from '@/shared/lib/utils';
 import { Edit, Eye, MessageSquare } from 'lucide-react';
 
 // Типы данных
@@ -37,7 +38,7 @@ interface Exchange {
 }
 
 interface FilterState {
-  dateRange: DateRange;
+  dateRange: DateRange | undefined;
   sentAmount: string;
   receivedAmount: string;
   status: string;
@@ -57,7 +58,7 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
   const navigate = useNavigate();
   
   const [filters, setFilters] = useState<FilterState>({
-    dateRange: { from: null, to: null },
+    dateRange: undefined,
     sentAmount: '',
     receivedAmount: '',
     status: '',
@@ -112,10 +113,17 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
   const filteredExchanges = useMemo(() => {
     return exchanges.filter(exchange => {
       // Фильтр по дате
-      if (filters.dateRange.from || filters.dateRange.to) {
+      if (filters.dateRange && filters.dateRange.from && filters.dateRange.to) {
         const exchangeDate = new Date(exchange.date);
-        if (filters.dateRange.from && exchangeDate < filters.dateRange.from) return false;
-        if (filters.dateRange.to && exchangeDate > filters.dateRange.to) return false;
+        const fromDate = new Date(filters.dateRange.from);
+        const toDate = new Date(filters.dateRange.to);
+        
+        // Устанавливаем время для корректного сравнения
+        fromDate.setHours(0, 0, 0, 0); // Начало дня
+        toDate.setHours(23, 59, 59, 999); // Конец дня
+        exchangeDate.setHours(0, 0, 0, 0); // Нормализуем дату обмена
+        
+        if (exchangeDate < fromDate || exchangeDate > toDate) return false;
       }
 
       // Фильтр по отправленной сумме
@@ -151,14 +159,14 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value === '__clear__' ? (key === 'dateRange' ? { from: null, to: null } : '') : value
+      [key]: value === '__clear__' ? (key === 'dateRange' ? undefined : '') : value
     }));
   };
 
   // Очистка всех фильтров
   const clearFilters = () => {
     setFilters({
-      dateRange: { from: null, to: null },
+      dateRange: undefined,
       sentAmount: '',
       receivedAmount: '',
       status: '',
@@ -168,7 +176,7 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
 
   // Проверка наличия активных фильтров
   const hasActiveFilters = 
-    filters.dateRange.from || filters.dateRange.to ||
+    filters.dateRange ||
     filters.sentAmount || filters.receivedAmount ||
     filters.status || filters.reviewStatus;
 
@@ -197,10 +205,11 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
                     className="w-48"
                     filterComponent={
                       <DatePicker
+                        mode="range"
                         value={filters.dateRange}
                         onChange={(range) => handleFilterChange('dateRange', range)}
-                        placeholder="Выберите период"
-                        className="text-foreground placeholder:text-muted-foreground"
+                        onClear={() => handleFilterChange('dateRange', undefined)}
+                        placeholder="Все даты"
                       />
                     }
                   >
