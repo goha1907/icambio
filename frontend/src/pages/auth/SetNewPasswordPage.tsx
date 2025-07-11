@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/config/supabase';
+import { supabase } from '@/shared/config/supabase';
 import { SetNewPasswordForm } from '@/features/auth/components/SetNewPasswordForm';
 import { Button } from '@/shared/ui/Button';
 import { Logo } from '@/shared/ui/Logo';

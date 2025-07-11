@@ -15,10 +15,10 @@ import { Logo } from '@/shared/ui/Logo';
  */
 export const LoginPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-icmop-background to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-icambio-background to-blue-50">
       <div className="min-h-screen flex">
         {/* Левая панель с брендингом (скрыта на мобильных) */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-icmop-primary to-blue-600 relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-icambio-primary to-blue-600 relative overflow-hidden">
           {/* Декоративные элементы */}
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full"></div>
@@ -105,8 +105,8 @@ export const LoginPage: React.FC = () => {
             {/* Логотип для мобильных */}
             <div className="text-center lg:hidden">
               <div className="flex items-center justify-center mb-4">
-                <Logo className="h-10 w-auto text-icmop-primary" />
-                <span className="ml-2 text-xl font-bold text-icmop-primary">iCambio</span>
+                <Logo className="h-10 w-auto text-icambio-primary" />
+                <span className="ml-2 text-xl font-bold text-icambio-primary">iCambio</span>
               </div>
             </div>
 
@@ -155,7 +155,7 @@ export const LoginPage: React.FC = () => {
                   Еще нет аккаунта?{' '}
                   <Link 
                     to="/register" 
-                    className="font-medium text-icmop-primary hover:text-icmop-primary/80 transition-colors underline-offset-4 hover:underline"
+                    className="font-medium text-icambio-primary hover:text-icambio-primary/80 transition-colors underline-offset-4 hover:underline"
                   >
                     Зарегистрироваться
                   </Link>
@@ -186,19 +186,19 @@ export const LoginPage: React.FC = () => {
               <div className="flex flex-wrap justify-center gap-4 text-sm">
                 <Link 
                   to="/rates" 
-                  className="text-muted-foreground hover:text-icmop-primary transition-colors"
+                  className="text-muted-foreground hover:text-icambio-primary transition-colors"
                 >
                   📊 Курсы валют
                 </Link>
                 <Link 
                   to="/faq" 
-                  className="text-muted-foreground hover:text-icmop-primary transition-colors"
+                  className="text-muted-foreground hover:text-icambio-primary transition-colors"
                 >
                   ❓ Частые вопросы
                 </Link>
                 <Link 
                   to="/working-hours" 
-                  className="text-muted-foreground hover:text-icmop-primary transition-colors"
+                  className="text-muted-foreground hover:text-icambio-primary transition-colors"
                 >
                   🕒 График работы
                 </Link>

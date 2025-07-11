@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
+import { Checkbox } from '@/shared/ui';
+import { PasswordInput } from '@/shared/ui';
 import {
   Form,
   FormControl,
@@ -16,8 +18,8 @@ import { Input } from '@/shared/ui/Input';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
   registerSchema,
-  RegisterFormData,
-} from '@/shared/validation/auth';
+  type RegisterFormData,
+} from '@/features/auth/validation';
 
 /**
  * Компонент формы регистрации нового пользователя
@@ -37,9 +39,8 @@ export const RegisterForm: React.FC = () => {
   const { register: registerUser, isLoading } = useAuth();
   
   // Состояния компонента
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [confirmPasswordError, setConfirmPasswordError] = useState<string>('');
+  // Переключатели видимости больше не нужны — логика внутри PasswordInput
+  // Удалено confirmPasswordError, валидация теперь в zod
   
   // Реф для автофокуса на поле email
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +52,7 @@ export const RegisterForm: React.FC = () => {
       email: '',
       password: '',
       confirmPassword: '',
+      termsAccepted: false,
     },
     mode: 'onSubmit', // Валидация только при отправке формы
     reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
@@ -64,30 +66,7 @@ export const RegisterForm: React.FC = () => {
   }, []);
 
   // Отслеживание изменений полей пароля для проверки совпадения
-  const password = form.watch('password');
-  const confirmPassword = form.watch('confirmPassword');
-
-  useEffect(() => {
-    if (confirmPassword && password && confirmPassword !== password) {
-      setConfirmPasswordError('Пароли не совпадают');
-    } else {
-      setConfirmPasswordError('');
-    }
-  }, [password, confirmPassword]);
-
-  /**
-   * Переключение видимости основного пароля
-   */
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
-  };
-
-  /**
-   * Переключение видимости подтверждения пароля
-   */
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(prev => !prev);
-  };
+  // defaultValues обновлены ниже
 
   /**
    * Обработка отправки формы
@@ -139,91 +118,54 @@ export const RegisterForm: React.FC = () => {
           />
 
           {/* Поле Пароль */}
-          <FormField
+          <PasswordInput
             control={form.control}
             name="password"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <FormLabel>Пароль <span className="text-destructive">*</span></FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      type={showPassword ? 'text' : 'password'}
+            label={<>Пароль <span className="text-destructive">*</span></>}
                       placeholder="Минимум 8 символов"
                       autoComplete="new-password"
-                      aria-describedby={fieldState.error ? `${field.name}-error` : undefined}
-                      variant={fieldState.error ? 'error' : 'default'}
                       disabled={isLoading}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                      disabled={isLoading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormMessage id={`${field.name}-error`} />
-              </FormItem>
-            )}
           />
 
           {/* Поле Подтверждение пароля */}
-          <FormField
+          <PasswordInput
             control={form.control}
             name="confirmPassword"
-            render={({ field, fieldState }) => {
-              const hasError = fieldState.error || confirmPasswordError;
-              return (
+            label={<>Подтвердите пароль <span className="text-destructive">*</span></>}
+            placeholder="Повторите пароль"
+            autoComplete="new-password"
+            disabled={isLoading}
+          />
+
+          {/* Чекбокс согласия с условиями */}
+          <FormField
+            control={form.control}
+            name="termsAccepted"
+            render={({ field, fieldState }) => (
                 <FormItem>
-                  <FormLabel>Подтвердите пароль <span className="text-destructive">*</span></FormLabel>
+                <div className="flex items-center space-x-2">
                   <FormControl>
-                    <div className="relative">
-                      <Input
-                        {...field}
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder="Повторите пароль"
-                        autoComplete="new-password"
-                        aria-describedby={hasError ? `${field.name}-error` : undefined}
-                        variant={hasError ? 'error' : 'default'}
+                    <Checkbox
+                      id="terms"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      aria-describedby={fieldState.error ? 'terms-error' : undefined}
                         disabled={isLoading}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={toggleConfirmPasswordVisibility}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        aria-label={showConfirmPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                        disabled={isLoading}
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
+                    />
                   </FormControl>
-                  {/* Показываем кастомную ошибку или стандартную ошибку формы */}
-                  {confirmPasswordError ? (
-                    <p className="text-sm font-medium text-destructive" id={`${field.name}-error`}>
-                      {confirmPasswordError}
-                    </p>
-                  ) : (
-                    <FormMessage id={`${field.name}-error`} />
-                  )}
+                  <label
+                    htmlFor="terms"
+                    className="text-sm font-medium text-foreground cursor-pointer select-none"
+                  >
+                    Я принимаю&nbsp;
+                    <Link to="/terms" className="text-icambio-primary underline-offset-4 hover:underline">
+                      условия использования
+                    </Link>
+                  </label>
+                </div>
+                <FormMessage id="terms-error" />
                 </FormItem>
-              );
-            }}
+            )}
           />
 
           {/* Информация о требованиях к паролю */}
@@ -258,7 +200,7 @@ export const RegisterForm: React.FC = () => {
               Уже есть аккаунт?{' '}
               <Link 
                 to="/login" 
-                className="font-medium text-icmop-primary hover:text-icmop-primary/80 transition-colors underline-offset-4 hover:underline"
+                className="font-medium text-icambio-primary hover:text-icambio-primary/80 transition-colors underline-offset-4 hover:underline"
               >
                 Войти в систему
               </Link>
