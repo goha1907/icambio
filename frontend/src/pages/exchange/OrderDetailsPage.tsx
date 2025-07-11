@@ -36,8 +36,8 @@ import { Button } from '@/shared/ui/Button';
 import { Badge } from '@/shared/ui/Badge';
 import { Textarea } from '@/shared/ui/Textarea';
 import { Label } from '@/shared/ui/Label';
-import { cn } from '@/lib/utils';
-import { MOCK_EXCHANGE_HISTORY } from '@/lib/mock-data';
+import { cn } from '@/shared/lib/utils';
+import { MOCK_EXCHANGE_HISTORY } from '@/shared/lib/mock-data';
 
 // Схема валидации отзыва
 const reviewSchema = z.object({

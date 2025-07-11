@@ -1,7 +1,7 @@
 import api from '@/shared/api/api';
 import { ExchangeRate } from '@/features/exchange/types';
 import { API_CONFIG } from '@/config/api';
-import { MOCK_EXCHANGE_RATES, mockCalculationResult, delay, shouldSimulateError } from '@/lib/mock-data';
+import { MOCK_EXCHANGE_RATES, mockCalculationResult, delay, shouldSimulateError } from '@/shared/lib/mock-data';
 
 interface CalculateExchangeData {
   amount_from?: number;

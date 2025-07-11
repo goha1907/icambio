@@ -70,4 +70,4 @@ export type ExchangeOrderFormData = z.infer<typeof exchangeOrderSchema>;
 export const formatAmount = (amount: number, currency: Currency): number => {
   const decimals = currency.is_crypto ? CURRENCY_DECIMALS.crypto : CURRENCY_DECIMALS.fiat;
   return parseFloat(amount.toFixed(decimals));
-};
+}; 

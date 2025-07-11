@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useWatch, useFormContext, Controller } from 'react-hook-form';
-import { MOCK_CURRENCIES, MOCK_EXCHANGE_RATES } from '@/lib/mock-data';
+import { MOCK_CURRENCIES, MOCK_EXCHANGE_RATES } from '@/shared/lib/mock-data';
 import { ArrowRightLeft, Trash2, TrendingUp, AlertCircle } from 'lucide-react';
 import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
@@ -377,7 +377,7 @@ export function CurrencyPairForm({ index, isRemovable, onRemove }: CurrencyPairF
             variant="ghost" 
             size="icon" 
             onClick={handleSwap}
-            className="bg-icmop-primary/10 text-icmop-primary hover:bg-icmop-primary/20 transition-colors"
+            className="bg-icambio-primary/10 text-icambio-primary hover:bg-icambio-primary/20 transition-colors"
             aria-label="Поменять валюты местами"
             disabled={!fromCurrencyCode || !toCurrencyCode}
           >
