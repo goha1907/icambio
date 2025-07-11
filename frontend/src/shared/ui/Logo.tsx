@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 /**
  * Варианты стилизации логотипа
@@ -112,7 +112,7 @@ export const Logo = ({
     <Link 
       to="/" 
       className={cn(
-        'flex items-center transition-opacity duration-200 hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-icmop-primary focus:ring-offset-2 rounded-sm',
+        'flex items-center transition-opacity duration-200 hover:opacity-80 focus:opacity-80 focus:outline-none focus:ring-2 focus:ring-icambio-primary focus:ring-offset-2 rounded-sm',
         className
       )}
       aria-label="Перейти на главную страницу iCambio"

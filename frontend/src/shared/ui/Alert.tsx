@@ -2,23 +2,23 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { CheckCircle, Info, AlertTriangle } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 /**
  * Варианты стилей для компонента Alert
  * Определяет различные типы уведомлений с соответствующими цветами и стилями
  */
 const alertVariants = cva(
-  'relative w-full rounded-lg border p-4 [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg+div]:translate-y-[-3px] [&>svg~*]:pl-7',
+  'w-full rounded-lg border p-4 flex gap-3 items-start',
   {
     variants: {
       variant: {
         default: 'bg-background text-foreground',
         destructive:
-          'border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive',
+          'border-destructive text-destructive dark:border-destructive [&>svg]:text-destructive',
         success:
-          'border-success/50 text-success-foreground dark:border-success [&>svg]:text-success',
-        info: 'border-info/50 text-info-foreground dark:border-info [&>svg]:text-info',
+          'border-success text-success-foreground dark:border-success [&>svg]:text-success',
+        info: 'border-info text-info-foreground dark:border-info [&>svg]:text-info',
       },
     },
     defaultVariants: {
@@ -42,21 +42,21 @@ const ICONS: Record<
 };
 
 /**
- * Интерфейс пропсов для компонента Alert
+ * Alert – универсальный компонент уведомлений.
+ * 
+ * @example
+ * ```tsx
+ * <Alert variant="success">
+ *   <AlertTitle>Успех!</AlertTitle>
+ *   <AlertDescription>Данные сохранены.</AlertDescription>
+ * </Alert>
+ * ```
  */
-interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
-  /** Показывать ли иконку в уведомлении */
-  showIcon?: boolean;
-}
-
-/**
- * Основной компонент Alert для отображения уведомлений
- * Поддерживает различные варианты: default, destructive, success, info
- */
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
-  ({ className, variant, showIcon = true, children, ...props }, ref) => {
+const Alert = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> &
+    VariantProps<typeof alertVariants> & { showIcon?: boolean }
+>(({ className, variant, showIcon = true, children, ...props }, ref) => {
     const Icon = variant ? ICONS[variant] : ICONS.default;
 
     return (
@@ -66,12 +66,11 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         className={cn(alertVariants({ variant }), className)}
         {...props}
       >
-        {showIcon && Icon && <Icon className="h-4 w-4" />}
-        <div>{children}</div>
+      {showIcon && <Icon className="h-4 w-4 shrink-0" />}
+      <div className="flex-1">{children}</div>
       </div>
     );
-  },
-);
+});
 Alert.displayName = 'Alert';
 
 /**

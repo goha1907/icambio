@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 /**
@@ -18,7 +18,7 @@ const inputVariants = cva(
        * - error: поле с красной границей для ошибок валидации
        */
       variant: {
-        default: 'border-input hover:border-muted-foreground focus:border-icmop-primary focus-visible:ring-ring',
+        default: 'border-input hover:border-muted-foreground focus:border-icambio-primary focus-visible:ring-ring',
         success: 'border-success hover:border-success focus:border-success focus-visible:ring-success',
         error: 'border-destructive hover:border-destructive focus:border-destructive focus-visible:ring-destructive',
       },

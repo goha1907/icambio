@@ -1,6 +1,6 @@
 import { Link as RouterLink, LinkProps as RouterLinkProps } from 'react-router-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { forwardRef } from 'react';
 
 /**
@@ -9,7 +9,7 @@ import { forwardRef } from 'react';
  */
 const linkVariants = cva(
   // Базовые стили - общие для всех вариантов
-  'transition-colors duration-200 hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-icmop-primary',
+  'transition-colors duration-200 hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-icambio-primary',
   {
     variants: {
       /**
@@ -20,8 +20,8 @@ const linkVariants = cva(
        * - danger: красная ссылка для опасных действий
        */
       variant: {
-        primary: 'text-icmop-primary hover:text-icmop-dark',
-        secondary: 'text-foreground hover:text-icmop-primary',
+        primary: 'text-icambio-primary hover:text-icambio-dark',
+        secondary: 'text-foreground hover:text-icambio-primary',
         muted: 'text-muted-foreground hover:text-foreground',
         danger: 'text-destructive hover:text-destructive/80',
       },

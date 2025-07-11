@@ -1,15 +1,62 @@
 import { forwardRef, HTMLAttributes } from 'react';
-import { cn } from '@/lib/utils';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/shared/lib/utils';
+
+// -----------------------------------------------------------------------------
+// Варианты стилизации Card (цветовые темы, интерактивность, градиенты)
+// -----------------------------------------------------------------------------
+
+const cardVariants = cva(
+  'rounded-lg border shadow-sm bg-card text-card-foreground',
+  {
+    variants: {
+      variant: {
+        default: 'border bg-card',
+        'success-soft': 'border-success/20 bg-success/10',
+        'destructive-soft': 'border-destructive/20 bg-destructive/10',
+        interactive: 'transition-shadow cursor-pointer hover:shadow-md',
+        'gradient-primary':
+          'border-transparent bg-gradient-to-r from-icambio-primary to-icambio-dark text-white',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  },
+);
+
+// -----------------------------------------------------------------------------
+// Варианты отступов для секций Card (Header / Content / Footer)
+// -----------------------------------------------------------------------------
+
+const sectionPaddingVariants = cva('', {
+  variants: {
+    paddings: {
+      default: 'p-6',
+      compact: 'p-4',
+      none: 'p-0',
+    },
+  },
+  defaultVariants: {
+    paddings: 'default',
+  },
+});
 
 /**
  * Интерфейс пропсов для компонентов Card
  * Расширяет стандартные HTML атрибуты div элемента
  */
-export interface CardProps extends HTMLAttributes<HTMLDivElement> {}
+export interface CardProps
+  extends HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {
+  /** Отступы для секций внутри карточки */
+  paddings?: 'default' | 'compact' | 'none';
+}
 
 /**
  * Основной компонент Card для группировки контента
  * Создает контейнер с закругленными углами, тенью и стилизацией
+ * Поддерживает варианты `variant` и глобальную настройку отступов `paddings`.
  * 
  * @example
  * <Card>
@@ -23,16 +70,14 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {}
  * </Card>
  */
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, variant, paddings = 'default', ...props }, ref) => (
     <div
       ref={ref}
-      className={cn(
-        'rounded-lg border bg-card text-card-foreground shadow-sm',
-        className
-      )}
+      className={cn(cardVariants({ variant }), className)}
+      data-card-padding={paddings}
       {...props}
     />
-  )
+  ),
 );
 Card.displayName = 'Card';
 
@@ -41,13 +86,13 @@ Card.displayName = 'Card';
  * Содержит отступы и вертикальное spacing для заголовка и описания
  */
 export const CardHeader = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, paddings = 'default', ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('flex flex-col space-y-1.5 p-6', className)}
+      className={cn('flex flex-col space-y-1.5', sectionPaddingVariants({ paddings }), className)}
       {...props}
     />
-  )
+  ),
 );
 CardHeader.displayName = 'CardHeader';
 
@@ -89,9 +134,13 @@ CardDescription.displayName = 'CardDescription';
  * Содержит отступы и является основной областью для контента
  */
 export const CardContent = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />
-  )
+  ({ className, paddings = 'default', ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(sectionPaddingVariants({ paddings }), className)}
+      {...props}
+    />
+  ),
 );
 CardContent.displayName = 'CardContent';
 
@@ -100,12 +149,12 @@ CardContent.displayName = 'CardContent';
  * Обычно содержит кнопки действий или дополнительную информацию
  */
 export const CardFooter = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, paddings = 'default', ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('flex items-center p-6 pt-0', className)}
+      className={cn('flex items-center', sectionPaddingVariants({ paddings }), className)}
       {...props}
     />
-  )
+  ),
 );
 CardFooter.displayName = 'CardFooter'; 

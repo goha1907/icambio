@@ -47,7 +47,7 @@ export default {
           foreground: 'hsl(222.2 84% 4.9%)',
         },
 
-        icmop: {
+        icambio: {
           primary: '#00A651', // Основной зеленый из логотипа
           secondary: '#000000', // Черный из логотипа
           accent: '#FFD700', // Желтый из логотипа
@@ -80,5 +80,6 @@ export default {
   },
   plugins: [
     require('@tailwindcss/line-clamp'),
+    require("tailwindcss-animate"),
   ],
 }

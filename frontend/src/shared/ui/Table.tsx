@@ -1,7 +1,20 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
+
+/**
+ * Контекст для передачи пропсов таблицы дочерним элементам
+ */
+interface TableContextProps {
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'striped' | 'bordered';
+}
+
+const TableContext = React.createContext<TableContextProps>({
+  size: 'md',
+  variant: 'default',
+});
 
 /**
  * Варианты стилей для основной таблицы
@@ -19,9 +32,9 @@ const tableVariants = cva(
        * - lg: просторная таблица для важных данных
        */
       size: {
-        sm: 'text-xs [&_th]:h-8 [&_th]:px-2 [&_td]:p-2',
-        md: 'text-sm [&_th]:h-12 [&_th]:px-4 [&_td]:p-4',
-        lg: 'text-base [&_th]:h-16 [&_th]:px-6 [&_td]:p-6',
+        sm: 'text-xs',
+        md: 'text-sm',
+        lg: 'text-base',
       },
       /**
        * Варианты стилизации
@@ -32,7 +45,7 @@ const tableVariants = cva(
       variant: {
         default: '',
         striped: '[&_tbody_tr:nth-child(even)]:bg-muted/30',
-        bordered: 'border [&_th]:border [&_td]:border',
+        bordered: 'border',
       },
     },
     defaultVariants: {
@@ -47,12 +60,7 @@ const tableVariants = cva(
  */
 interface TableProps
   extends React.HTMLAttributes<HTMLTableElement>,
-    VariantProps<typeof tableVariants> {
-  /** Размер таблицы */
-  size?: 'sm' | 'md' | 'lg';
-  /** Вариант стилизации */
-  variant?: 'default' | 'striped' | 'bordered';
-}
+    VariantProps<typeof tableVariants> {}
 
 /**
  * Основной компонент Table - контейнер для табличных данных
@@ -91,11 +99,13 @@ interface TableProps
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, size, variant, ...props }, ref) => (
     <div className="relative w-full overflow-auto">
+      <TableContext.Provider value={{ size: size ?? 'md', variant: variant ?? 'default' }}>
       <table
         ref={ref}
         className={cn(tableVariants({ size, variant }), className)}
         {...props}
       />
+      </TableContext.Provider>
     </div>
   )
 );
@@ -107,10 +117,6 @@ Table.displayName = 'Table';
 interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement> {
   /** Закрепить заголовок при прокрутке */
   sticky?: boolean;
-  /** Показать строку с фильтрами */
-  showFilters?: boolean;
-  /** Компонент с фильтрами */
-  filtersComponent?: React.ReactNode;
 }
 
 /**
@@ -118,45 +124,17 @@ interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement>
  * 
  * Содержит строки с заголовками колонок. Может быть закреплен
  * в верхней части при прокрутке длинных таблиц.
- * Поддерживает интегрированные фильтры.
- * 
- * @example
- * <TableHeader>
- *   <TableRow>
- *     <TableHead>Колонка 1</TableHead>
- *     <TableHead>Колонка 2</TableHead>
- *   </TableRow>
- * </TableHeader>
- * 
- * @example
- * // С фильтрами
- * <TableHeader 
- *   showFilters 
- *   filtersComponent={<MyFiltersComponent />}
- * >
- *   <TableRow>
- *     <TableHead>Закрепленный заголовок</TableHead>
- *   </TableRow>
- * </TableHeader>
  */
 const TableHeader = React.forwardRef<HTMLTableSectionElement, TableHeaderProps>(
-  ({ className, sticky, showFilters, filtersComponent, children, ...props }, ref) => (
+  ({ className, sticky, children, ...props }, ref) => (
     <thead
       ref={ref}
       className={cn(
-        '[&_tr]:border-b',
         sticky && 'sticky top-0 z-10 bg-background',
         className
       )}
       {...props}
     >
-      {showFilters && filtersComponent && (
-        <tr className="border-b bg-gray-50">
-          <td colSpan={100} className="p-0">
-            {filtersComponent}
-          </td>
-        </tr>
-      )}
       {children}
     </thead>
   )
@@ -183,7 +161,7 @@ const TableBody = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tbody
     ref={ref}
-    className={cn('[&_tr:last-child]:border-0', className)}
+    className={cn(className)}
     {...props}
   />
 ));
@@ -248,21 +226,24 @@ interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
  * </TableRow>
  */
 const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
-  ({ className, selected, disabled, clickable, ...props }, ref) => (
+  ({ className, selected, disabled, clickable, ...props }, ref) => {
+    const { variant } = React.useContext(TableContext);
+    return (
     <tr
       ref={ref}
       className={cn(
-        'border-b transition-colors',
-        // Состояния строки
-        !disabled && 'hover:bg-muted/50',
-        selected && 'bg-muted data-[state=selected]:bg-muted',
-        disabled && 'opacity-50 cursor-not-allowed',
-        clickable && !disabled && 'cursor-pointer hover:bg-muted/70',
+          'border-b transition-colors data-[state=selected]:bg-muted',
+          variant === 'bordered' && '[&>th]:border-r [&>td]:border-r',
+          selected && 'bg-muted/50',
+          disabled && 'opacity-50 pointer-events-none',
+          clickable && 'cursor-pointer',
+          '[&_tr:last-child]:border-0',
         className
       )}
       {...props}
     />
-  )
+    );
+  }
 );
 TableRow.displayName = 'TableRow';
 
@@ -276,91 +257,56 @@ interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
   sortDirection?: 'asc' | 'desc' | null;
   /** Колбэк при клике на сортируемый заголовок */
   onSort?: () => void;
-  /** Компонент фильтра для этой колонки */
-  filterComponent?: React.ReactNode;
 }
 
 /**
  * Компонент TableHead - заголовок колонки таблицы
  * 
- * Отображает заголовок колонки с возможностью сортировки и фильтрации.
- * Поддерживает индикаторы направления сортировки и встроенные фильтры.
- * 
- * @example
- * <TableHead>Простой заголовок</TableHead>
- * 
- * @example
- * // Сортируемый заголовок
- * <TableHead 
- *   sortable 
- *   sortDirection="asc"
- *   onSort={() => handleSort('name')}
- * >
- *   Название
- * </TableHead>
- * 
- * @example
- * // Заголовок с фильтром
- * <TableHead 
- *   filterComponent={
- *     <Select onValueChange={handleFilter}>
- *       <SelectItem value="all">Все</SelectItem>
- *       <SelectItem value="active">Активные</SelectItem>
- *     </Select>
- *   }
- * >
- *   Статус
- * </TableHead>
+ * Отображает заголовок колонки с возможностью сортировки.
+ * Поддерживает индикаторы направления сортировки.
  */
 const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
-  ({ className, children, sortable, sortDirection, onSort, filterComponent, ...props }, ref) => (
+  ({ className, children, sortable, sortDirection, onSort, ...props }, ref) => {
+    const { size } = React.useContext(TableContext);
+    return (
     <th
       ref={ref}
-      className={cn(
-        'px-4 text-left align-top font-medium text-icmop-primary [&:has([role=checkbox])]:pr-0',
-        'h-auto py-3', // Единая высота для всех заголовков
-        sortable && 'cursor-pointer select-none hover:bg-muted/50',
-        className
-      )}
-      onClick={sortable && !filterComponent ? onSort : undefined}
+        className={cn(
+          tableCellVariants({ size, align: 'left' }),
+          'font-bold text-muted-foreground',
+          className
+        )}
       {...props}
     >
-      <div className="space-y-2">
-        {/* Заголовок с сортировкой */}
-        <div 
-          className={cn(
-            "flex items-center gap-2 min-h-[1.5rem]", // Минимальная высота для выравнивания
-            sortable && filterComponent && "cursor-pointer select-none hover:bg-muted/50 rounded px-1 -mx-1"
-          )}
-          onClick={sortable && filterComponent ? onSort : undefined}
-        >
-          {children}
-          {/* Индикатор сортировки */}
-          {sortable && (
-            <div className="flex flex-col">
-              <ChevronUp
-                className={cn(
-                  'h-3 w-3 transition-colors',
-                  sortDirection === 'asc' ? 'text-icmop-primary' : 'text-muted-foreground/50'
-                )}
-              />
-              <ChevronDown
-                className={cn(
-                  'h-3 w-3 -mt-1 transition-colors',
-                  sortDirection === 'desc' ? 'text-icmop-primary' : 'text-muted-foreground/50'
-                )}
-              />
-            </div>
-          )}
-        </div>
-        
-        {/* Фильтр или пустое место для выравнивания */}
-        <div className="w-full min-h-[2.5rem] flex items-center">
-          {filterComponent || <div className="h-10"></div>}
-        </div>
+      <div
+        className={cn(
+          "flex items-center gap-2", // Лаконичный заголовок
+          sortable && "cursor-pointer select-none hover:bg-muted/50 rounded px-1 -mx-1"
+        )}
+        onClick={sortable ? onSort : undefined}
+      >
+        {children}
+        {/* Индикатор сортировки */}
+        {sortable && (
+          <div className="flex flex-col">
+            <ChevronUp
+              className={cn(
+                'h-3 w-3 transition-colors',
+                sortDirection === 'asc' ? 'text-icambio-primary' : 'text-muted-foreground/50'
+              )}
+            />
+            <ChevronDown
+              className={cn(
+                'h-3 w-3 -mt-1 transition-colors',
+                sortDirection === 'desc' ? 'text-icambio-primary' : 'text-muted-foreground/50'
+              )}
+            />
+          </div>
+        )}
       </div>
     </th>
-  )
+    );
+  }
 );
 TableHead.displayName = 'TableHead';
 
@@ -389,22 +335,39 @@ interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
  *   1,234.56
  * </TableCell>
  */
+const tableCellVariants = cva(
+  'align-middle [&:has([role=checkbox])]:pr-0',
+  {
+    variants: {
+      size: {
+        sm: 'py-1 px-2',
+        md: 'py-2 px-4',
+        lg: 'py-3 px-6',
+      },
+      align: {
+        left: 'text-left',
+        center: 'text-center',
+        right: 'text-right',
+      }
+    },
+    defaultVariants: {
+      size: 'md',
+      align: 'left',
+    },
+  }
+);
+
 const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ className, align = 'left', numeric, ...props }, ref) => (
+  ({ className, align = 'left', numeric, ...props }, ref) => {
+    const { size } = React.useContext(TableContext);
+    return (
     <td
       ref={ref}
-      className={cn(
-        'p-4 align-middle [&:has([role=checkbox])]:pr-0',
-        // Выравнивание содержимого
-        align === 'center' && 'text-center',
-        align === 'right' && 'text-right',
-        // Стили для числовых данных
-        numeric && 'font-mono tabular-nums',
-        className
-      )}
+        className={cn(tableCellVariants({ size, align }), numeric && 'font-mono', className)}
       {...props}
     />
-  )
+    );
+  }
 );
 TableCell.displayName = 'TableCell';
 
@@ -433,6 +396,94 @@ const TableCaption = React.forwardRef<
   />
 ));
 TableCaption.displayName = 'TableCaption';
+
+/**
+ * # Полный пример использования
+ *
+ * ```tsx
+ * import {
+ *   Table,
+ *   TableHeader,
+ *   TableBody,
+ *   TableHead,
+ *   TableRow,
+ *   TableCell,
+ *   TableCaption,
+ * } from '@/shared/ui/Table';
+ * import { Select, SelectItem, SelectTrigger, SelectValue, SelectContent } from '@/shared/ui/Select';
+ * import { Button } from '@/shared/ui/Button';
+ *
+ * interface Rate {
+ *   currency: string;
+ *   rate: number;
+ *   status: 'active' | 'inactive';
+ * }
+ *
+ * const rates: Rate[] = [
+ *   { currency: 'USD', rate: 90.15, status: 'active' },
+ *   { currency: 'EUR', rate: 98.42, status: 'inactive' },
+ *   { currency: 'BTC', rate: 30000, status: 'active' },
+ * ];
+ *
+ * export function RatesTable() {
+ *   const [sortDir, setSortDir] = React.useState<'asc' | 'desc' | null>('asc');
+ *   const [statusFilter, setStatusFilter] = React.useState<'all' | 'active' | 'inactive'>('all');
+ *
+ *   const sorted = React.useMemo(() => {
+ *     const data = [...rates];
+ *     data.sort((a, b) => sortDir === 'asc' ? a.rate - b.rate : b.rate - a.rate);
+ *     return data;
+ *   }, [sortDir]);
+ *
+ *   const filtered = sorted.filter(r => statusFilter === 'all' ? true : r.status === statusFilter);
+ *
+ *   return (
+ *     <Table variant="striped" size="md">
+ *       <TableCaption>Курсы валют на {new Date().toLocaleDateString()}</TableCaption>
+ *       <TableHeader
+ *         sticky
+ *         showFilters
+ *         filtersComponent={
+ *           <Select value={statusFilter} onValueChange={val => setStatusFilter(val as any)}>
+ *             <SelectTrigger size="sm"><SelectValue placeholder="Статус" /></SelectTrigger>
+ *             <SelectContent>
+ *               <SelectItem value="all">Все</SelectItem>
+ *               <SelectItem value="active">Активные</SelectItem>
+ *               <SelectItem value="inactive">Неактивные</SelectItem>
+ *             </SelectContent>
+ *           </Select>
+ *         }
+ *       >
+ *         <TableRow>
+ *           <TableHead>Валюта</TableHead>
+ *           <TableHead
+ *             sortable
+ *             sortDirection={sortDir}
+ *             onSort={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')}
+ *           >
+ *             Курс
+ *           </TableHead>
+ *           <TableHead>Статус</TableHead>
+ *           <TableHead>Действия</TableHead>
+ *         </TableRow>
+ *       </TableHeader>
+ *       <TableBody>
+ *         {filtered.map(r => (
+ *           <TableRow key={r.currency} clickable onClick={() => alert(r.currency)}>
+ *             <TableCell>{r.currency}</TableCell>
+ *             <TableCell align="right" numeric>{r.rate.toLocaleString()}</TableCell>
+ *             <TableCell>{r.status === 'active' ? 'Активен' : 'Неактивен'}</TableCell>
+ *             <TableCell>
+ *               <Button size="sm" variant="outline">Подробнее</Button>
+ *             </TableCell>
+ *           </TableRow>
+ *         ))}
+ *       </TableBody>
+ *     </Table>
+ *   );
+ * }
+ * ```
+ */
 
 export {
   Table,

@@ -4,35 +4,37 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
-const Dialog = DialogPrimitive.Root;
+const Modal = DialogPrimitive.Root;
 
-const DialogTrigger = DialogPrimitive.Trigger;
+const ModalTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = DialogPrimitive.Portal;
+const ModalPortal = DialogPrimitive.Portal;
 
-const DialogOverlay = React.forwardRef<
+const ModalClose = DialogPrimitive.Close;
+
+const ModalOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      'fixed inset-0 z-50 bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+      'fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
       className,
     )}
     {...props}
   />
 ));
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+ModalOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-const DialogContent = React.forwardRef<
+const ModalContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
+  <ModalPortal>
+    <ModalOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
@@ -47,11 +49,11 @@ const DialogContent = React.forwardRef<
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
-  </DialogPortal>
+  </ModalPortal>
 ));
-DialogContent.displayName = DialogPrimitive.Content.displayName;
+ModalContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader = ({
+const ModalHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -63,9 +65,9 @@ const DialogHeader = ({
     {...props}
   />
 );
-DialogHeader.displayName = 'DialogHeader';
+ModalHeader.displayName = 'ModalHeader';
 
-const DialogFooter = ({
+const ModalFooter = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -77,9 +79,9 @@ const DialogFooter = ({
     {...props}
   />
 );
-DialogFooter.displayName = 'DialogFooter';
+ModalFooter.displayName = 'ModalFooter';
 
-const DialogTitle = React.forwardRef<
+const ModalTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
@@ -92,9 +94,9 @@ const DialogTitle = React.forwardRef<
     {...props}
   />
 ));
-DialogTitle.displayName = DialogPrimitive.Title.displayName;
+ModalTitle.displayName = DialogPrimitive.Title.displayName;
 
-const DialogDescription = React.forwardRef<
+const ModalDescription = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
@@ -104,14 +106,63 @@ const DialogDescription = React.forwardRef<
     {...props}
   />
 ));
-DialogDescription.displayName = DialogPrimitive.Description.displayName;
+ModalDescription.displayName = DialogPrimitive.Description.displayName;
 
+/**
+ * # Компонент Modal
+ * 
+ * Набор компонентов для создания модальных диалоговых окон с поддержкой a11y.
+ * 
+ * ## Пример использования
+ * 
+ * ```tsx
+ * import {
+ *   Modal,
+ *   ModalTrigger,
+ *   ModalContent,
+ *   ModalHeader,
+ *   ModalFooter,
+ *   ModalTitle,
+ *   ModalDescription,
+ *   ModalClose
+ * } from '@/shared/ui/Modal';
+ * import { Button } from '@/shared/ui/Button';
+ * 
+ * function MyModal() {
+ *   return (
+ *     <Modal>
+ *       <ModalTrigger asChild>
+ *         <Button variant="outline">Открыть модальное окно</Button>
+ *       </ModalTrigger>
+ *       <ModalContent>
+ *         <ModalHeader>
+ *           <ModalTitle>Заголовок окна</ModalTitle>
+ *           <ModalDescription>
+ *             Это описание модального окна. Здесь может быть важная информация.
+ *           </ModalDescription>
+ *         </ModalHeader>
+ *         <div className="py-4">
+ *           <p>Основное содержимое модального окна...</p>
+ *         </div>
+ *         <ModalFooter>
+ *           <ModalClose asChild>
+ *              <Button variant="secondary">Отмена</Button>
+ *           </ModalClose>
+ *           <Button>Сохранить</Button>
+ *         </ModalFooter>
+ *       </ModalContent>
+ *     </Modal>
+ *   );
+ * }
+ * ```
+ */
 export {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
+  Modal,
+  ModalTrigger,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalTitle,
+  ModalDescription,
+  ModalClose,
 };
