@@ -1,8 +1,14 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/shared/ui/Card';
 import { PageTitle } from '@/shared/ui/PageTitle';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/Modal';
-import { MOCK_REVIEWS } from '@/lib/mock-data';
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
+} from '@/shared/ui/Modal';
+import { MOCK_REVIEWS } from '@/shared/lib/mock-data';
 
 interface Review {
   id: string;
@@ -122,7 +128,7 @@ export const ReviewsPage = () => {
           onClick={() => setCurrentPage(i)}
           className={`px-3 py-2 rounded-lg border transition-colors ${
             i === currentPage
-              ? 'bg-icmop-primary text-white border-icmop-primary'
+              ? 'bg-icambio-primary text-white border-icambio-primary'
               : 'border-gray-300 hover:bg-gray-50'
           }`}
         >
@@ -196,8 +202,8 @@ export const ReviewsPage = () => {
         <Card>
           <CardContent className="p-6 sm:p-8">
             <div className="flex items-center mb-4">
-              <span className="text-icmop-primary text-2xl mr-3">🔍</span>
-              <h2 className="text-xl font-semibold text-icmop-primary">Фильтр по рейтингу</h2>
+              <span className="text-icambio-primary text-2xl mr-3">🔍</span>
+              <h2 className="text-xl font-semibold text-icambio-primary">Фильтр по рейтингу</h2>
             </div>
             
             <div className="flex flex-wrap gap-3">
@@ -205,7 +211,7 @@ export const ReviewsPage = () => {
                 onClick={() => handleRatingFilter(null)}
                 className={`px-4 py-2 rounded-lg border transition-colors ${
                   selectedRating === null
-                    ? 'bg-icmop-primary text-white border-icmop-primary'
+                    ? 'bg-icambio-primary text-white border-icambio-primary'
                     : 'border-gray-300 hover:bg-gray-50'
                 }`}
               >
@@ -218,7 +224,7 @@ export const ReviewsPage = () => {
                   onClick={() => handleRatingFilter(rating)}
                   className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
                     selectedRating === rating
-                      ? 'bg-icmop-primary text-white border-icmop-primary'
+                      ? 'bg-icambio-primary text-white border-icambio-primary'
                       : 'border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -234,8 +240,8 @@ export const ReviewsPage = () => {
         <Card>
           <CardContent className="p-6 sm:p-8">
             <div className="flex items-center mb-6">
-              <span className="text-icmop-primary text-3xl mr-3">💬</span>
-              <h2 className="text-2xl font-semibold text-icmop-primary">
+              <span className="text-icambio-primary text-3xl mr-3">💬</span>
+              <h2 className="text-2xl font-semibold text-icambio-primary">
                 {selectedRating 
                   ? `Отзывы с рейтингом ${selectedRating} ${selectedRating === 1 ? 'звезда' : selectedRating < 5 ? 'звезды' : 'звезд'}`
                   : 'Все отзывы'
@@ -251,83 +257,51 @@ export const ReviewsPage = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {currentReviews.map((review) => (
-                    <div
+                    <Card
                       key={review.id}
-                      className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                      className="overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300"
                     >
-                      {/* Заголовок отзыва */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-800 mb-1">{review.name}</h3>
-                          <p className="text-gray-500 text-sm">{review.date}</p>
+                      <CardContent className="p-5 flex flex-col h-full">
+                        <div className="flex items-start mb-4">
+                          <div className="w-12 h-12 rounded-full bg-icambio-primary/10 flex items-center justify-center mr-4">
+                            <span className="text-icambio-primary font-bold text-xl">
+                              {review.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-800">{review.name}</h4>
+                            <p className="text-xs text-gray-500">{review.date}</p>
+                          </div>
+                          {renderStars(review.rating, 'md')}
                         </div>
-                        {renderStars(review.rating)}
-                      </div>
-
-                      {/* Текст отзыва (обрезанный) */}
-                      <div className="text-gray-700 leading-relaxed mb-4 overflow-hidden">
-                        <p className="line-clamp-3">
-                          {review.comment}
+                        <p className="text-gray-600 text-sm mb-4 flex-grow">
+                          {review.comment.length > 100
+                            ? `${review.comment.substring(0, 100)}...`
+                            : review.comment}
                         </p>
-                      </div>
-
-                      {/* Кнопка "Подробнее" */}
-                      <div className="flex justify-end">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <button 
-                              className="text-icmop-primary hover:text-icmop-primary/80 text-sm font-medium transition-colors"
-                              onClick={() => setSelectedReview(review)}
-                            >
-                              Подробнее →
+                        <Modal>
+                          <ModalTrigger asChild>
+                            <button className="text-sm text-icambio-primary hover:underline self-start">
+                              Читать полностью
                             </button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center justify-between">
-                                <span>Отзыв от {review.name}</span>
-                                <div className="flex items-center gap-2">
-                                  {renderStars(review.rating)}
-                                  <span className="text-sm text-gray-500">({review.rating}/5)</span>
-                                </div>
-                              </DialogTitle>
-                            </DialogHeader>
-                            
-                            <div className="space-y-4">
-                              <div className="flex items-center gap-4 text-sm text-gray-500">
-                                <span>📅 {review.date}</span>
-                                <span>👤 Клиент iCambio</span>
+                          </ModalTrigger>
+                          <ModalContent>
+                            <ModalHeader>
+                              <ModalTitle>Отзыв от {review.name}</ModalTitle>
+                              <div className="flex items-center justify-between pt-2">
+                                {renderStars(review.rating, 'lg')}
+                                <span className="text-sm text-gray-500">{review.date}</span>
                               </div>
-                              
-                              <div className="bg-gray-50 rounded-lg p-4">
-                                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                                  {review.comment}
-                                </p>
-                              </div>
-                              
-                              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-green-600">✓</span>
-                                  <span className="text-sm text-gray-600">Подтвержденная покупка</span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                  <button className="hover:text-icmop-primary transition-colors">
-                                    👍 Полезно
-                                  </button>
-                                  <span>•</span>
-                                  <button className="hover:text-icmop-primary transition-colors">
-                                    📤 Поделиться
-                                  </button>
-                                </div>
-                              </div>
+                            </ModalHeader>
+                            <div className="py-4 text-base text-gray-700 leading-relaxed">
+                              {review.comment}
                             </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
+                          </ModalContent>
+                        </Modal>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
 
@@ -346,7 +320,7 @@ export const ReviewsPage = () => {
         {/* Призыв оставить отзыв */}
         <Card>
           <CardContent className="p-6 sm:p-8">
-            <div className="bg-gradient-to-r from-icmop-primary to-blue-600 rounded-lg p-8 text-center text-white">
+            <div className="bg-gradient-to-r from-icambio-primary to-blue-600 rounded-lg p-8 text-center text-white">
               <span className="text-4xl mb-4 block">✍️</span>
               <h2 className="text-2xl font-semibold mb-4">Поделитесь своим опытом</h2>
               <p className="mb-6 opacity-90">
@@ -355,7 +329,7 @@ export const ReviewsPage = () => {
               <div className="flex flex-wrap justify-center gap-4">
                 <a 
                   href="/profile" 
-                  className="bg-white text-icmop-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                  className="bg-white text-icambio-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
                 >
                   Оставить отзыв
                 </a>
@@ -363,7 +337,7 @@ export const ReviewsPage = () => {
                   href="https://yandex.ru/maps/org/icambio" 
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-icmop-primary transition-colors"
+                  className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-icambio-primary transition-colors"
                 >
                   Отзыв на Яндекс.Картах
                 </a>
