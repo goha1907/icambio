@@ -20,7 +20,7 @@
 ### 3. **Использование цветов и типографики из темы Tailwind CSS**
 
 -   **Запрещено** хардкодить цвета, отступы, размеры шрифтов и другие стилистические значения.
--   **Обязательно** используйте переменные, определенные в конфигурации Tailwind CSS (`tailwind.config.js`), или классы утилит Tailwind, основанные на этих переменных (например, `text-destructive`, `border-input`, `bg-icmop-primary`).
+-   **Обязательно** используйте переменные, определенные в конфигурации Tailwind CSS (`tailwind.config.js`), или классы утилит Tailwind, основанные на этих переменных (например, `text-destructive`, `border-input`, `bg-icambio-primary`).
 -   Подробное описание используемых цветов и шрифтов находится в конфигурации темы Tailwind CSS.
 
 ### 4. **Адаптивность (Mobile-First)**
@@ -91,8 +91,8 @@ import { Button } from '@/shared/ui/Button';
 ### Цветовые переменные проекта
 ```css
 /* Основные цвета */
---icmop-primary: #00A651;     /* Основной зеленый */
---icmop-dark: #008C46;        /* Темный зеленый */
+--icambio-primary: #00A651;     /* Основной зеленый */
+--icambio-dark: #008C46;        /* Темный зеленый */
 
 /* Системные цвета */
 --destructive: #EF4444;       /* Для ошибок */
@@ -106,7 +106,7 @@ import { Button } from '@/shared/ui/Button';
 // ✅ Правильно - используем переменные
 <p className="text-destructive">Ошибка валидации</p>
 <div className="border-input">...</div>
-<button className="bg-icmop-primary">...</button>
+<button className="bg-icambio-primary">...</button>
 
 // ❌ Неправильно - хардкод цветов
 <p className="text-red-500">Ошибка валидации</p>
