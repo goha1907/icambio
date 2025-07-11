@@ -26,7 +26,7 @@ import { Input } from '@/shared/ui/Input';
 import { Textarea } from '@/shared/ui/Textarea';
 import { Label } from '@/shared/ui/Label';
 import { Badge } from '@/shared/ui/Badge';
-import { exchangeOrderSchema } from '@/shared/validation/exchange';
+import { exchangeOrderSchema } from '@/features/exchange/validation.ts';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import toast from 'react-hot-toast';
 

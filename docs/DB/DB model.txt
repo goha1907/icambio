@@ -1,0 +1,116 @@
+﻿// --- Пользователи ---
+Table users {
+  id uuid [pk, default: `gen_random_uuid()`] // ID пользователя, как в Supabase
+  username varchar
+  email varchar [not null, unique]
+  first_name varchar
+  last_name varchar
+  whatsapp bigint [not null] // только цифры
+  telegram varchar
+  referral_code varchar [unique, not null] // Уникальный код самого пользователя
+  referred_by_code varchar [null] // Реферальный код того, кто его пригласил
+  default_address_id int [ref: > user_addresses.id, null] // Ссылка на адрес по умолчанию
+  role varchar [not null, default: 'user'] // admin, operator, etc.
+  created_at timestamp [default: `now()`]
+}
+
+  // --- Адреса пользователей ---
+  Table user_addresses {
+    id int [pk, increment]
+    user_id uuid [ref: > users.id, not null]
+    
+    // Структурированные данные от Google API
+    country varchar
+    city varchar
+    street varchar
+    house_number varchar
+    postal_code varchar
+    
+    // Полный адрес для отображения и координаты
+    full_address text [not null] // Полная строка, как ее отдает Google
+    latitude decimal
+    longitude decimal
+    
+    created_at timestamp [default: `now()`]
+  }
+
+// --- Филиалы ---
+Table branches {
+  id int [pk, increment]
+  name varchar [not null]
+  email varchar [unique]
+  whatsapp bigint
+  telegram varchar
+  instagram varchar
+  address text [not null]
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+}
+
+// --- Валюты ---
+Table currencies {
+  id int [pk, increment]
+  code varchar [unique, not null] // USD, EUR, ARS
+  name varchar [not null]
+  symbol varchar
+  decimal_places int [default: 2] // округление
+  created_at timestamp [default: `now()`]
+}
+
+// --- Валюты, привязанные к филиалам ---
+Table branch_currencies {
+  id int [pk, increment]
+  branch_id int [ref: > branches.id]
+  currency_id int [ref: > currencies.id]
+  amount decimal [not null, default: 0] // остаток
+
+  Indexes {
+    (branch_id, currency_id) [unique]
+  }
+}
+
+// --- Курсы валют ---
+Table exchange_rates {
+  id int [pk, increment]
+  currency_from_id int [ref: > currencies.id]
+  currency_to_id int [ref: > currencies.id]
+  branch_id int [ref: > branches.id]
+  min_amount decimal [not null] // от какой суммы
+  rate decimal [not null] // курс
+  is_hot boolean [default: false]
+  updated_at timestamp [default: `now()`]
+
+  Indexes {
+    (currency_from_id, currency_to_id, branch_id, min_amount) [unique]
+  }
+}
+
+// --- Заказы ---
+Table orders {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  branch_id int [ref: > branches.id]
+  currency_from_id int [ref: > currencies.id]
+  currency_to_id int [ref: > currencies.id]
+  amount_from decimal [not null] // сколько отдаёт пользователь
+  amount_to decimal [not null]   // сколько получает
+  applied_rate decimal [not null] // конечный курс, по которому провели обмен
+  status varchar [not null, default: 'pending'] // pending, completed, canceled
+  created_at timestamp [default: `now()`]
+  completed_at timestamp
+}
+
+// --- Отзывы ---
+Table reviews {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  order_id int [ref: > orders.id]
+  rating int [not null] // 1–5
+  comment text
+  visible boolean [default: false]
+  created_at timestamp [default: `now()`]
+
+  Indexes {
+    (user_id, order_id) [unique]
+  }
+}

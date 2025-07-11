@@ -17,10 +17,15 @@ export const registerSchema = z
     email: z.string().min(1, 'Email обязателен').email('Введите корректный email'),
     password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
     confirmPassword: z.string().min(1, 'Подтвердите пароль'),
+    termsAccepted: z.boolean({ required_error: 'Необходимо согласиться с условиями' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Пароли не совпадают',
     path: ['confirmPassword'],
+  })
+  .refine((data) => data.termsAccepted === true, {
+    message: 'Необходимо согласиться с условиями',
+    path: ['termsAccepted'],
   });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;

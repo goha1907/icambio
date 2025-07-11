@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 /**
  * Варианты стилей для Loader компонента
@@ -47,7 +47,7 @@ const loaderVariants = cva(
        * - white: белый для темных фонов
        */
       color: {
-        primary: 'text-icmop-primary',
+        primary: 'text-icambio-primary',
         secondary: 'text-foreground',
         muted: 'text-muted-foreground',
         white: 'text-white',

@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { Loader } from './Loader';
-import { Alert, AlertDescription, AlertTitle } from './Alert';
-import { Button } from './Button';
-import { cn } from '@/lib/utils';
+import { Loader } from '@/shared/ui/Loader';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/Alert';
+import { Button } from '@/shared/ui/Button';
+import { cn } from '@/shared/lib/utils';
 
 /**
  * Интерфейс пропсов для компонента ProtectedRoute
@@ -25,29 +25,42 @@ interface ProtectedRouteProps {
 }
 
 /**
- * Компонент ProtectedRoute для защиты маршрутов, требующих аутентификации
+ * ProtectedRoute — компонент-обёртка для защищённых маршрутов.
  * 
- * Этот компонент проверяет аутентификацию пользователя и при необходимости
- * перенаправляет на страницу входа. Поддерживает проверку ролей, кастомные
- * редиректы и настраиваемые состояния загрузки.
+ * Выполняет две основные проверки перед рендерингом вложенных маршрутов (`<Outlet />`):
+ * 1. Пользователь аутентифицирован (`useAuth().isAuthenticated`).
+ * 2. Пользователь обладает хотя бы одной из требуемых ролей (`user.user_metadata.roles`).
+ * 
+ * При отсутствии аутентификации происходит редирект на страницу логина. Если же
+ * аутентификация прошла, но роли не совпадают, отображается страница "Доступ
+ * запрещён" (можно заменить через `accessDeniedComponent`).
+ * 
+ * @param {ProtectedRouteProps}  props                                   Параметры компонента
+ * @param {string}               [props.redirectTo="/login"]           URL для редиректа неавторизованных пользователей
+ * @param {string[]}             [props.requiredRoles]                   Список ролей, необходимых для доступа. Роли читаются из `user.user_metadata.roles`
+ * @param {React.ReactNode}      [props.fallback]                        Кастомный элемент для состояния загрузки
+ * @param {React.ReactNode}      [props.accessDeniedComponent]           Кастомный элемент для отображения ошибки доступа
+ * @param {string}               [props.className]                       Дополнительные CSS-классы контейнера состояний
+ * @param {boolean}              [props.showDetailedErrors=false]        Показывать ли подробности о требуемых/текущих ролях
+ * @returns {JSX.Element} Компонент `<Outlet />`, либо состояние загрузки, либо редирект/отказ в доступе
  * 
  * @example
- * // Базовое использование - защита маршрута
+ * // 1. Базовое использование (только проверка аутентификации)
  * <ProtectedRoute />
  * 
  * @example
- * // С кастомным редиректом
+ * // 2. Кастомный путь редиректа
  * <ProtectedRoute redirectTo="/auth/signin" />
  * 
  * @example
- * // С проверкой ролей пользователя
+ * // 3. Проверка ролей пользователя
  * <ProtectedRoute 
  *   requiredRoles={['admin', 'moderator']}
  *   accessDeniedComponent={<CustomAccessDenied />}
  * />
  * 
  * @example
- * // С кастомным состоянием загрузки
+ * // 4. Кастомное состояние загрузки
  * <ProtectedRoute 
  *   fallback={
  *     <div className="flex h-screen items-center justify-center">

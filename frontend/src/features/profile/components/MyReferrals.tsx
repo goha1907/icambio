@@ -82,7 +82,7 @@ export const MyReferrals = ({ user }: MyReferralsProps) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-icmop-primary" />
+            <Users className="w-5 h-5 text-icambio-primary" />
             Статистика рефералов
           </CardTitle>
         </CardHeader>
@@ -133,14 +133,14 @@ export const MyReferrals = ({ user }: MyReferralsProps) => {
       </Card>
 
       {/* Информация о программе */}
-      <Card className="bg-gradient-to-r from-icmop-primary/5 to-icmop-primary/10 border-icmop-primary/20">
+      <Card className="bg-gradient-to-r from-icambio-primary/5 to-icambio-primary/10 border-icambio-primary/20">
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
-            <div className="p-2 bg-icmop-primary/20 rounded-lg">
-              <Award className="w-5 h-5 text-icmop-primary" />
+            <div className="p-2 bg-icambio-primary/20 rounded-lg">
+              <Award className="w-5 h-5 text-icambio-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-icmop-primary mb-2">
+              <h3 className="font-semibold text-icambio-primary mb-2">
                 Как работает реферальная программа?
               </h3>
               <ul className="text-sm text-gray-600 space-y-1">

@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore'
 import { authService, type LoginCredentials, type RegisterCredentials } from '../services/authService'
 import toast from 'react-hot-toast'
 import type { TUser, SupabaseSession } from '@/types'
-import { supabase } from '@/config/supabase'
+import { supabase } from '@/shared/config/supabase'
 import { useNavigate } from 'react-router-dom'
 
 export const useAuth = () => {

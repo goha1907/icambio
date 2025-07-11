@@ -40,4 +40,4 @@ export const profileSchema = z.object({
     .or(z.literal('')),
 });
 
-export type ProfileFormData = z.infer<typeof profileSchema>;
+export type ProfileFormData = z.infer<typeof profileSchema>; 

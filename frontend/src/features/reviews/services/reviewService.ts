@@ -1,7 +1,7 @@
 import api from '@/shared/api/api';
 import { Review } from '@/types';
 import { API_CONFIG } from '@/config/api';
-import { MOCK_REVIEWS, delay, shouldSimulateError } from '@/lib/mock-data';
+import { MOCK_REVIEWS, delay, shouldSimulateError } from '@/shared/lib/mock-data';
 
 export const reviewService = {
   getAllReviews: async (): Promise<Review[]> => {

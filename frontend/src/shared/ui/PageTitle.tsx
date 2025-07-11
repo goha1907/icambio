@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 /**
  * Варианты стилей для компонента PageTitle
@@ -61,30 +61,39 @@ interface PageTitleProps
 }
 
 /**
- * Компонент PageTitle для отображения заголовков страниц
+ * PageTitle — семантический компонент для отображения заголовков страниц.
  * 
- * Используется для создания единообразных заголовков на всех страницах приложения.
- * Поддерживает различные размеры, выравнивание, описание и дополнительные элементы.
+ * Обеспечивает единообразные размеры, выравнивание, описание и возможность
+ * размещать дополнительные элементы (кнопки, ссылки) рядом с заголовком.
+ * 
+ * @param {PageTitleProps} props               Параметры компонента
+ * @param {string}          props.title        Основной заголовок страницы
+ * @param {string}          [props.description]Описание, отображаемое под заголовком
+ * @param {'sm'|'md'|'lg'|'xl'} [props.size]   Размер заголовка (по умолчанию `'lg'`)
+ * @param {'left'|'center'}   [props.align]    Выравнивание содержимого (по умолчанию `'left'`)
+ * @param {React.ReactNode}   [props.children] Дополнительные элементы (кнопки, ссылки)
+ * @param {string}            [props.className]Дополнительные CSS-классы
+ * @returns {React.ReactElement} JSX-элемент
  * 
  * @example
- * // Простой заголовок
+ * // 1. Простой заголовок
  * <PageTitle title="Личный кабинет" />
  * 
  * @example
- * // Заголовок с описанием
+ * // 2. Заголовок с описанием
  * <PageTitle 
  *   title="Создать заявку" 
  *   description="Заполните форму для создания новой заявки"
  * />
  * 
  * @example
- * // Заголовок с кнопкой
+ * // 3. Заголовок с кнопкой
  * <PageTitle title="Заказы">
  *   <Button variant="primary">Создать заказ</Button>
  * </PageTitle>
  * 
  * @example
- * // Центрированный заголовок
+ * // 4. Центрированный заголовок большого размера
  * <PageTitle 
  *   title="Добро пожаловать" 
  *   align="center"
@@ -132,4 +141,5 @@ const PageTitle = React.forwardRef<HTMLDivElement, PageTitleProps>(
 
 PageTitle.displayName = 'PageTitle';
 
-export { PageTitle, type PageTitleProps };
+// Экспортируем также варианты стилизации для единообразия с другими UI-компонентами
+export { PageTitle, pageTitleVariants, type PageTitleProps };

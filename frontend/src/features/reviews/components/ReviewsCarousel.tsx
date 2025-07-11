@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { Review } from '@/features/exchange/types';
-import { MOCK_REVIEWS } from '@/lib/mock-data';
-import { cn } from '@/lib/utils';
+import { MOCK_REVIEWS } from '@/shared/lib/mock-data';
+import { cn } from '@/shared/lib/utils';
 
 // Мемоизированный компонент отзыва
 const ReviewItem = memo(({ review }: { review: Review }) => (
@@ -169,7 +169,7 @@ export const ReviewsCarousel = ({
                   className={cn(
                     "w-2 h-2 rounded-full transition-all duration-200",
                     isActive 
-                      ? "bg-icmop-primary scale-125" 
+                      ? "bg-icambio-primary scale-125" 
                       : "bg-gray-300 hover:bg-gray-400"
                   )}
                   aria-label={`Перейти к странице ${index + 1}`}

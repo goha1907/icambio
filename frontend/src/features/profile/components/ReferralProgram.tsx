@@ -6,7 +6,7 @@ import { Label } from '@/shared/ui/Label';
 import type { TUser } from '@/types';
 import { Copy, Link2, Users, Wallet, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { findUserByReferralCode } from '@/lib/mock-data';
+import { findUserByReferralCode } from '@/shared/lib/mock-data';
 import { useNavigate } from 'react-router-dom';
 
 interface ReferralProgramProps {
@@ -86,7 +86,7 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-icmop-primary" />
+            <Users className="w-5 h-5 text-icambio-primary" />
             Реферальная программа
           </CardTitle>
         </CardHeader>
@@ -100,14 +100,14 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <code 
-                  className="text-2xl font-mono font-bold text-icmop-primary cursor-pointer hover:opacity-80 transition-opacity"
+                  className="text-2xl font-mono font-bold text-icambio-primary cursor-pointer hover:opacity-80 transition-opacity"
                   onClick={handleCopyLink}
                   title="Нажмите, чтобы скопировать ссылку"
                 >
                   {user.referral_code}
                 </code>
                 <span 
-                  className="text-sm text-gray-500 cursor-pointer hover:text-icmop-primary transition-colors"
+                  className="text-sm text-gray-500 cursor-pointer hover:text-icambio-primary transition-colors"
                   onClick={handleGoToMyReferrals}
                   title="Перейти к списку рефералов"
                 >

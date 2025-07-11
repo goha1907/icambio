@@ -3,7 +3,7 @@
 import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 
 /**
  * Варианты стилей для TabsList
@@ -63,9 +63,9 @@ const tabsTriggerVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-b-2 border-transparent px-3 py-2 text-muted-foreground hover:text-icmop-primary data-[state=active]:border-icmop-primary data-[state=active]:text-icmop-primary',
+        default: 'border-b-2 border-transparent px-3 py-2 text-muted-foreground hover:text-icambio-primary data-[state=active]:border-icambio-primary data-[state=active]:text-icambio-primary',
         pills: 'rounded-md px-3 py-1.5 text-muted-foreground hover:bg-background hover:text-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
-        underline: 'border-b-2 border-transparent px-2 py-2 text-muted-foreground hover:text-icmop-primary data-[state=active]:border-icmop-primary data-[state=active]:text-icmop-primary',
+        underline: 'border-b-2 border-transparent px-2 py-2 text-muted-foreground hover:text-icambio-primary data-[state=active]:border-icambio-primary data-[state=active]:text-icambio-primary',
       },
       size: {
         sm: 'h-7 px-2 py-1 text-xs gap-1',
@@ -258,6 +258,51 @@ const TabsContent = React.forwardRef<
   />
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
+
+/**
+ * # Полный пример использования
+ *
+ * ```tsx
+ * import {
+ *   Tabs,
+ *   TabsList,
+ *   TabsTrigger,
+ *   TabsContent,
+ * } from '@/shared/ui/TabPanel';
+ * import { Settings, Shield, CreditCard } from 'lucide-react';
+ *
+ * function SettingsTabs() {
+ *   const [tab, setTab] = React.useState('general');
+ *
+ *   return (
+ *     <Tabs value={tab} onValueChange={setTab} className="w-full">
+ *       // Список вкладок
+ *       <TabsList variant="pills" size="sm" className="mb-4">
+ *         <TabsTrigger value="general" icon={<Settings size={16} />}>
+ *           Общие
+ *         </TabsTrigger>
+ *         <TabsTrigger value="security" icon={<Shield size={16} />}>
+ *           Безопасность
+ *         </TabsTrigger>
+ *         // Вкладка только с иконкой
+ *         <TabsTrigger value="billing" icon={<CreditCard size={16} />} iconOnly />
+ *       </TabsList>
+ *
+ *       // Содержимое вкладок
+ *       <TabsContent value="general" padded>
+ *         <p>Общие настройки приложения...</p>
+ *       </TabsContent>
+ *       <TabsContent value="security" padded>
+ *         <p>Настройки безопасности...</p>
+ *       </TabsContent>
+ *       <TabsContent value="billing" padded>
+ *         <p>Платёжные методы и выставление счетов...</p>
+ *       </TabsContent>
+ *     </Tabs>
+ *   );
+ * }
+ * ```
+ */
 
 export {
   Tabs,

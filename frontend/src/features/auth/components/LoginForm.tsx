@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/Button'
+import { Checkbox } from '@/shared/ui'
 
 import {
   Form,
@@ -15,10 +16,7 @@ import {
 } from '@/shared/ui/Form'
 import { Input } from '@/shared/ui/Input'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import {
-  loginSchema,
-  LoginFormData,
-} from '@/shared/validation/auth'
+import { loginSchema, type LoginFormData } from '@/features/auth/validation'
 
 /**
  * Компонент формы входа в систему
@@ -35,7 +33,7 @@ import {
  */
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate()
-  const { login, isLoading } = useAuth()
+  const { login, isLoading, error } = useAuth()
   
   // Состояния компонента
   const [showPassword, setShowPassword] = useState(false)
@@ -181,13 +179,11 @@ export const LoginForm: React.FC = () => {
           <div className="flex items-center justify-between">
             {/* Чекбокс "Запомнить меня" */}
             <div className="flex items-center space-x-2">
-                             <input
+              <Checkbox
                  id="remember-me"
-                 type="checkbox"
                  checked={rememberMe}
-                 onChange={(e) => setRememberMe(e.target.checked)}
+                onCheckedChange={(checked) => setRememberMe(!!checked)}
                  disabled={isLoading}
-                 className="h-4 w-4 rounded border-input accent-icmop-primary focus:ring-2 focus:ring-icmop-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                />
               <label 
                 htmlFor="remember-me" 
@@ -200,7 +196,7 @@ export const LoginForm: React.FC = () => {
             {/* Ссылка на восстановление пароля */}
             <Link 
               to="/reset-password" 
-              className="text-sm font-medium text-icmop-primary hover:text-icmop-primary/80 transition-colors underline-offset-4 hover:underline"
+              className="text-sm font-medium text-icambio-primary hover:text-icambio-primary/80 transition-colors underline-offset-4 hover:underline"
             >
               Забыли пароль?
             </Link>

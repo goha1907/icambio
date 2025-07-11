@@ -21,7 +21,6 @@
       "@components/*": ["src/shared/ui/*"],
       "@features/*": ["src/features/*"],
       "@lib/*": ["src/lib/*"],
-      "@config/*": ["src/config/*"],
       "@types/*": ["src/types/*"]
     }
   },

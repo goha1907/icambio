@@ -5,7 +5,7 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown } from "lucide-react"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 
 /**
  * Варианты стилей для SelectTrigger
@@ -23,9 +23,9 @@ const selectTriggerVariants = cva(
        * - success: состояние успеха с зеленой границей
        */
       variant: {
-        default: "border-input hover:border-muted-foreground focus:border-icmop-primary focus:ring-ring",
-        error: "border-destructive hover:border-destructive focus:border-destructive focus:ring-destructive",
-        success: "border-success hover:border-success focus:border-success focus:ring-success",
+        default: "border-input hover:border-muted-foreground focus:ring-ring",
+        error: "border-destructive hover:border-destructive focus:ring-destructive",
+        success: "border-success hover:border-success focus:ring-success",
       },
       /**
        * Размеры компонента
@@ -109,11 +109,12 @@ const SelectTrigger = React.forwardRef<
     className={cn(selectTriggerVariants({ variant, size }), className)}
     {...props}
   >
-    {children}
-    {/* Иконка стрелки для открытия списка */}
-    <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-    </SelectPrimitive.Icon>
+    <div className="flex items-center justify-between w-full">
+      {children}
+      <SelectPrimitive.Icon asChild>
+        <ChevronDown className="h-4 w-4 opacity-50" />
+      </SelectPrimitive.Icon>
+    </div>
   </SelectPrimitive.Trigger>
 ))
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
@@ -221,7 +222,7 @@ const SelectItem = React.forwardRef<
       // Состояние отключения
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       // Состояние выбора
-      "data-[state=checked]:bg-icmop-primary/10 data-[state=checked]:text-icmop-primary data-[state=checked]:font-medium",
+      "data-[state=checked]:bg-icambio-primary/10 data-[state=checked]:text-icambio-primary data-[state=checked]:font-medium",
       className
     )}
     {...props}
@@ -229,7 +230,7 @@ const SelectItem = React.forwardRef<
     {/* Индикатор выбранного элемента */}
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4 text-icmop-primary" />
+        <Check className="h-4 w-4 text-icambio-primary" />
       </SelectPrimitive.ItemIndicator>
     </span>
 
@@ -263,6 +264,111 @@ const SelectSeparator = React.forwardRef<
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
+/**
+ * # Полный пример использования
+ * 
+ * ```tsx
+ * import {
+ *   Select,
+ *   SelectTrigger,
+ *   SelectValue,
+ *   SelectContent,
+ *   SelectGroup,
+ *   SelectLabel,
+ *   SelectItem,
+ *   SelectSeparator,
+ * } from '@/shared/ui/Select';
+ * 
+ * function CurrencySelect() {
+ *   const [currency, setCurrency] = React.useState('usd');
+ * 
+ *   return (
+ *     <Select value={currency} onValueChange={setCurrency}>
+ *       <SelectTrigger variant="default" size="md">
+ *         <SelectValue placeholder="Выберите валюту" />
+ *       </SelectTrigger>
+ *       <SelectContent>
+ *         <SelectGroup>
+ *           <SelectLabel>Криптовалюты</SelectLabel>
+ *           <SelectItem value="btc">Bitcoin (BTC)</SelectItem>
+ *           <SelectItem value="eth">Ethereum (ETH)</SelectItem>
+ *           <SelectSeparator />
+ *           <SelectLabel>Фиат</SelectLabel>
+ *           <SelectItem value="usd">Доллар США (USD)</SelectItem>
+ *           <SelectItem value="eur">Евро (EUR)</SelectItem>
+ *         </SelectGroup>
+ *       </SelectContent>
+ *     </Select>
+ *   );
+ * }
+ * ```
+ *
+ * # Интеграция с React Hook Form
+ *
+ * Для использования с `react-hook-form` оберните `Select` в компонент `Controller`.
+ *
+ * ```tsx
+ * import { useForm, Controller } from 'react-hook-form';
+ * import { z } from 'zod';
+ * import { zodResolver } from '@hookform/resolvers/zod';
+ * import {
+ *   Select,
+ *   SelectTrigger,
+ *   SelectValue,
+ *   SelectContent,
+ *   SelectItem,
+ * } from '@/shared/ui/Select';
+ * import { FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/Form';
+ *
+ * const formSchema = z.object({
+ *   framework: z.string({ required_error: 'Пожалуйста, выберите фреймворк.' }),
+ * });
+ *
+ * function FrameworkForm() {
+ *   const form = useForm<z.infer<typeof formSchema>>({
+ *     resolver: zodResolver(formSchema),
+ *   });
+ *
+ *   const onSubmit = (data: z.infer<typeof formSchema>) => {
+ *     console.log(data);
+ *   };
+ *
+ *   return (
+ *     <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
+ *       <FormField
+ *         control={form.control}
+ *         name="framework"
+ *         render={({ field, fieldState }) => (
+ *           <FormItem>
+ *             <FormLabel>Фреймворк</FormLabel>
+ *             <Select
+ *               onValueChange={field.onChange}
+ *               defaultValue={field.value}
+ *               value={field.value}
+ *             >
+ *               <SelectTrigger
+ *                 variant={fieldState.error ? 'error' : 'default'}
+ *                 ref={field.ref}
+ *               >
+ *                 <SelectValue placeholder="Выберите фреймворк..." />
+ *               </SelectTrigger>
+ *               <SelectContent>
+ *                 <SelectItem value="react">React</SelectItem>
+ *                 <SelectItem value="vue">Vue</SelectItem>
+ *                 <SelectItem value="svelte">Svelte</SelectItem>
+ *               </SelectContent>
+ *             </Select>
+ *             <FormMessage />
+ *           </FormItem>
+ *         )}
+ *       />
+ *       <button type="submit">Отправить</button>
+ *     </form>
+ *   );
+ * }
+ * ```
+ */
+ 
 export {
   Select,
   SelectGroup,

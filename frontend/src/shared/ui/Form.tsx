@@ -10,7 +10,7 @@ import {
   useFormContext,
 } from "react-hook-form"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/shared/lib/utils"
 import { Label } from "@/shared/ui/Label"
 
 /**
@@ -140,14 +140,14 @@ FormItem.displayName = "FormItem"
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
+>(({ className, htmlFor, ...props }, ref) => {
   const { error, formItemId } = useFormField()
 
   return (
     <Label
       ref={ref}
       className={cn(error && "text-destructive", className)}
-      htmlFor={formItemId}
+      htmlFor={htmlFor ?? formItemId}
       {...props}
     />
   )
@@ -161,13 +161,13 @@ FormLabel.displayName = "FormLabel"
 const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
+>(({ id, ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
-
+  const controlId = id ?? formItemId
   return (
     <Slot
       ref={ref}
-      id={formItemId}
+      id={controlId}
       aria-describedby={
         !error
           ? `${formDescriptionId}`

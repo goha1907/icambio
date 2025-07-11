@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/shared/ui/Button';
 import {
@@ -13,12 +13,12 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/ui/Form';
-import { Input } from '@/shared/ui/Input';
+import { PasswordInput } from '@/shared/ui';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
   changePasswordSchema,
-  ChangePasswordFormData,
-} from '@/shared/validation/auth';
+  type ChangePasswordFormData,
+} from '@/features/auth/validation';
 
 /**
  * Компонент формы смены пароля
@@ -39,13 +39,9 @@ export const ChangePasswordForm: React.FC = () => {
   const { changePasswordWithReauth, isLoading } = useAuth();
   
   // Состояния компонента
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
-  const [confirmPasswordError, setConfirmPasswordError] = useState<string>('');
+  // Локальные переключатели показа пароля и ручная проверка больше не нужны
   
-  // Реф для автофокуса на поле текущего пароля
-  const oldPasswordInputRef = useRef<HTMLInputElement>(null);
+  // autoFocus будет передан в PasswordInput
 
   // Инициализация формы с улучшенными настройками
   const form = useForm<ChangePasswordFormData>({
@@ -59,45 +55,13 @@ export const ChangePasswordForm: React.FC = () => {
     reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
   });
 
-  // Автофокус на поле текущего пароля при монтировании компонента
-  useEffect(() => {
-    if (oldPasswordInputRef.current) {
-      oldPasswordInputRef.current.focus();
-    }
-  }, []);
+  // autofocus handled by component directly
 
-  // Отслеживание изменений полей новых паролей для проверки совпадения
-  const newPassword = form.watch('newPassword');
-  const confirmNewPassword = form.watch('confirmNewPassword');
-
-  useEffect(() => {
-    if (confirmNewPassword && newPassword && confirmNewPassword !== newPassword) {
-      setConfirmPasswordError('Новые пароли не совпадают');
-    } else {
-      setConfirmPasswordError('');
-    }
-  }, [newPassword, confirmNewPassword]);
+  // Валидация совпадения паролей полностью в zod-схеме
 
   /**
-   * Переключение видимости текущего пароля
+   * Локальные toggle функции больше не нужны
    */
-  const toggleOldPasswordVisibility = () => {
-    setShowOldPassword(prev => !prev);
-  };
-
-  /**
-   * Переключение видимости нового пароля
-   */
-  const toggleNewPasswordVisibility = () => {
-    setShowNewPassword(prev => !prev);
-  };
-
-  /**
-   * Переключение видимости подтверждения нового пароля
-   */
-  const toggleConfirmNewPasswordVisibility = () => {
-    setShowConfirmNewPassword(prev => !prev);
-  };
 
   /**
    * Обработка отправки формы
@@ -113,7 +77,6 @@ export const ChangePasswordForm: React.FC = () => {
 
       // Успешная смена пароля - сбрасываем форму и редиректим на профиль
       form.reset();
-      setConfirmPasswordError('');
       
       // Редирект на страницу профиля через небольшую задержку для показа toast
       setTimeout(() => {
@@ -131,131 +94,34 @@ export const ChangePasswordForm: React.FC = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* Поле Текущий пароль */}
-        <FormField
+          <PasswordInput
           control={form.control}
           name="oldPassword"
-            render={({ field, fieldState }) => (
-            <FormItem>
-                <FormLabel>Текущий пароль <span className="text-destructive">*</span></FormLabel>
-              <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      ref={oldPasswordInputRef}
-                      type={showOldPassword ? 'text' : 'password'}
+            label={<>Текущий пароль <span className="text-destructive">*</span></>}
                       placeholder="Введите текущий пароль"
                       autoComplete="current-password"
-                      aria-describedby={fieldState.error ? `${field.name}-error` : undefined}
-                      variant={fieldState.error ? 'error' : 'default'}
                       disabled={isLoading}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={toggleOldPasswordVisibility}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={showOldPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                      disabled={isLoading}
-                    >
-                      {showOldPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-              </FormControl>
-                <FormMessage id={`${field.name}-error`} />
-            </FormItem>
-          )}
+            autoFocus
         />
 
           {/* Поле Новый пароль */}
-        <FormField
+          <PasswordInput
           control={form.control}
           name="newPassword"
-            render={({ field, fieldState }) => (
-            <FormItem>
-                <FormLabel>Новый пароль <span className="text-destructive">*</span></FormLabel>
-              <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      type={showNewPassword ? 'text' : 'password'}
+            label={<>Новый пароль <span className="text-destructive">*</span></>}
                       placeholder="Минимум 8 символов"
                       autoComplete="new-password"
-                      aria-describedby={fieldState.error ? `${field.name}-error` : undefined}
-                      variant={fieldState.error ? 'error' : 'default'}
                       disabled={isLoading}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={toggleNewPasswordVisibility}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={showNewPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                      disabled={isLoading}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-              </FormControl>
-                <FormMessage id={`${field.name}-error`} />
-            </FormItem>
-          )}
         />
 
-          {/* Поле Подтверждение нового пароля */}
-        <FormField
+          {/* Подтверждение нового пароля */}
+          <PasswordInput
           control={form.control}
           name="confirmNewPassword"
-            render={({ field, fieldState }) => {
-              const hasError = fieldState.error || confirmPasswordError;
-              return (
-            <FormItem>
-                  <FormLabel>Подтвердите новый пароль <span className="text-destructive">*</span></FormLabel>
-              <FormControl>
-                    <div className="relative">
-                      <Input
-                        {...field}
-                        type={showConfirmNewPassword ? 'text' : 'password'}
+            label={<>Подтвердите новый пароль <span className="text-destructive">*</span></>}
                         placeholder="Повторите новый пароль"
                         autoComplete="new-password"
-                        aria-describedby={hasError ? `${field.name}-error` : undefined}
-                        variant={hasError ? 'error' : 'default'}
                         disabled={isLoading}
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={toggleConfirmNewPasswordVisibility}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        aria-label={showConfirmNewPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                        disabled={isLoading}
-                      >
-                        {showConfirmNewPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-              </FormControl>
-                  {/* Показываем кастомную ошибку или стандартную ошибку формы */}
-                  {confirmPasswordError ? (
-                    <p className="text-sm font-medium text-destructive" id={`${field.name}-error`}>
-                      {confirmPasswordError}
-                    </p>
-                  ) : (
-                    <FormMessage id={`${field.name}-error`} />
-                  )}
-            </FormItem>
-              );
-            }}
           />
 
           {/* Информация о требованиях к новому паролю */}

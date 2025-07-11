@@ -30,7 +30,7 @@ import { ProfileDetails } from '@/features/profile/components/ProfileDetails';
 import { ExchangeHistory } from '@/features/profile/components/ExchangeHistory';
 import { ReferralProgram } from '@/features/profile/components/ReferralProgram';
 import { MyReferrals } from '@/features/profile/components/MyReferrals';
-import { MOCK_EXCHANGE_HISTORY, MOCK_USER_PROFILES } from '@/lib/mock-data';
+import { MOCK_EXCHANGE_HISTORY, MOCK_USER_PROFILES } from '@/shared/lib/mock-data';
 
 /**
  * Главная страница профиля пользователя

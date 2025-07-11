@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
@@ -16,8 +16,8 @@ import { Input } from '@/shared/ui/Input';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
   resetPasswordSchema,
-  ResetPasswordFormData,
-} from '@/shared/validation/auth';
+  type ResetPasswordFormData,
+} from '@/features/auth/validation';
 
 /**
  * Компонент формы запроса сброса пароля
@@ -35,8 +35,7 @@ export const ResetPasswordForm: React.FC = () => {
   const navigate = useNavigate();
   const { resetPassword, isLoading } = useAuth();
   
-  // Реф для автофокуса на поле email
-  const emailInputRef = useRef<HTMLInputElement>(null);
+  // autoFocus будет передан напрямую в Input
 
   // Инициализация формы с улучшенными настройками
   const form = useForm<ResetPasswordFormData>({
@@ -46,29 +45,15 @@ export const ResetPasswordForm: React.FC = () => {
     reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
   });
 
-  // Автофокус на поле email при монтировании компонента
-  useEffect(() => {
-    if (emailInputRef.current) {
-      emailInputRef.current.focus();
-    }
-  }, []);
-
   /**
    * Обработка отправки формы
    */
   const onSubmit = async (data: ResetPasswordFormData) => {
     try {
       const result = await resetPassword(data.email);
-      
-      if (result.error) {
-        // Ошибки показываются через toast в useAuth
-        return;
-      }
-
-      // Успешная отправка - редиректим на страницу подтверждения через задержку
-      setTimeout(() => {
+      if (!result.error) {
         navigate('/reset-password-sent');
-      }, 1000);
+      }
     } catch (error) {
       console.error('Reset password form error:', error);
       // Ошибки показываются через toast в useAuth
@@ -90,10 +75,10 @@ export const ResetPasswordForm: React.FC = () => {
                 <FormControl>
                   <Input
                     {...field}
-                    ref={emailInputRef}
                     type="email"
                     placeholder="your@email.com"
                     autoComplete="email"
+                    autoFocus
                     aria-describedby={fieldState.error ? `${field.name}-error` : undefined}
                     variant={fieldState.error ? 'error' : 'default'}
                     disabled={isLoading}
@@ -135,7 +120,7 @@ export const ResetPasswordForm: React.FC = () => {
               Вспомнили пароль?{' '}
               <Link 
                 to="/login" 
-                className="font-medium text-icmop-primary hover:text-icmop-primary/80 transition-colors underline-offset-4 hover:underline"
+                className="font-medium text-icambio-primary hover:text-icambio-primary/80 transition-colors underline-offset-4 hover:underline"
               >
                 Вернуться ко входу
               </Link>

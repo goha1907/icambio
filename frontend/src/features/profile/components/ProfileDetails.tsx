@@ -7,7 +7,7 @@ import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Input';
 import { Label } from '@/shared/ui/Label';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { profileSchema, ProfileFormData } from '@/shared/validation/profile';
+import { profileSchema, type ProfileFormData } from '@/features/profile/validation';
 import type { TUser } from '@/types';
 import { Edit3, Save, X, MapPin } from 'lucide-react';
 
@@ -151,7 +151,7 @@ export const ProfileDetails = ({ user }: ProfileDetailsProps) => {
               href={value.startsWith('https://') ? value : `${linkPrefix}${value.replace(/[@+]/g, '')}`}
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-icmop-primary hover:underline"
+              className="text-icambio-primary hover:underline"
             >
               {value}
             </a>
@@ -165,7 +165,7 @@ export const ProfileDetails = ({ user }: ProfileDetailsProps) => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold bg-gradient-to-r from-icmop-primary to-icmop-dark bg-clip-text text-transparent">
+          <CardTitle className="text-xl font-semibold bg-gradient-to-r from-icambio-primary to-icambio-dark bg-clip-text text-transparent">
             Информация профиля
           </CardTitle>
           {!isEditing && (
@@ -173,7 +173,7 @@ export const ProfileDetails = ({ user }: ProfileDetailsProps) => {
               variant="ghost" 
               size="sm"
               onClick={handleEdit}
-              className="text-icmop-primary hover:bg-icmop-primary/10"
+              className="text-icambio-primary hover:bg-icambio-primary/10"
             >
               <Edit3 className="w-4 h-4 mr-2" />
               Редактировать данные
@@ -223,12 +223,12 @@ export const ProfileDetails = ({ user }: ProfileDetailsProps) => {
               <Button 
                 type="submit"
                 disabled={!hasChanges || isLoading}
-                className="bg-icmop-primary hover:bg-icmop-dark"
+                className="bg-icambio-primary hover:bg-icambio-dark"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isLoading ? 'Сохранение...' : 'Сохранить данные'}
-          </Button>
-        </div>
+              </Button>
+            </div>
           )}
         </form>
       </CardContent>

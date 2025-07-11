@@ -1,4 +1,4 @@
-import { supabase } from '@/config/supabase'
+import { supabase } from '@/shared/config/supabase'
 import type { SupabaseSession, TUser } from '@/types'
 import { AuthError } from '@supabase/supabase-js'
 

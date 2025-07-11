@@ -6,7 +6,7 @@ import * as z from 'zod';
 
 import { Button } from '@/shared/ui/Button';
 import { CurrencyPairForm } from '@/features/exchange/components/CurrencyPairForm';
-import { MOCK_QUICK_PAIRS } from '@/lib/mock-data';
+import { MOCK_QUICK_PAIRS } from '@/shared/lib/mock-data';
 
 const calculatorSchema = z.object({
   pairs: z.array(
@@ -87,7 +87,7 @@ export const ExchangeCalculator = ({
     <div className="mx-auto w-full max-w-5xl rounded-xl bg-white p-6 shadow-lg sm:p-8">
       {!simplified && (
         <>
-          <h3 className="mb-6 bg-gradient-to-r from-icmop-primary to-icmop-dark bg-clip-text text-xl font-semibold text-transparent">
+          <h3 className="mb-6 bg-gradient-to-r from-icambio-primary to-icambio-dark bg-clip-text text-xl font-semibold text-transparent">
             Калькулятор обмена
           </h3>
           <div className="mb-8 flex flex-wrap gap-3">
