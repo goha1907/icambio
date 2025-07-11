@@ -31,7 +31,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   Главная
                 </Link>
@@ -39,7 +39,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/exchange" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   Заказать обмен
                 </Link>
@@ -47,7 +47,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/rates" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   Курсы
                 </Link>
@@ -55,7 +55,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/reviews" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   Отзывы
                 </Link>
@@ -72,7 +72,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/delivery" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   Доставка
                 </Link>
@@ -80,7 +80,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/rules" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   Правила обмена
                 </Link>
@@ -88,7 +88,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/working-hours" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   График работы
                 </Link>
@@ -96,7 +96,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/aml-kyc" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   AML/KYC
                 </Link>
@@ -104,7 +104,7 @@ export const Footer = () => {
               <li>
                 <Link 
                   to="/about" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   О нас
                 </Link>
@@ -122,7 +122,7 @@ export const Footer = () => {
                 <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 <a 
                   href="mailto:info@icambio.com" 
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   info@icambio.com
                 </a>
@@ -136,7 +136,7 @@ export const Footer = () => {
                   href="https://wa.me/79991234567" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   +7 999 123-45-67
                 </a>
@@ -148,7 +148,7 @@ export const Footer = () => {
                   href="https://t.me/icambio_support" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-sm text-gray-600 hover:text-icmop-primary transition-colors duration-200"
+                  className="text-sm text-gray-600 hover:text-icambio-primary transition-colors duration-200"
                 >
                   @icambio_support
                 </a>

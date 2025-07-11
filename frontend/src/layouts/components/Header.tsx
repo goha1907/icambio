@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { UserMenu } from '@/features/profile/components/UserMenu';
 import { Logo } from '@/shared/ui/Logo';
@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 export const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -24,8 +25,8 @@ export const Header = () => {
       : location.pathname.startsWith(path);
       
     return isCurrentPath
-      ? 'text-icmop-primary border-b-2 border-icmop-primary font-medium px-3 py-2 text-sm sm:text-base rounded-md transition-all duration-200'
-      : 'text-gray-600 hover:text-icmop-primary transition-colors duration-200 px-3 py-2 text-sm sm:text-base rounded-md hover:bg-gray-50';
+      ? 'text-icambio-primary border-b-2 border-icambio-primary font-medium px-3 py-2 text-sm sm:text-base rounded-md transition-all duration-200'
+      : 'text-gray-600 hover:text-icambio-primary transition-colors duration-200 px-3 py-2 text-sm sm:text-base rounded-md hover:bg-gray-50';
   };
 
   const isAuthPage = (path: string) => {
@@ -63,24 +64,20 @@ export const Header = () => {
               <UserMenu user={user} />
             ) : (
               <div className="flex items-center space-x-3">
-                <Button 
-                  asChild 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
-                  className={isAuthPage('/login') ? 'ring-2 ring-icmop-primary ring-offset-2' : ''}
+                  className={isAuthPage('/login') ? 'ring-2 ring-icambio-primary ring-offset-2' : ''}
+                  onClick={() => navigate('/login')}
                 >
-                  <Link to="/login">
-                    Вход
-                  </Link>
+                  Вход
                 </Button>
-                <Button 
-                  asChild 
+                <Button
                   size="sm"
-                  className={`bg-icmop-primary hover:bg-icmop-primary/90 ${isAuthPage('/register') ? 'ring-2 ring-icmop-primary ring-offset-2' : ''}`}
+                  className={`bg-icambio-primary hover:bg-icambio-primary/90 ${isAuthPage('/register') ? 'ring-2 ring-icambio-primary ring-offset-2' : ''}`}
+                  onClick={() => navigate('/register')}
                 >
-                  <Link to="/register">
-                    Регистрация
-                  </Link>
+                  Регистрация
                 </Button>
               </div>
             )}
@@ -129,7 +126,7 @@ export const Header = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-icmop-primary hover:bg-gray-50 transition-colors duration-200"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-icambio-primary hover:bg-gray-50 transition-colors duration-200"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
