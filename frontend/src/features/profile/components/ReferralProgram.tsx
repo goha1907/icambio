@@ -6,8 +6,8 @@ import { Label } from '@/shared/ui/Label';
 import type { TUser } from '@/types';
 import { Copy, Link2, Users, Wallet, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { findUserByReferralCode } from '@/shared/lib/mock-data';
 import { useNavigate } from 'react-router-dom';
+import { getUserByCode } from '@/shared/lib/mock-data-db';
 
 interface ReferralProgramProps {
   user: TUser;
@@ -61,7 +61,7 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
       // Имитация API запроса
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const inviterUser = findUserByReferralCode(referralCode);
+      const inviterUser = getUserByCode(referralCode);
       
       if (!inviterUser) {
         toast.error('Реферальный код не найден');
@@ -138,12 +138,12 @@ export const ReferralProgram = ({ user }: ReferralProgramProps) => {
             <div className="mt-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-green-600">
-                  {user.referralBalance.toFixed(2)} USDT
+                  {user.referralBalance?.toFixed(2) || '0.00'} USDT
                 </span>
               </div>
               <Button
                 variant="primary"
-                disabled={user.referralBalance <= 0}
+                disabled={!user.referralBalance || user.referralBalance <= 0}
                 className="opacity-50 cursor-not-allowed shrink-0 min-w-[140px]"
                 title="Функция вывода средств в разработке"
               >

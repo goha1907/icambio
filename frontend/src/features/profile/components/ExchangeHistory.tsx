@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type DateRange } from 'react-day-picker';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
@@ -11,9 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/ui/Table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/Select';
-import { Input } from '@/shared/ui/Input';
-import { DatePicker } from '@/shared/ui/DatePicker';
 import { cn } from '@/shared/lib/utils';
 import { Edit, Eye, MessageSquare } from 'lucide-react';
 
@@ -201,93 +198,23 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead 
-                    className="w-48"
-                    filterComponent={
-                      <DatePicker
-                        mode="range"
-                        value={filters.dateRange}
-                        onChange={(range) => handleFilterChange('dateRange', range)}
-                        onClear={() => handleFilterChange('dateRange', undefined)}
-                        placeholder="Все даты"
-                      />
-                    }
-                  >
+                  <TableHead className="text-left">
                     Дата
                   </TableHead>
-                  
-                  <TableHead 
-                    className="w-40"
-                    filterComponent={
-                      <Input
-                        type="number"
-                        placeholder="Сумма"
-                        value={filters.sentAmount}
-                        onChange={(e) => handleFilterChange('sentAmount', e.target.value)}
-                        className="text-foreground placeholder:text-muted-foreground"
-                      />
-                    }
-                  >
-                    Отправлено
+                  <TableHead className="text-left">
+                    Направление
                   </TableHead>
-                  
-                  <TableHead 
-                    className="w-40"
-                    filterComponent={
-                      <Input
-                        type="number"
-                        placeholder="Сумма"
-                        value={filters.receivedAmount}
-                        onChange={(e) => handleFilterChange('receivedAmount', e.target.value)}
-                        className="text-foreground placeholder:text-muted-foreground"
-                      />
-                    }
-                  >
-                    Получено
+                  <TableHead className="text-left">
+                    Сумма
                   </TableHead>
-                  
-                  <TableHead 
-                    className="w-36"
-                    filterComponent={
-                      <Select 
-                        value={filters.status || undefined} 
-                        onValueChange={(value) => handleFilterChange('status', value)}
-                      >
-                        <SelectTrigger className="text-foreground">
-                          <SelectValue placeholder="Все статусы" className="text-muted-foreground" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__clear__">Все статусы</SelectItem>
-                          <SelectItem value="pending">В обработке</SelectItem>
-                          <SelectItem value="completed">Выполнен</SelectItem>
-                          <SelectItem value="cancelled">Отменен</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    }
-                  >
+                  <TableHead className="text-left">
                     Статус
                   </TableHead>
-                  
-                  <TableHead 
-                    className="w-36"
-                    filterComponent={
-                      <Select 
-                        value={filters.reviewStatus || undefined} 
-                        onValueChange={(value) => handleFilterChange('reviewStatus', value)}
-                      >
-                        <SelectTrigger className="text-foreground">
-                          <SelectValue placeholder="Все отзывы" className="text-muted-foreground" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__clear__">Все отзывы</SelectItem>
-                          <SelectItem value="unavailable">Недоступен</SelectItem>
-                          <SelectItem value="create">Оставить</SelectItem>
-                          <SelectItem value="edit">Изменить</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    }
-                  >
-                    Отзывы
+                  <TableHead className="text-left">
+                    Отзыв
+                  </TableHead>
+                  <TableHead className="text-right">
+                    Действия
                   </TableHead>
                 </TableRow>
               </TableHeader>

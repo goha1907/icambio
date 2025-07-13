@@ -12,25 +12,6 @@ export const MyReferrals = ({ user }: MyReferralsProps) => {
   const totalEarnings = user.referralBalance || 0;
   const activeReferrals = referrals.filter(ref => (ref.referralBalance || 0) > 0).length;
 
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString('ru-RU');
-    } catch {
-      return 'Недавно';
-    }
-  };
-
-  const getStatusBadge = (referral: TUser) => {
-    const balance = referral.referralBalance || 0;
-    if (balance > 50) {
-      return <Badge variant="success">Активный</Badge>;
-    } else if (balance > 0) {
-      return <Badge variant="info">Новичок</Badge>;
-    } else {
-      return <Badge variant="secondary">Неактивный</Badge>;
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Статистика */}
