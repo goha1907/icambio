@@ -1,67 +1,102 @@
 from django.db import models
+from branches.models import Branch
 
 
 class Currency(models.Model):
-    """Модель валюты."""
-    code = models.CharField('Код валюты', max_length=10, unique=True)
-    name = models.CharField('Название', max_length=50)
-    symbol = models.CharField('Символ', max_length=5)
+    """Модель валюты согласно схеме БД."""
+    
+    code = models.CharField('Код валюты', max_length=10, unique=True, blank=False)
+    name = models.CharField('Название', max_length=50, unique=True, blank=False)
+    symbol = models.CharField('Символ', max_length=5, blank=True)
     decimal_places = models.PositiveSmallIntegerField(
         'Знаков после запятой',
-        default=2,
-        help_text='Количество знаков после запятой для отображения и расчетов'
+        default=2
     )
-    is_active = models.BooleanField('Активна', default=True)
+    created_at = models.DateTimeField('Создана', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Валюта'
         verbose_name_plural = 'Валюты'
+        db_table = 'currencies'
 
     def __str__(self):
         return f"{self.code} - {self.name}"
 
 
 class ExchangeRate(models.Model):
-    """Модель курса обмена."""
-    from_currency = models.ForeignKey(
+    """Модель курса обмена согласно схеме БД."""
+    
+    currency_from = models.ForeignKey(
         Currency,
-        related_name='rates_from',
         on_delete=models.CASCADE,
-        verbose_name='Из валюты'
+        verbose_name='Из валюты',
+        related_name='rates_from'
     )
-    to_currency = models.ForeignKey(
+    currency_to = models.ForeignKey(
         Currency,
-        related_name='rates_to',
         on_delete=models.CASCADE,
-        verbose_name='В валюту'
+        verbose_name='В валюту',
+        related_name='rates_to'
+    )
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        verbose_name='Филиал',
+        related_name='exchange_rates'
+    )
+    
+    min_amount = models.DecimalField(
+        'Минимальная сумма',
+        max_digits=15,
+        decimal_places=4,
+        blank=False
+    )
+    max_amount = models.DecimalField(
+        'Максимальная сумма',
+        max_digits=15,
+        decimal_places=4,
+        null=True,
+        blank=True
     )
     rate = models.DecimalField(
         'Курс',
-        max_digits=10,
-        decimal_places=4
+        max_digits=15,
+        decimal_places=8,
+        blank=False
     )
-    min_amount = models.DecimalField(
-        'Минимальная сумма',
-        max_digits=10,
-        decimal_places=2
-    )
-    is_active = models.BooleanField('Активен', default=True)
+    
+    is_hot = models.BooleanField('Горячий курс', default=False)
+    visible = models.BooleanField('Видимый', default=True)
+    in_filter = models.BooleanField('В фильтрах', default=False)
+    
     updated_at = models.DateTimeField('Обновлено', auto_now=True)
 
     class Meta:
         verbose_name = 'Курс обмена'
         verbose_name_plural = 'Курсы обмена'
-        unique_together = ['from_currency', 'to_currency']
+        db_table = 'exchange_rates'
+        unique_together = [
+            'currency_from',
+            'currency_to',
+            'branch',
+            'min_amount'
+        ]
 
     def __str__(self):
-        return (f"{self.from_currency.code} -> "
-                f"{self.to_currency.code}: {self.rate}")
+        return (
+            f"{self.currency_from.code} -> {self.currency_to.code} "
+            f"({self.branch.name}): {self.rate}"
+        )
 
     def calculate_to_receive(self, amount_from):
         """Расчет суммы к получению"""
         if amount_from < self.min_amount:
             raise ValueError(
                 f"Сумма обмена должна быть не менее {self.min_amount}"
+            )
+        if self.max_amount and amount_from > self.max_amount:
+            raise ValueError(
+                f"Сумма обмена должна быть не более {self.max_amount}"
             )
         return amount_from * self.rate
 
@@ -72,60 +107,8 @@ class ExchangeRate(models.Model):
             raise ValueError(
                 f"Сумма обмена будет меньше минимальной {self.min_amount}"
             )
+        if self.max_amount and amount_from > self.max_amount:
+            raise ValueError(
+                f"Сумма обмена будет больше максимальной {self.max_amount}"
+            )
         return amount_from
-
-
-class ExchangeOffice(models.Model):
-    """Модель обменного пункта."""
-    name = models.CharField('Название', max_length=100)
-    address = models.TextField('Адрес')
-    latitude = models.DecimalField(
-        'Широта',
-        max_digits=9,
-        decimal_places=6,
-        null=True,
-        blank=True
-    )
-    longitude = models.DecimalField(
-        'Долгота',
-        max_digits=9,
-        decimal_places=6,
-        null=True,
-        blank=True
-    )
-    is_active = models.BooleanField('Активен', default=True)
-
-    class Meta:
-        verbose_name = 'Обменный пункт'
-        verbose_name_plural = 'Обменные пункты'
-
-    def __str__(self):
-        return self.name
-
-
-class CurrencyBalance(models.Model):
-    """Модель баланса валют в обменном пункте."""
-    office = models.ForeignKey(
-        ExchangeOffice,
-        on_delete=models.CASCADE,
-        related_name='balances',
-        verbose_name='Обменный пункт'
-    )
-    currency = models.ForeignKey(
-        Currency,
-        on_delete=models.CASCADE,
-        verbose_name='Валюта'
-    )
-    balance = models.DecimalField(
-        'Баланс',
-        max_digits=15,
-        decimal_places=2
-    )
-
-    class Meta:
-        verbose_name = 'Баланс валюты'
-        verbose_name_plural = 'Балансы валют'
-        unique_together = ['office', 'currency']
-
-    def __str__(self):
-        return f"{self.office.name} - {self.currency.code}: {self.balance}"

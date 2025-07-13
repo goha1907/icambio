@@ -5,20 +5,45 @@ from users.models import User
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ('email', 'username', 'first_name', 'last_name', 'is_staff')
+    list_display = [
+        'email', 'first_name', 'last_name', 'role', 'referral_code',
+        'is_active', 'created_at'
+    ]
+    list_filter = ['role', 'is_active', 'created_at']
+    search_fields = ['email', 'first_name', 'last_name', 'referral_code']
+    ordering = ['email']
+    
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Profile', {'fields': ('username', 'first_name', 'last_name', 'telegram', 'whatsapp')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-        ('Referral info', {'fields': ('referral_code', 'referred_by', 'bonus_balance'), 'classes': ('collapse',)}),
+        (None, {
+            'fields': ('email', 'password')
+        }),
+        ('Личная информация', {
+            'fields': ('username', 'first_name', 'last_name')
+        }),
+        ('Контакты', {
+            'fields': ('whatsapp', 'telegram', 'address')
+        }),
+        ('Реферальная система', {
+            'fields': ('referral_code', 'referred_by_code'),
+            'classes': ('collapse',)
+        }),
+        ('Права доступа', {
+            'fields': ('role', 'is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')
+        }),
+        ('Важные даты', {
+            'fields': ('last_login', 'created_at'),
+            'classes': ('collapse',)
+        }),
     )
-    readonly_fields = ('email', 'referral_code', 'bonus_balance')
+    
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': ('email', 'password1', 'password2'),
         }),
     )
-    search_fields = ('email', 'username', 'first_name', 'last_name')
-    ordering = ('email',)
+    
+    readonly_fields = ['referral_code', 'created_at']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('address')

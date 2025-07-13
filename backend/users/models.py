@@ -1,7 +1,7 @@
-import shortuuid
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
-
+from core.models import Address
 from django.conf import settings
 
 
@@ -27,42 +27,60 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """Модель пользователя с дополнительными полями."""
+    """Модель пользователя согласно схеме БД."""
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
     username = models.CharField(
         'Username',
         max_length=150,
-        unique=True,
         blank=True,
         null=True
     )
-    email = models.EmailField('Email', unique=True)
-    supabase_user_id = models.UUIDField(
-        unique=True,
+    email = models.EmailField('Email', unique=True, blank=False)
+    first_name = models.CharField('Имя', max_length=150, blank=True)
+    last_name = models.CharField('Фамилия', max_length=150, blank=True)
+    
+    whatsapp = models.BigIntegerField('WhatsApp', null=True, blank=True)
+    telegram = models.CharField('Telegram', max_length=100, blank=True)
+    
+    address = models.ForeignKey(
+        Address,
+        on_delete=models.SET_NULL,
+        verbose_name='Адрес',
         null=True,
-        blank=True
+        blank=True,
+        related_name='users'
     )
-    telegram = models.URLField('Telegram', blank=True, null=True)
-    whatsapp = models.URLField('WhatsApp', blank=True, null=True)
+    
     referral_code = models.CharField(
         'Реферальный код',
-        max_length=10,
+        max_length=20,
         unique=True,
+        blank=False
+    )
+    referred_by_code = models.CharField(
+        'Код реферера',
+        max_length=20,
         blank=True,
+        null=True
     )
-    referred_by = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='referrals',
-        verbose_name='Реферер'
+    
+    role = models.CharField(
+        'Роль',
+        max_length=20,
+        default='user',
+        choices=[
+            ('user', 'Пользователь'),
+            ('admin', 'Администратор'),
+            ('operator', 'Оператор'),
+        ]
     )
-    bonus_balance = models.DecimalField(
-        'Бонусный баланс',
-        max_digits=10,
-        decimal_places=4,
-        default=0
-    )
+    
+    created_at = models.DateTimeField('Создан', auto_now_add=True)
 
     objects = UserManager()
 
@@ -72,13 +90,22 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        db_table = 'users'
 
     def __str__(self):
         return self.email
 
     def save(self, *args, **kwargs):
         if not self.referral_code:
-            self.referral_code = shortuuid.uuid()[:10].upper()
+            # Генерируем уникальный реферальный код
+            import secrets
+            import string
+            alphabet = string.ascii_uppercase + string.digits
+            while True:
+                code = ''.join(secrets.choice(alphabet) for _ in range(8))
+                if not User.objects.filter(referral_code=code).exists():
+                    self.referral_code = code
+                    break
         super().save(*args, **kwargs)
 
     @property
@@ -86,3 +113,15 @@ class User(AbstractUser):
         """Генерация реферальной ссылки"""
         base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
         return f"{base_url}/register?ref={self.referral_code}"
+
+    @property
+    def full_name(self):
+        """Полное имя пользователя"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.username:
+            return self.username
+        else:
+            return self.email

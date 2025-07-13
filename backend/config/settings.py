@@ -52,12 +52,16 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
-    'django_cleanup.apps.CleanupConfig',
+    'django_extensions',
+    'drf_spectacular',
 
     # Local apps
+    'core',
     'users',
+    'branches',
     'exchange',
     'orders',
+    'reviews',
 ]
 
 MIDDLEWARE = [
@@ -67,6 +71,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'users.middleware.AutoUserCreationMiddleware',  # Автоматическое создание пользователей
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -173,7 +178,6 @@ if DEBUG:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'users.authentication.SupabaseJWTAuthentication',
-        'users.authentication.SupabaseServiceAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -250,3 +254,23 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 AUTH_USER_MODEL = 'users.User'
+
+# DRF SPECTACULAR (API ДОКУМЕНТАЦИЯ)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'iCambio API',
+    'DESCRIPTION': 'API для сервиса обмена валют',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/v1/',
+}
+
+# DJANGO DEBUG TOOLBAR (ТОЛЬКО В DEVELOPMENT)
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    
+    INTERNAL_IPS = [
+        '127.0.0.1',
+        'localhost',
+    ]
