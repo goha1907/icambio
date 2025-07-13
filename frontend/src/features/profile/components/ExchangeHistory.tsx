@@ -153,12 +153,12 @@ export const ExchangeHistory = ({ exchanges }: ExchangeHistoryProps) => {
   }, [exchanges, filters]);
 
   // Обработчики изменения фильтров
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value === '__clear__' ? (key === 'dateRange' ? undefined : '') : value
-    }));
-  };
+  // const handleFilterChange = (key: keyof FilterState, value: any) => {
+  //   setFilters(prev => ({
+  //     ...prev,
+  //     [key]: value === '__clear__' ? (key === 'dateRange' ? undefined : '') : value
+  //   }));
+  // };
 
   // Очистка всех фильтров
   const clearFilters = () => {

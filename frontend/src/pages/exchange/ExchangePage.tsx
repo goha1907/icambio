@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -180,8 +180,6 @@ export function ExchangePage() {
                           <CurrencyExchangeForm
                             key={field.id}
                             index={index}
-                            isRemovable={fields.length > 1}
-                            onRemove={() => remove(index)}
                           />
                         </div>
                       ))}

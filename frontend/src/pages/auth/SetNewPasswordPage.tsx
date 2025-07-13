@@ -6,6 +6,7 @@ import { Logo } from '@/shared/ui/Logo';
 import { Loader } from '@/shared/ui/Loader';
 import { Lock, Shield, CheckCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useState, useEffect } from 'react';
 
 /**
  * Страница установки нового пароля
