@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
 import { Checkbox } from '@/shared/ui';
-import { PasswordInput } from '@/shared/ui';
+import { PasswordInput } from '@/shared/ui/PasswordInput';
 import {
   Form,
   FormControl,
@@ -37,15 +37,8 @@ import {
 export const RegisterForm: React.FC = () => {
   const navigate = useNavigate();
   const { register: registerUser, isLoading } = useAuth();
-  
-  // Состояния компонента
-  // Переключатели видимости больше не нужны — логика внутри PasswordInput
-  // Удалено confirmPasswordError, валидация теперь в zod
-  
-  // Реф для автофокуса на поле email
-  const emailInputRef = useRef<HTMLInputElement>(null);
 
-  // Инициализация формы с улучшенными настройками
+  // Инициализация react-hook-form
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -54,16 +47,18 @@ export const RegisterForm: React.FC = () => {
       confirmPassword: '',
       termsAccepted: false,
     },
-    mode: 'onSubmit', // Валидация только при отправке формы
-    reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
   });
-
+  
+  // Состояния компонента
+  // Переключатели видимости больше не нужны — логика внутри PasswordInput
+  // Удалено confirmPasswordError, валидация теперь в zod
+  
   // Автофокус на поле email при монтировании компонента
   useEffect(() => {
-    if (emailInputRef.current) {
-      emailInputRef.current.focus();
-    }
-  }, []);
+    form.setFocus('email');
+  }, [form]);
 
   // Отслеживание изменений полей пароля для проверки совпадения
   // defaultValues обновлены ниже
@@ -103,7 +98,6 @@ export const RegisterForm: React.FC = () => {
                 <FormControl>
                   <Input
                     {...field}
-                    ref={emailInputRef}
                     type="email"
                     placeholder="your@email.com"
                     autoComplete="email"
@@ -118,23 +112,55 @@ export const RegisterForm: React.FC = () => {
           />
 
           {/* Поле Пароль */}
-          <PasswordInput
+          <FormField
             control={form.control}
             name="password"
-            label={<>Пароль <span className="text-destructive">*</span></>}
-                      placeholder="Минимум 8 символов"
-                      autoComplete="new-password"
-                      disabled={isLoading}
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel>
+                  Пароль <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Минимум 8 символов"
+                    autoComplete="new-password"
+                    aria-describedby={
+                      fieldState.error ? `${field.name}-error` : undefined
+                    }
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage id={`${field.name}-error`} />
+              </FormItem>
+            )}
           />
 
           {/* Поле Подтверждение пароля */}
-          <PasswordInput
+          <FormField
             control={form.control}
             name="confirmPassword"
-            label={<>Подтвердите пароль <span className="text-destructive">*</span></>}
-            placeholder="Повторите пароль"
-            autoComplete="new-password"
-            disabled={isLoading}
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel>
+                  Подтвердите пароль <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Повторите пароль"
+                    autoComplete="new-password"
+                    aria-describedby={
+                      fieldState.error ? `${field.name}-error` : undefined
+                    }
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage id={`${field.name}-error`} />
+              </FormItem>
+            )}
           />
 
           {/* Чекбокс согласия с условиями */}
@@ -142,29 +168,28 @@ export const RegisterForm: React.FC = () => {
             control={form.control}
             name="termsAccepted"
             render={({ field, fieldState }) => (
-                <FormItem>
-                <div className="flex items-center space-x-2">
-                  <FormControl>
-                    <Checkbox
-                      id="terms"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      aria-describedby={fieldState.error ? 'terms-error' : undefined}
-                        disabled={isLoading}
-                    />
-                  </FormControl>
-                  <label
-                    htmlFor="terms"
-                    className="text-sm font-medium text-foreground cursor-pointer select-none"
-                  >
-                    Я принимаю&nbsp;
-                    <Link to="/terms" className="text-icambio-primary underline-offset-4 hover:underline">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    aria-describedby={fieldState.error ? 'terms-error' : undefined}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="cursor-pointer">
+                    Я принимаю{' '}
+                    <Link
+                      to="/terms"
+                      className="text-icambio-primary underline-offset-4 hover:underline"
+                    >
                       условия использования
                     </Link>
-                  </label>
+                  </FormLabel>
+                  <FormMessage id="terms-error" />
                 </div>
-                <FormMessage id="terms-error" />
-                </FormItem>
+              </FormItem>
             )}
           />
 

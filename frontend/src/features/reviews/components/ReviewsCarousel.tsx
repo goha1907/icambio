@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { Review } from '@/features/exchange/types';
-import { MOCK_REVIEWS } from '@/shared/lib/mock-data';
+import { getVisibleReviews, getUserById } from '@/shared/lib/mock-data-db';
 import { cn } from '@/shared/lib/utils';
 
 // Мемоизированный компонент отзыва
@@ -44,7 +44,24 @@ export const ReviewsCarousel = ({
   autoplayInterval = 10000,
   visibleItems = 3,
 }: ReviewsCarouselProps) => {
-  const reviews = MOCK_REVIEWS;
+  const reviewsData = getVisibleReviews();
+  
+  // Преобразуем данные в формат, совместимый с компонентом
+  const reviews: Review[] = reviewsData.map(review => {
+    const user = getUserById(review.user_id);
+    return {
+      id: review.id.toString(),
+      user: {
+        id: review.user_id,
+        name: user?.first_name || 'Пользователь',
+        lastname: user?.last_name || ''
+      },
+      rating: review.rating,
+      comment: review.comment,
+      created_at: review.created_at
+    };
+  });
+  
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 

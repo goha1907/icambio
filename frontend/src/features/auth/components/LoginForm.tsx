@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { Button } from '@/shared/ui/Button'
 import { Checkbox } from '@/shared/ui'
-
 import {
   Form,
   FormControl,
@@ -15,101 +14,69 @@ import {
   FormMessage,
 } from '@/shared/ui/Form'
 import { Input } from '@/shared/ui/Input'
+import { PasswordInput } from '@/shared/ui/PasswordInput'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { loginSchema, type LoginFormData } from '@/features/auth/validation'
 
 /**
- * Компонент формы входа в систему
+ * Компонент формы входа в систему.
  * 
- * Отвечает только за логику формы аутентификации:
- * - Валидация полей с помощью React Hook Form + Zod
- * - Показать/скрыть пароль с Eye/EyeOff иконками
- * - Запомнить данные входа (localStorage)
- * - Автофокус и автозаполнение
- * - Улучшенная обработка ошибок
- * - Accessibility поддержка
- * 
- * Верстка страницы и общее расположение элементов находится в LoginPage.tsx
+ * Отвечает за логику аутентификации: валидация, отправка данных,
+ * обработка состояния загрузки и ошибок. Использует `PasswordInput`
+ * для поля пароля и интегрирует "Запомнить меня" в состояние формы.
  */
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate()
-  const { login, isLoading, error } = useAuth()
-  
-  // Состояния компонента
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
-  
-  // Реф для автофокуса на поле email
-  const emailInputRef = useRef<HTMLInputElement>(null)
+  const { login, isLoading } = useAuth()
 
-  // Инициализация формы с улучшенными настройками
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
-    mode: 'onSubmit', // Валидация только при отправке формы
-    reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
   })
-
-  // Автофокус на поле email при монтировании компонента
-  useEffect(() => {
-    if (emailInputRef.current) {
-      emailInputRef.current.focus()
-    }
-  }, [])
 
   // Загрузка сохраненных данных из localStorage
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail')
     const wasRemembered = localStorage.getItem('rememberMe') === 'true'
-    
+
     if (savedEmail && wasRemembered) {
       form.setValue('email', savedEmail)
-      setRememberMe(true)
+      form.setValue('rememberMe', true)
     }
   }, [form])
 
-
-
-  /**
-   * Переключение видимости пароля
-   */
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev)
-  }
+  // Автофокус на поле email при монтировании
+  useEffect(() => {
+    form.setFocus('email')
+  }, [form])
 
   /**
    * Обработка отправки формы
    */
   const onSubmit = async (data: LoginFormData) => {
-    try {
-      const result = await login(data)
-      
-      if (result.error) {
-        // Ошибки теперь показываются через toast в useAuth
-        return
-      }
+    const result = await login({ email: data.email, password: data.password })
 
-      // Сохраняем email если пользователь выбрал "Запомнить меня"
-      if (rememberMe) {
+    if (result && !result.error) {
+      if (data.rememberMe) {
         localStorage.setItem('rememberedEmail', data.email)
         localStorage.setItem('rememberMe', 'true')
       } else {
         localStorage.removeItem('rememberedEmail')
         localStorage.removeItem('rememberMe')
       }
-
-      // Успешный вход - перенаправляем на главную
       navigate('/')
-    } catch (error) {
-      console.error('Login form error:', error)
-      // Ошибки теперь показываются через toast в useAuth
     }
+    // Ошибки теперь обрабатываются и показываются через toast в useAuth
   }
 
   return (
-    <div className="space-y-4">{/* Уменьшил отступ так как заголовок теперь в LoginPage */}
-
-      {/* Форма входа */}
+    <div className="space-y-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* Поле Email */}
@@ -122,7 +89,6 @@ export const LoginForm: React.FC = () => {
                 <FormControl>
                   <Input
                     {...field}
-                    ref={emailInputRef}
                     type="email"
                     placeholder="your@email.com"
                     autoComplete="email"
@@ -144,31 +110,14 @@ export const LoginForm: React.FC = () => {
               <FormItem>
                 <FormLabel>Пароль <span className="text-destructive">*</span></FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Введите пароль"
-                      autoComplete="current-password"
-                      aria-describedby={fieldState.error ? `${field.name}-error` : undefined}
-                      variant={fieldState.error ? 'error' : 'default'}
-                      disabled={isLoading}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
-                      disabled={isLoading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Введите пароль"
+                    autoComplete="current-password"
+                    aria-describedby={fieldState.error ? `${field.name}-error` : undefined}
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
                 </FormControl>
                 <FormMessage id={`${field.name}-error`} />
               </FormItem>
@@ -178,24 +127,31 @@ export const LoginForm: React.FC = () => {
           {/* Дополнительные опции */}
           <div className="flex items-center justify-between">
             {/* Чекбокс "Запомнить меня" */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                 id="remember-me"
-                 checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(!!checked)}
-                 disabled={isLoading}
-               />
-              <label 
-                htmlFor="remember-me" 
-                className="text-sm font-medium text-foreground cursor-pointer select-none"
-              >
-                Запомнить меня
-              </label>
-            </div>
+            <FormField
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isLoading}
+                      aria-label="Запомнить меня"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="cursor-pointer">
+                      Запомнить меня
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
 
             {/* Ссылка на восстановление пароля */}
-            <Link 
-              to="/reset-password" 
+            <Link
+              to="/reset-password"
               className="text-sm font-medium text-icambio-primary hover:text-icambio-primary/80 transition-colors underline-offset-4 hover:underline"
             >
               Забыли пароль?
@@ -203,9 +159,9 @@ export const LoginForm: React.FC = () => {
           </div>
 
           {/* Кнопка отправки */}
-          <Button 
-            type="submit" 
-            disabled={isLoading} 
+          <Button
+            type="submit"
+            disabled={isLoading}
             className="w-full"
             size="lg"
           >

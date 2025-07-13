@@ -13,15 +13,11 @@ import {
   Copy, 
   Phone, 
   MessageCircle, 
-  MapPin,
-  AlertCircle,
   FileText,
-  Calendar,
   DollarSign,
   TrendingUp,
   Shield,
   User,
-  CreditCard,
   Package,
   Truck,
   Eye,
@@ -37,7 +33,7 @@ import { Badge } from '@/shared/ui/Badge';
 import { Textarea } from '@/shared/ui/Textarea';
 import { Label } from '@/shared/ui/Label';
 import { cn } from '@/shared/lib/utils';
-import { MOCK_EXCHANGE_HISTORY } from '@/shared/lib/mock-data';
+import { MOCK_ORDERS_DB } from '@/shared/lib/mock-data-db';
 
 // Схема валидации отзыва
 const reviewSchema = z.object({
@@ -107,7 +103,7 @@ export const OrderDetailsPage = () => {
   const [showContactInfo, setShowContactInfo] = useState(false);
 
   // Получаем данные заказа из location.state или ищем в mock данных
-  let order = location.state?.orderData || MOCK_EXCHANGE_HISTORY.find(o => o.id === orderId);
+  let order = location.state?.orderData || MOCK_ORDERS_DB.find(o => o.id === orderId);
   
   // Если заказ не найден, создаем демонстрационный заказ
   if (!order && orderId?.startsWith('ORD-')) {
@@ -251,7 +247,6 @@ export const OrderDetailsPage = () => {
 
   // Вычисляем общие суммы
   const totalFromAmount = order.pairs?.reduce((acc: number, pair: any) => acc + pair.amount, 0) || order.fromAmount;
-  const totalToAmount = order.pairs?.reduce((acc: number, pair: any) => acc + pair.result, 0) || order.toAmount;
   const totalFees = (order.fees?.exchange || 0) + (order.fees?.delivery || 0);
 
   return (

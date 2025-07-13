@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm, FormProvider } from 'react-hook-form';
 import { 
   ArrowRight,
   Star,
@@ -20,10 +21,20 @@ import {
 import { Button } from '@/shared/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/Card';
 import { Badge } from '@/shared/ui/Badge';
-import { ExchangeCalculator } from '@/features/exchange/components/ExchangeCalculator';
 import { ExchangeRatesTable } from '@/features/exchange/components/ExchangeRatesTable';
 import { ReviewsCarousel } from '@/features/reviews/components/ReviewsCarousel';
+import { CurrencyExchangeForm } from '@/features/exchange/components/CurrencyExchangeForm';
+import { QuickPairFilters } from '@/features/exchange/components/QuickPairFilters';
 import toast from 'react-hot-toast';
+
+interface HomeFormData {
+  pairs: Array<{
+    fromCurrency: string;
+    toCurrency: string;
+    amount: number;
+    result: number;
+  }>;
+}
 
 /**
  * Главная страница приложения iCambio
@@ -38,10 +49,42 @@ import toast from 'react-hot-toast';
  */
 export const HomePage = () => {
   const navigate = useNavigate();
+  
+  const form = useForm<HomeFormData>({
+    defaultValues: { 
+      pairs: [{
+        fromCurrency: 'USD',
+        toCurrency: 'RUB',
+        amount: 0,
+        result: 0,
+      }] 
+    },
+  });
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Скопировано в буфер обмена');
+  };
+
+  const handleFilterSelect = (fromCurrency: string, toCurrency: string) => {
+    form.setValue('pairs.0.fromCurrency', fromCurrency);
+    form.setValue('pairs.0.toCurrency', toCurrency);
+  };
+
+  const handleOrderSubmit = () => {
+    const formData = form.getValues();
+    navigate('/exchange', { 
+      state: { 
+        initialData: formData.pairs[0] 
+      } 
+    });
+  };
+
+  // Проверяем, можно ли активировать кнопку заказа
+  const canSubmitOrder = () => {
+    const formData = form.getValues();
+    const pair = formData.pairs[0];
+    return pair.fromCurrency && pair.toCurrency && pair.amount > 0;
   };
 
   return (
@@ -159,10 +202,28 @@ export const HomePage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ExchangeCalculator />
+              <FormProvider {...form}>
+                <QuickPairFilters onFilterSelect={handleFilterSelect} />
+                <CurrencyExchangeForm index={0} />
+                <div className="mt-6 flex justify-center">
+                  <Button 
+                    size="lg"
+                    onClick={handleOrderSubmit}
+                    disabled={!canSubmitOrder()}
+                    className={`px-8 py-3 ${
+                      canSubmitOrder() 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Заказать обмен
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </div>
+              </FormProvider>
             </CardContent>
           </Card>
-            </div>
+        </div>
       </section>
 
       {/* Exchange Rates Section - всегда показываем */}

@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/shared/config/supabase';
 import { SetNewPasswordForm } from '@/features/auth/components/SetNewPasswordForm';

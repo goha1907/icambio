@@ -8,29 +8,19 @@ import {
   ArrowRight, 
   TrendingUp, 
   Shield, 
-  Clock, 
-  Users, 
-  Star,
-  Calculator,
-  Zap,
-  Globe,
-  CheckCircle,
-  Info,
+  ChevronDown, 
+  ChevronUp,
   BarChart3,
   DollarSign,
-  Percent,
   Phone,
   MessageCircle,
-  Copy,
-  Eye,
-  ChevronDown,
-  ChevronUp
+  CheckCircle
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/Card';
 import { Button } from '@/shared/ui/Button';
 import { Badge } from '@/shared/ui/Badge';
-import { CurrencyPairForm } from '@/features/exchange/components/CurrencyPairForm';
+import { CurrencyExchangeForm } from '@/features/exchange/components/CurrencyExchangeForm/CurrencyExchangeForm';
 import { ExchangeRatesTable } from '@/features/exchange/components/ExchangeRatesTable';
 import toast from 'react-hot-toast';
 
@@ -139,7 +129,7 @@ export function ExchangePage() {
             <Card className="border-green-200 bg-green-50">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <Info className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <DollarSign className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-green-800 mb-1">
                       Добро пожаловать в iCambio
@@ -161,7 +151,7 @@ export function ExchangePage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle className="flex items-center space-x-2">
-                          <Calculator className="w-5 h-5 text-green-600" />
+                          <DollarSign className="w-5 h-5 text-green-600" />
                           <span>Калькулятор обмена</span>
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
@@ -187,7 +177,7 @@ export function ExchangePage() {
                               </Badge>
                             </div>
                           )}
-                          <CurrencyPairForm
+                          <CurrencyExchangeForm
                             key={field.id}
                             index={index}
                             isRemovable={fields.length > 1}
@@ -280,7 +270,7 @@ export function ExchangePage() {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Zap className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <DollarSign className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium text-sm">Быстрые операции</p>
                     <p className="text-xs text-muted-foreground">
@@ -300,7 +290,7 @@ export function ExchangePage() {
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Globe className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <DollarSign className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="font-medium text-sm">50+ валют</p>
                     <p className="text-xs text-muted-foreground">

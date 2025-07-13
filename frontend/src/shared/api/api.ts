@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import { BASE_URL } from '@/config/api'
+import { BASE_URL } from '@/shared/config/api'
 import { useAuthStore } from '@/features/auth/store/useAuthStore'
 import toast from 'react-hot-toast'
 

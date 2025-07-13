@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
@@ -45,6 +45,11 @@ export const ResetPasswordForm: React.FC = () => {
     reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
   });
 
+  // Автофокус на поле email при монтировании компонента
+  useEffect(() => {
+    form.setFocus('email');
+  }, [form]);
+
   /**
    * Обработка отправки формы
    */
@@ -78,7 +83,6 @@ export const ResetPasswordForm: React.FC = () => {
                     type="email"
                     placeholder="your@email.com"
                     autoComplete="email"
-                    autoFocus
                     aria-describedby={fieldState.error ? `${field.name}-error` : undefined}
                     variant={fieldState.error ? 'error' : 'default'}
                     disabled={isLoading}

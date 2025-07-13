@@ -124,6 +124,26 @@ interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement>
  * 
  * Содержит строки с заголовками колонок. Может быть закреплен
  * в верхней части при прокрутке длинных таблиц.
+ * Поддерживает интегрированные фильтры.
+ * 
+ * @example
+ * <TableHeader>
+ *   <TableRow>
+ *     <TableHead>Колонка 1</TableHead>
+ *     <TableHead>Колонка 2</TableHead>
+ *   </TableRow>
+ * </TableHeader>
+ * 
+ * @example
+ * // С фильтрами
+ * <TableHeader 
+ *   showFilters 
+ *   filtersComponent={<MyFiltersComponent />}
+ * >
+ *   <TableRow>
+ *     <TableHead>Закрепленный заголовок</TableHead>
+ *   </TableRow>
+ * </TableHeader>
  */
 const TableHeader = React.forwardRef<HTMLTableSectionElement, TableHeaderProps>(
   ({ className, sticky, children, ...props }, ref) => (
@@ -262,8 +282,34 @@ interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
 /**
  * Компонент TableHead - заголовок колонки таблицы
  * 
- * Отображает заголовок колонки с возможностью сортировки.
- * Поддерживает индикаторы направления сортировки.
+ * Отображает заголовок колонки с возможностью сортировки и фильтрации.
+ * Поддерживает индикаторы направления сортировки и встроенные фильтры.
+ * 
+ * @example
+ * <TableHead>Простой заголовок</TableHead>
+ * 
+ * @example
+ * // Сортируемый заголовок
+ * <TableHead 
+ *   sortable 
+ *   sortDirection="asc"
+ *   onSort={() => handleSort('name')}
+ * >
+ *   Название
+ * </TableHead>
+ * 
+ * @example
+ * // Заголовок с фильтром
+ * <TableHead 
+ *   filterComponent={
+ *     <Select onValueChange={handleFilter}>
+ *       <SelectItem value="all">Все</SelectItem>
+ *       <SelectItem value="active">Активные</SelectItem>
+ *     </Select>
+ *   }
+ * >
+ *   Статус
+ * </TableHead>
  */
 const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
   ({ className, children, sortable, sortDirection, onSort, ...props }, ref) => {

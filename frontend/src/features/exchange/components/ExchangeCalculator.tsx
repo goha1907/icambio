@@ -1,12 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-
+import { z } from 'zod';
 import { Button } from '@/shared/ui/Button';
-import { CurrencyPairForm } from '@/features/exchange/components/CurrencyPairForm';
-import { MOCK_QUICK_PAIRS } from '@/shared/lib/mock-data';
+import { CurrencyExchangeForm } from './CurrencyExchangeForm/CurrencyExchangeForm';
+import { MOCK_EXCHANGE_RATES_DB, MOCK_CURRENCIES_DB } from '@/shared/lib/mock-data-db';
 
 const calculatorSchema = z.object({
   pairs: z.array(
@@ -14,115 +11,125 @@ const calculatorSchema = z.object({
       fromCurrency: z.string(),
       toCurrency: z.string(),
       amount: z.number(),
-      result: z.number(),
+      result: z.number()
     })
   ).min(1),
 });
 
 type CalculatorFormData = z.infer<typeof calculatorSchema>;
 
-interface ExchangeCalculatorProps {
-  simplified?: boolean;
-}
+// Получаем быстрые пары из курсов обмена (только те, что включены в фильтры)
+const getQuickPairs = () => {
+  const quickPairs = MOCK_EXCHANGE_RATES_DB
+    .filter(rate => rate.visible && rate.in_filter)
+    .map(rate => {
+      const fromCurrency = MOCK_CURRENCIES_DB.find(c => c.id === rate.currency_from_id);
+      const toCurrency = MOCK_CURRENCIES_DB.find(c => c.id === rate.currency_to_id);
+      return {
+        id: rate.id,
+        fromCurrency: fromCurrency?.code || '',
+        toCurrency: toCurrency?.code || '',
+        is_hot: rate.is_hot
+      };
+    })
+    .filter(pair => pair.fromCurrency && pair.toCurrency);
+  
+  // Убираем дубликаты
+  const uniquePairs = quickPairs.filter((pair, index, self) => 
+    index === self.findIndex(p => p.fromCurrency === pair.fromCurrency && p.toCurrency === pair.toCurrency)
+  );
+  
+  return uniquePairs;
+};
 
-// Фильтруем пары по visible флагу (определяется администратором)
-const VISIBLE_QUICK_PAIRS = MOCK_QUICK_PAIRS.filter(pair => pair.visible);
+const VISIBLE_QUICK_PAIRS = getQuickPairs();
 
 export const ExchangeCalculator = ({
-  simplified = false,
-}: ExchangeCalculatorProps) => {
-  const navigate = useNavigate();
-  const [activePairIndex, setActivePairIndex] = useState(0);
-  
+  onOrderCreate,
+  className = "",
+}: {
+  onOrderCreate?: (data: CalculatorFormData) => void;
+  className?: string;
+}) => {
   const form = useForm<CalculatorFormData>({
     resolver: zodResolver(calculatorSchema),
     defaultValues: {
-      pairs: [VISIBLE_QUICK_PAIRS[0]],
+      pairs: VISIBLE_QUICK_PAIRS.length > 0 ? [{
+        fromCurrency: VISIBLE_QUICK_PAIRS[0].fromCurrency,
+        toCurrency: VISIBLE_QUICK_PAIRS[0].toCurrency,
+        amount: 0,
+        result: 0
+      }] : []
     },
   });
-  
-  const { watch, setValue, handleSubmit, formState } = form;
-  const pairs = watch("pairs");
-  const currentPair = pairs?.[0] || {};
 
-  useEffect(() => {
-    const selectedPair = VISIBLE_QUICK_PAIRS[activePairIndex];
+  const { setValue } = form;
+
+  const handleQuickPairSelect = (selectedPair: any) => {
     setValue("pairs.0.fromCurrency", selectedPair.fromCurrency);
     setValue("pairs.0.toCurrency", selectedPair.toCurrency);
-    setValue("pairs.0.amount", 0);
-    setValue("pairs.0.result", 0);
-  }, [activePairIndex, setValue]);
-
-  // Проверяем валидность данных
-  const isValidForOrder = () => {
-    const pair = currentPair;
-    if (!pair) return false;
-    
-    // Проверяем наличие валют
-    if (!pair.fromCurrency || !pair.toCurrency) return false;
-    
-    // Проверяем, что есть хотя бы одна введенная сумма больше 0
-    const hasValidAmount = (pair.amount && pair.amount > 0) || (pair.result && pair.result > 0);
-    if (!hasValidAmount) return false;
-    
-    // Проверяем отсутствие ошибок формы
-    const hasErrors = Object.keys(formState.errors).length > 0;
-    if (hasErrors) return false;
-    
-    return true;
   };
 
   const handleCreateOrder = (data: CalculatorFormData) => {
-    const orderData = data.pairs[0];
-    if (isValidForOrder()) {
-      localStorage.setItem('exchangeCalculatorData', JSON.stringify({
-        ...orderData,
-        timestamp: new Date().toISOString(),
-      }));
-      navigate('/exchange');
+    if (onOrderCreate) {
+      onOrderCreate(data);
     }
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl rounded-xl bg-white p-6 shadow-lg sm:p-8">
-      {!simplified && (
-        <>
-          <h3 className="mb-6 bg-gradient-to-r from-icambio-primary to-icambio-dark bg-clip-text text-xl font-semibold text-transparent">
-            Калькулятор обмена
-          </h3>
-          <div className="mb-8 flex flex-wrap gap-3">
-            {VISIBLE_QUICK_PAIRS.map((pair, index) => (
-              <Button
-                key={index}
-                variant={activePairIndex === index ? "primary" : "secondary"}
-                onClick={() => setActivePairIndex(index)}
-              >
-                {pair.name}
-              </Button>
-            ))}
-          </div>
-        </>
-      )}
-      
-      <FormProvider {...form}>
-        <form onSubmit={handleSubmit(handleCreateOrder)}>
-          <CurrencyPairForm
-            index={0}
-            isRemovable={false}
-            onRemove={() => {}}
-          />
+    <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`}>
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-8 h-8 bg-icambio-primary rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-sm">₮</span>
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900">
+          Калькулятор обмена
+        </h3>
+      </div>
 
-          {!simplified && (
-            <div className="flex justify-end mt-8">
-              <Button 
-                type="submit"
-                disabled={!isValidForOrder()}
-                className="w-full sm:w-auto"
-              >
-                Заказать обмен
-              </Button>
-            </div>
-          )}
+      {/* Быстрые пары */}
+      <div className="mb-8">
+        <h4 className="text-sm font-medium text-gray-700 mb-3">
+          Популярные направления:
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {VISIBLE_QUICK_PAIRS.map((pair: any, index: number) => (
+            <Button
+              key={index}
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickPairSelect(pair)}
+              className={`text-xs ${
+                pair.is_hot 
+                  ? 'border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100' 
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              {pair.fromCurrency} → {pair.toCurrency}
+              {pair.is_hot && (
+                <span className="ml-1 text-orange-500">🔥</span>
+              )}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Форма калькулятора */}
+      <FormProvider {...form}>
+        <form onSubmit={form.handleSubmit(handleCreateOrder)}>
+          <div className="space-y-4">
+            <CurrencyExchangeForm />
+          </div>
+
+          <div className="mt-6">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={!form.watch("pairs.0.amount") || form.watch("pairs.0.amount") <= 0}
+            >
+              Заказать обмен
+            </Button>
+          </div>
         </form>
       </FormProvider>
     </div>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Edit, Lock, LogOut, Users } from 'lucide-react';
+import { User, Lock, LogOut } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { cn } from '@/shared/lib/utils';
 import type { TUser } from '@/types';

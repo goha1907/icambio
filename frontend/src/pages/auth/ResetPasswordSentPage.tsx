@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/ui/Button';
 import { Logo } from '@/shared/ui/Logo';
-import { Mail, Clock, CheckCircle, Shield, RefreshCw } from 'lucide-react';
+import { Mail, Clock, CheckCircle, RefreshCw } from 'lucide-react';
 
 /**
  * Страница подтверждения отправки сброса пароля
@@ -202,7 +202,7 @@ export const ResetPasswordSentPage: React.FC = () => {
                   onClick={handleResendEmail}
                   disabled={!canResend}
               className="w-full"
-                  variant={canResend ? "default" : "outline"}
+                  variant={canResend ? "primary" : "outline"}
             >
                   {canResend ? (
                     <>
