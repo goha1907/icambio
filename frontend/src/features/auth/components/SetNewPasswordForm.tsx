@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { PasswordInput } from '@/shared/ui';
+import { PasswordInput } from '@/shared/ui/PasswordInput';
 import { Button } from '@/shared/ui/Button';
 import {
   Form,
@@ -50,7 +50,12 @@ export const SetNewPasswordForm: React.FC = () => {
     reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
   });
 
-  // autoFocus handled by PasswordInput, совпадение паролей проверяет zod-схема
+  // Автофокус будет установлен декларативно через form.setFocus
+
+  // Устанавливаем фокус на поле нового пароля при монтировании
+  useEffect(() => {
+    form.setFocus('password');
+  }, [form]);
 
   /**
    * Обработка отправки формы
@@ -73,24 +78,55 @@ export const SetNewPasswordForm: React.FC = () => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* Новый пароль */}
-          <PasswordInput
+          <FormField
             control={form.control}
             name="password"
-            label={<>Новый пароль <span className="text-destructive">*</span></>}
-                      placeholder="Минимум 8 символов"
-                      autoComplete="new-password"
-            autoFocus
-                      disabled={isLoading}
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel>
+                  Новый пароль <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Минимум 8 символов"
+                    autoComplete="new-password"
+                    aria-describedby={
+                      fieldState.error ? `${field.name}-error` : undefined
+                    }
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage id={`${field.name}-error`} />
+              </FormItem>
+            )}
           />
 
           {/* Подтверждение пароля */}
-          <PasswordInput
+          <FormField
             control={form.control}
             name="confirmPassword"
-            label={<>Подтвердите пароль <span className="text-destructive">*</span></>}
-                        placeholder="Повторите пароль"
-                        autoComplete="new-password"
-                        disabled={isLoading}
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel>
+                  Подтвердите пароль <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Повторите пароль"
+                    autoComplete="new-password"
+                    aria-describedby={
+                      fieldState.error ? `${field.name}-error` : undefined
+                    }
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage id={`${field.name}-error`} />
+              </FormItem>
+            )}
           />
 
           {/* Информация о требованиях к паролю */}

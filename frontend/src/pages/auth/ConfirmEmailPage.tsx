@@ -202,7 +202,7 @@ export const ConfirmEmailPage: React.FC = () => {
                   onClick={handleResendEmail}
                   disabled={!canResend}
               className="w-full"
-                  variant={canResend ? "default" : "outline"}
+                  variant={canResend ? "primary" : "outline"}
             >
                   {canResend ? (
                     <>

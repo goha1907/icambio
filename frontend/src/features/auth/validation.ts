@@ -2,11 +2,9 @@ import { z } from 'zod';
 
 // Схема для входа
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email обязателен').email('Введите корректный email'),
-  password: z
-    .string()
-    .min(1, 'Пароль обязателен')
-    .min(6, 'Пароль должен содержать минимум 6 символов'),
+  email: z.string().email('Некорректный email-адрес'),
+  password: z.string().min(1, 'Пароль не может быть пустым'),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;

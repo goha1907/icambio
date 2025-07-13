@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/ui/Form';
-import { PasswordInput } from '@/shared/ui';
+import { PasswordInput } from '@/shared/ui/PasswordInput';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import {
   changePasswordSchema,
@@ -41,7 +41,7 @@ export const ChangePasswordForm: React.FC = () => {
   // Состояния компонента
   // Локальные переключатели показа пароля и ручная проверка больше не нужны
   
-  // autoFocus будет передан в PasswordInput
+  // Автофокус будет установлен декларативно через form.setFocus
 
   // Инициализация формы с улучшенными настройками
   const form = useForm<ChangePasswordFormData>({
@@ -55,7 +55,10 @@ export const ChangePasswordForm: React.FC = () => {
     reValidateMode: 'onChange', // Перевалидация при изменении после первой отправки
   });
 
-  // autofocus handled by component directly
+  // Устанавливаем фокус на поле текущего пароля при монтировании
+  useEffect(() => {
+    form.setFocus('oldPassword');
+  }, [form]);
 
   // Валидация совпадения паролей полностью в zod-схеме
 
@@ -94,34 +97,81 @@ export const ChangePasswordForm: React.FC = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* Поле Текущий пароль */}
-          <PasswordInput
-          control={form.control}
-          name="oldPassword"
-            label={<>Текущий пароль <span className="text-destructive">*</span></>}
-                      placeholder="Введите текущий пароль"
-                      autoComplete="current-password"
-                      disabled={isLoading}
-            autoFocus
-        />
+          <FormField
+            control={form.control}
+            name="oldPassword"
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel>
+                  Текущий пароль <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Введите текущий пароль"
+                    autoComplete="current-password"
+                    aria-describedby={
+                      fieldState.error ? `${field.name}-error` : undefined
+                    }
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage id={`${field.name}-error`} />
+              </FormItem>
+            )}
+          />
 
           {/* Поле Новый пароль */}
-          <PasswordInput
-          control={form.control}
-          name="newPassword"
-            label={<>Новый пароль <span className="text-destructive">*</span></>}
-                      placeholder="Минимум 8 символов"
-                      autoComplete="new-password"
-                      disabled={isLoading}
-        />
+          <FormField
+            control={form.control}
+            name="newPassword"
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel>
+                  Новый пароль <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Минимум 8 символов"
+                    autoComplete="new-password"
+                    aria-describedby={
+                      fieldState.error ? `${field.name}-error` : undefined
+                    }
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage id={`${field.name}-error`} />
+              </FormItem>
+            )}
+          />
 
           {/* Подтверждение нового пароля */}
-          <PasswordInput
-          control={form.control}
-          name="confirmNewPassword"
-            label={<>Подтвердите новый пароль <span className="text-destructive">*</span></>}
-                        placeholder="Повторите новый пароль"
-                        autoComplete="new-password"
-                        disabled={isLoading}
+          <FormField
+            control={form.control}
+            name="confirmNewPassword"
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel>
+                  Подтвердите новый пароль <span className="text-destructive">*</span>
+                </FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    {...field}
+                    placeholder="Повторите новый пароль"
+                    autoComplete="new-password"
+                    aria-describedby={
+                      fieldState.error ? `${field.name}-error` : undefined
+                    }
+                    variant={fieldState.error ? 'error' : 'default'}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage id={`${field.name}-error`} />
+              </FormItem>
+            )}
           />
 
           {/* Информация о требованиях к новому паролю */}
