@@ -11,10 +11,10 @@ export interface IUserProfile {
   whatsapp?: string;
   telegram?: string;
   preferred_delivery_address?: string; // Предпочитаемый адрес доставки
-  referral_code: string; // Мой уникальный реферальный код (REF123ABC)
-  referral_link: string; // Моя реферальная ссылка
+  referral_code?: string; // Мой уникальный реферальный код (REF123ABC)
+  referral_link?: string; // Моя реферальная ссылка
   invited_by_code?: string; // Код того, кто меня пригласил
-  referralBalance: number; // Баланс бонусов (пока неактивный)
+  referralBalance?: number; // Баланс бонусов (пока неактивный)
   referrals?: TUser[]; // Мои рефералы для отображения в списке
 }
 
