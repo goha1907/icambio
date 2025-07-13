@@ -110,3 +110,10 @@ lerna-debug.log*
 *.temp
 *.swp
 *.swo
+
+# ==============================================
+# 🔄 BACKUP FILES
+# ==============================================
+backend_backup/
+backend_old/
+backup_*/
