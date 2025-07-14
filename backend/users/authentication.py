@@ -1,6 +1,6 @@
 import jwt
 import logging
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -13,7 +13,7 @@ User = get_user_model()
 
 class SupabaseJWTAuthentication(BaseAuthentication):
     """
-    Аутентификация через JWT токены Supabase
+    Упрощенная аутентификация через JWT токены Supabase
     """
 
     def authenticate(self, request) -> Optional[Tuple[User, str]]:
@@ -41,102 +41,57 @@ class SupabaseJWTAuthentication(BaseAuthentication):
 
     def _decode_jwt(self, token: str) -> dict:
         """
-        Декодирует JWT токен от Supabase
+        Декодирует JWT токен от Supabase с явной проверкой секрета и логированием ошибок
         """
         try:
-            # Получаем публичный ключ от Supabase
             jwt_secret = settings.SUPABASE_JWT_SECRET
-
-            # Декодируем токен
+            if not jwt_secret:
+                logging.error('SUPABASE_JWT_SECRET is not set')
+                raise AuthenticationFailed('SUPABASE_JWT_SECRET is not set')
             payload = jwt.decode(
                 token,
                 jwt_secret,
                 algorithms=['HS256'],
                 options={'verify_aud': False}
             )
-
             return payload
-
         except jwt.ExpiredSignatureError:
+            logging.warning('Supabase JWT expired')
             raise AuthenticationFailed('Token has expired')
         except jwt.InvalidTokenError as e:
+            logging.warning(f'Supabase JWT invalid: {e}')
             raise AuthenticationFailed(f'Invalid token: {str(e)}')
 
     def _get_or_create_user(self, payload: dict) -> User:
         """
-        Получает или создаёт пользователя на основе данных из JWT
+        Получает или создаёт пользователя на основе email из JWT
         """
-        supabase_user_id = payload.get('sub')
         email = payload.get('email')
 
-        if not supabase_user_id or not email:
-            raise AuthenticationFailed('Invalid token payload')
+        if not email:
+            raise AuthenticationFailed('Email not found in token payload')
 
-        # 1. Поиск по Supabase ID
+        # Ищем пользователя по email
         try:
-            return User.objects.get(supabase_user_id=supabase_user_id)
+            return User.objects.get(email=email)
         except User.DoesNotExist:
             pass
 
-        # 2. Поиск по email (может быть другой Supabase ID — проверим)
-        try:
-            user = User.objects.get(email=email)
-
-            if user.supabase_user_id and user.supabase_user_id != supabase_user_id:
-                raise AuthenticationFailed(
-                    "Email conflict: this email is already "
-                    "linked to another Supabase ID"
-                )
-
-            user.supabase_user_id = supabase_user_id
-            user.save()
-            return user
-
-        except User.DoesNotExist:
-            pass
-
-        # 3. Создание нового пользователя
+        # Создаем нового пользователя
+        user_metadata = payload.get('user_metadata', {})
+        
         user = User.objects.create(
             email=email,
-            supabase_user_id=supabase_user_id,
             is_active=True,
-            first_name=payload.get('user_metadata', {}).get('first_name', ''),
-            last_name=payload.get('user_metadata', {}).get('last_name', ''),
-            username=payload.get(
-                'user_metadata', {}
-            ).get('username') or email.split('@')[0],
+            first_name=user_metadata.get('first_name', ''),
+            last_name=user_metadata.get('last_name', ''),
+            username=user_metadata.get('username') or email.split('@')[0],
         )
 
         logger = logging.getLogger(__name__)
-        logger.info(
-            f"Created new user from Supabase: {email} ({supabase_user_id})"
-        )
+        logger.info(f"Created new user from Supabase: {email}")
 
         return user
-
-
-class SupabaseServiceAuthentication(BaseAuthentication):
-    """
-    Аутентификация для сервисных запросов с service_role ключом
-    """
-
-    def authenticate(self, request) -> Optional[Tuple[Any, str]]:
-        """
-        Проверяет service_role ключ для административных операций
-        """
-        auth_header = request.META.get('HTTP_AUTHORIZATION')
-
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return None
-
-        token = auth_header.split(' ')[1]
-
-        # Проверяем, что это service_role ключ
-        if token == settings.SUPABASE_SERVICE_ROLE_KEY:
-            # Возвращаем специальный объект для service операций
-            return (None, token)
-
-        return None
 
 
 class SupabaseBackend(BaseBackend):

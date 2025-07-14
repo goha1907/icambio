@@ -1,5 +1,4 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/ui/Card';
-import { Badge } from '@/shared/ui/Badge';
 import type { TUser } from '@/types';
 import { Users, TrendingUp, Award, Calendar } from 'lucide-react';
 

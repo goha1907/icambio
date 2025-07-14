@@ -118,7 +118,7 @@ export const ExchangeCalculator = ({
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(handleCreateOrder)}>
           <div className="space-y-4">
-            <CurrencyExchangeForm />
+            <CurrencyExchangeForm index={0} />
           </div>
 
           <div className="mt-6">

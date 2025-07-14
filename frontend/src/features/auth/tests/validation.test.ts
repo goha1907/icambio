@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loginSchema } from '@/shared/validation/auth'
+import { loginSchema } from '@/features/auth/validation'
 
 describe('Auth Validation Schemas', () => {
   describe('loginSchema', () => {

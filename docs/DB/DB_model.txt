@@ -128,3 +128,12 @@ Table reviews {
     (user_id, order_id) [unique]
   }
 }
+
+Table referral_transactions {
+  id int [pk, increment]
+  user_id uuid [ref: > users.id] // кто получает
+  referred_user_id uuid [ref: > users.id] // кто привёл доход
+  order_id int [ref: > orders.id]
+  amount decimal [not null]
+  created_at timestamp [default: `now()`]
+}
