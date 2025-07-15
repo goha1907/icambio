@@ -66,7 +66,7 @@ class ExchangeRate(models.Model):
     )
     
     is_hot = models.BooleanField('Горячий курс', default=False)
-    visible = models.BooleanField('Видимый', default=True)
+    visible = models.BooleanField('Видимый', default=False)
     in_filter = models.BooleanField('В фильтрах', default=False)
     
     updated_at = models.DateTimeField('Обновлено', auto_now=True)
@@ -112,3 +112,68 @@ class ExchangeRate(models.Model):
                 f"Сумма обмена будет больше максимальной {self.max_amount}"
             )
         return amount_from
+
+
+class Purchase(models.Model):
+    """Модель закупок валют у оптовиков."""
+    
+    branch = models.ForeignKey(
+        'branches.Branch',
+        on_delete=models.CASCADE,
+        verbose_name='Филиал',
+        related_name='purchases'
+    )
+    currency_from = models.ForeignKey(
+        Currency,
+        on_delete=models.CASCADE,
+        verbose_name='Чем заплатили',
+        related_name='purchases_from'
+    )
+    currency_to = models.ForeignKey(
+        Currency,
+        on_delete=models.CASCADE,
+        verbose_name='Что купили',
+        related_name='purchases_to'
+    )
+    
+    amount_from = models.DecimalField(
+        'Сумма к оплате',
+        max_digits=15,
+        decimal_places=4
+    )
+    amount_to = models.DecimalField(
+        'Сумма к получению',
+        max_digits=15,
+        decimal_places=4
+    )
+    applied_rate = models.DecimalField(
+        'Примененный курс',
+        max_digits=15,
+        decimal_places=8
+    )
+    
+    source = models.CharField('Источник', max_length=100, blank=True)
+    user = models.ForeignKey(
+        'users.User',
+        on_delete=models.SET_NULL,
+        verbose_name='Пользователь',
+        null=True,
+        blank=True
+    )
+    note = models.TextField('Примечание', blank=True)
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Закупка валюты'
+        verbose_name_plural = 'Закупки валют'
+        db_table = 'purchases'
+        indexes = [
+            models.Index(fields=['branch', 'currency_to']),
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return (
+            f"Закупка {self.amount_to} {self.currency_to.code} "
+            f"за {self.amount_from} {self.currency_from.code}"
+        )

@@ -69,6 +69,13 @@ class User(AbstractUser):
         null=True
     )
     
+    referral_amount = models.DecimalField(
+        'Накопления за рефералов',
+        max_digits=15,
+        decimal_places=4,
+        default=0
+    )
+    
     role = models.CharField(
         'Роль',
         max_length=20,
@@ -125,3 +132,76 @@ class User(AbstractUser):
             return self.username
         else:
             return self.email
+
+
+class ReferralTransaction(models.Model):
+    """Модель начислений и выплат по реферальной программе."""
+    
+    TYPE_CHOICES = [
+        ('earn', 'Начисление'),
+        ('withdrawal', 'Выплата'),
+        ('adjustment', 'Корректировка'),
+    ]
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        related_name='referral_transactions'
+    )
+    referred_user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        verbose_name='Реферал',
+        null=True,
+        blank=True,
+        related_name='referred_transactions'
+    )
+    order = models.ForeignKey(
+        'orders.Order',
+        on_delete=models.SET_NULL,
+        verbose_name='Заказ',
+        null=True,
+        blank=True,
+        related_name='referral_transactions'
+    )
+    
+    type = models.CharField(
+        'Тип операции',
+        max_length=20,
+        choices=TYPE_CHOICES
+    )
+    amount = models.DecimalField(
+        'Сумма',
+        max_digits=15,
+        decimal_places=4
+    )
+    currency = models.ForeignKey(
+        'exchange.Currency',
+        on_delete=models.CASCADE,
+        verbose_name='Валюта'
+    )
+    branch = models.ForeignKey(
+        'branches.Branch',
+        on_delete=models.SET_NULL,
+        verbose_name='Филиал',
+        null=True,
+        blank=True
+    )
+    note = models.TextField('Примечание', blank=True)
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Реферальная транзакция'
+        verbose_name_plural = 'Реферальные транзакции'
+        db_table = 'referral_transactions'
+        indexes = [
+            models.Index(fields=['user', 'order']),
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return (
+            f"{self.get_type_display()} {self.amount} "
+            f"{self.currency.code} для {self.user.email}"
+        )

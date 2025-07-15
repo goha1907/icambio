@@ -5,52 +5,51 @@ Table users {
   email varchar [not null, unique]
   first_name varchar
   last_name varchar
-  whatsapp bigint [not null]
+  whatsapp bigint
   telegram varchar
-  address_id int [ref: > addresses.id, null] // адрес из профиля (может быть null)
   referral_code varchar [unique, not null]
   referred_by_code varchar
-  role varchar [not null, default: 'user'] // user, admin, operator
+  referral_amount decimal [not null, default: 0]
+  address_id int [ref: > addresses.id, null]
+  role varchar [not null, default: 'user']
   created_at timestamp [default: `now()`]
 }
 
 // --- Адреса ---
 Table addresses {
   id int [pk, increment]
-
   country varchar
   city varchar
   street varchar
   house_number varchar
   postal_code varchar
-
-  full_address text [not null]
+  full_address text
   latitude decimal
   longitude decimal
-
   created_at timestamp [default: `now()`]
 }
+
 // --- Филиалы ---
 Table branches {
   id int [pk, increment]
   name varchar [not null]
-  email varchar [unique]
+  email varchar
   whatsapp bigint
   telegram varchar
   instagram varchar
-  address_id int [ref: > addresses.id, not null] // физический адрес филиала
+  address_id int [ref: > addresses.id]
   is_active boolean [default: true]
   created_at timestamp [default: `now()`]
 }
 
-// --- График работы филиалов ---
+// --- График работы филиала ---
 Table branch_hours {
   id int [pk, increment]
   branch_id int [ref: > branches.id]
-  weekday int [not null] // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  weekday int [not null]
+  is_open boolean [default: true]
   open_time time
   close_time time
-  is_open boolean [default: true]
 
   Indexes {
     (branch_id, weekday) [unique]
@@ -60,14 +59,14 @@ Table branch_hours {
 // --- Валюты ---
 Table currencies {
   id int [pk, increment]
-  code varchar [unique, not null] // USD, EUR, ARS
+  code varchar [unique, not null]
   name varchar [unique, not null]
   symbol varchar
   decimal_places int [default: 2]
   created_at timestamp [default: `now()`]
 }
 
-// --- Валюты, привязанные к филиалам ---
+// --- Резервы валют ---
 Table branch_currencies {
   id int [pk, increment]
   branch_id int [ref: > branches.id]
@@ -79,17 +78,17 @@ Table branch_currencies {
   }
 }
 
-// --- Курсы валют ---
+// --- Курсы обмена ---
 Table exchange_rates {
   id int [pk, increment]
+  branch_id int [ref: > branches.id]
   currency_from_id int [ref: > currencies.id]
   currency_to_id int [ref: > currencies.id]
-  branch_id int [ref: > branches.id]
   min_amount decimal [not null]
-  max_amount decimal
+  max_amount decimal [null]
   rate decimal [not null]
   is_hot boolean [default: false]
-  visible boolean [default: true]
+  visible boolean [default: false]
   in_filter boolean [default: false]
   updated_at timestamp [default: `now()`]
 
@@ -100,7 +99,7 @@ Table exchange_rates {
 
 // --- Заказы ---
 Table orders {
-  id uuid [pk, increment]
+  id int [pk, increment]
   user_id uuid [ref: > users.id]
   branch_id int [ref: > branches.id]
   currency_from_id int [ref: > currencies.id]
@@ -108,18 +107,28 @@ Table orders {
   amount_from decimal [not null]
   amount_to decimal [not null]
   applied_rate decimal [not null]
-  status varchar [not null, default: 'pending'] // pending, completed, canceled
+  status varchar [not null, default: 'pending']
   delivery boolean [default: false]
-  delivery_address_id int [ref: > addresses.id, null] // если выбрана доставка  created_at timestamp [default: `now()`]
+  delivery_address_id int [ref: > addresses.id, null]
+  created_at timestamp [default: `now()`]
   completed_at timestamp
+}
+
+// --- Прибыль по заказу ---
+Table order_profit {
+  id int [pk, increment]
+  order_id int [ref: > orders.id]
+  currency_id int [ref: > currencies.id]
+  amount decimal [not null]
+  created_at timestamp [default: `now()`]
 }
 
 // --- Отзывы ---
 Table reviews {
   id int [pk, increment]
   user_id uuid [ref: > users.id]
-  order_id uuid [ref: > orders.id]
-  rating int [not null] // 1–5
+  order_id int [ref: > orders.id]
+  rating int [not null]
   comment text
   visible boolean [default: false]
   created_at timestamp [default: `now()`]
@@ -129,11 +138,46 @@ Table reviews {
   }
 }
 
+// --- Реферальные операции ---
 Table referral_transactions {
   id int [pk, increment]
-  user_id uuid [ref: > users.id] // кто получает
-  referred_user_id uuid [ref: > users.id] // кто привёл доход
-  order_id int [ref: > orders.id]
+  user_id uuid [ref: > users.id]
+  referred_user_id uuid [ref: > users.id, null]
+  order_id int [ref: > orders.id, null]
+  type varchar [not null] // earn, withdrawal, adjustment
   amount decimal [not null]
+  currency_id int [ref: > currencies.id]
+  branch_id int [ref: > branches.id, null]
+  note text
   created_at timestamp [default: `now()`]
 }
+
+// --- Закупки валют ---
+Table purchases {
+  id int [pk, increment]
+  branch_id int [ref: > branches.id]
+  currency_from_id int [ref: > currencies.id]
+  currency_to_id int [ref: > currencies.id]
+  amount_from decimal [not null]
+  amount_to decimal [not null]
+  applied_rate decimal [not null]
+  source varchar
+  user_id uuid [ref: > users.id, null]
+  note text
+  created_at timestamp [default: `now()`]
+}
+
+// --- Движения валют ---
+Table currency_movements {
+  id int [pk, increment]
+  branch_id int [ref: > branches.id]
+  currency_id int [ref: > currencies.id]
+  user_id uuid [ref: > users.id, null]
+  order_id int [ref: > orders.id, null]
+  purchase_id int [ref: > purchases.id, null]
+  referral_transaction_id int [ref: > referral_transactions.id, null]
+  type varchar [not null] // deposit, withdrawal, correction
+  amount decimal [not null]
+  reason text
+  created_at timestamp [default: `now()`]
+} 

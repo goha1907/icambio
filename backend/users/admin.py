@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from users.models import User
+from users.models import User, ReferralTransaction
 
 
 @admin.register(User)
@@ -24,7 +24,10 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('whatsapp', 'telegram', 'address')
         }),
         ('Реферальная система', {
-            'fields': ('referral_code', 'referred_by_code'),
+            'fields': (
+                'referral_code', 'referred_by_code',
+                'referral_amount'
+            ),
             'classes': ('collapse',)
         }),
         ('Права доступа', {
@@ -47,3 +50,34 @@ class CustomUserAdmin(UserAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('address')
+
+
+@admin.register(ReferralTransaction)
+class ReferralTransactionAdmin(admin.ModelAdmin):
+    list_display = [
+        'user', 'type', 'amount', 'currency', 'branch', 'created_at'
+    ]
+    list_filter = ['type', 'currency', 'branch', 'created_at']
+    search_fields = ['user__email', 'note']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'type', 'amount', 'currency')
+        }),
+        ('Связанные объекты', {
+            'fields': ('referred_user', 'order', 'branch'),
+            'classes': ('collapse',)
+        }),
+        ('Дополнительно', {
+            'fields': ('note', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ['created_at']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'user', 'referred_user', 'currency', 'branch'
+        )

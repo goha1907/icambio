@@ -1,5 +1,5 @@
 from django.contrib import admin
-from orders.models import Order
+from orders.models import Order, OrderProfit
 
 
 @admin.register(Order)
@@ -41,4 +41,30 @@ class OrderAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related(
             'user', 'branch', 'currency_from', 'currency_to',
             'delivery_address'
+        )
+
+
+@admin.register(OrderProfit)
+class OrderProfitAdmin(admin.ModelAdmin):
+    list_display = [
+        'order', 'currency', 'amount', 'created_at'
+    ]
+    list_filter = ['currency', 'created_at']
+    search_fields = ['order__id', 'currency__code']
+    readonly_fields = ['created_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('order', 'currency', 'amount')
+        }),
+        ('Системная информация', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'order', 'currency'
         )

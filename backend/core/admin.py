@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Address
+from .models import Address, CurrencyMovement
 
 
 @admin.register(Address)
@@ -25,3 +25,39 @@ class AddressAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(CurrencyMovement)
+class CurrencyMovementAdmin(admin.ModelAdmin):
+    list_display = [
+        'branch', 'currency', 'type', 'amount', 'user', 'created_at'
+    ]
+    list_filter = [
+        'type', 'branch', 'currency', 'created_at'
+    ]
+    search_fields = [
+        'branch__name', 'currency__code', 'user__email', 'reason'
+    ]
+    readonly_fields = ['created_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('branch', 'currency', 'type', 'amount')
+        }),
+        ('Связанные объекты', {
+            'fields': (
+                'user', 'order', 'purchase', 'referral_transaction'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Дополнительно', {
+            'fields': ('reason', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'branch', 'currency', 'user'
+        )

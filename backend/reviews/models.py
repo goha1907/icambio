@@ -40,7 +40,7 @@ class Review(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Отзыв {self.user.email} к заказу {self.order.id[:8]}"
+        return f"Отзыв {self.user.email} к заказу {self.order.id}"
 
     @property
     def user_name(self):

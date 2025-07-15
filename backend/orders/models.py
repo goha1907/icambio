@@ -1,4 +1,3 @@
-import uuid
 from django.db import models
 from django.core.validators import MinValueValidator
 from users.models import User
@@ -15,12 +14,6 @@ class Order(models.Model):
         ('completed', 'Выполнен'),
         ('canceled', 'Отменён'),
     ]
-    
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
     
     user = models.ForeignKey(
         User,
@@ -94,7 +87,7 @@ class Order(models.Model):
 
     def __str__(self):
         return (
-            f"Заказ {self.id[:8]} - "
+            f"Заказ {self.id} - "
             f"{self.amount_from} {self.currency_from.code} -> "
             f"{self.amount_to} {self.currency_to.code}"
         )
@@ -120,3 +113,37 @@ class Order(models.Model):
     def is_pending(self):
         """Проверяет, ожидает ли заказ обработки"""
         return self.status == 'pending'
+
+
+class OrderProfit(models.Model):
+    """Модель фиксации прибыли по ордерам согласно схеме БД."""
+    
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        verbose_name='Заказ',
+        related_name='profits'
+    )
+    currency = models.ForeignKey(
+        'exchange.Currency',
+        on_delete=models.CASCADE,
+        verbose_name='Валюта прибыли'
+    )
+    amount = models.DecimalField(
+        'Сумма прибыли',
+        max_digits=15,
+        decimal_places=4
+    )
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Прибыль по заказу'
+        verbose_name_plural = 'Прибыли по заказам'
+        db_table = 'order_profit'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return (
+            f"Прибыль по заказу {self.order.id}: "
+            f"{self.amount} {self.currency.code}"
+        )
