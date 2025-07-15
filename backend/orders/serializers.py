@@ -1,188 +1,216 @@
 from rest_framework import serializers
-from django.db import transaction
-from orders.models import Order, OrderDocument, OrderItem, Review
-from exchange.models import ExchangeRate
+from orders.models import Order, OrderProfit
+from users.models import User
+from branches.models import Branch
+from exchange.models import Currency
+from core.models import Address
 
 
-class OrderItemSerializer(serializers.ModelSerializer):
-    amount_from_formatted = serializers.SerializerMethodField()
-    amount_to_formatted = serializers.SerializerMethodField()
-
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя в заказе."""
+    
     class Meta:
-        model = OrderItem
-        fields = ['id', 'from_currency', 'to_currency',
-                  'amount_from', 'amount_to', 'rate']
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name']
 
-    def get_amount_from_formatted(self, obj):
-        return obj.get_formatted_amount_from()
 
-    def get_amount_to_formatted(self, obj):
-        return obj.get_formatted_amount_to()
+class BranchSerializer(serializers.ModelSerializer):
+    """Сериализатор для филиала в заказе."""
+    
+    class Meta:
+        model = Branch
+        fields = ['id', 'name', 'email']
 
-    def validate(self, data):
-        """Валидация курса и сумм"""
-        # Проверяем существование активного курса
-        try:
-            exchange_rate = ExchangeRate.objects.get(
-                from_currency=data['from_currency'],
-                to_currency=data['to_currency'],
-                is_active=True
-            )
-        except ExchangeRate.DoesNotExist:
-            raise serializers.ValidationError(
-                "Нет активного курса для данной валютной пары"
-            )
 
-        # Проверяем соответствие курса
-        if exchange_rate.rate != data['rate']:
-            raise serializers.ValidationError(
-                "Курс обмена изменился. Пожалуйста, обновите страницу"
-            )
+class CurrencySerializer(serializers.ModelSerializer):
+    """Сериализатор для валюты в заказе."""
+    
+    class Meta:
+        model = Currency
+        fields = ['id', 'code', 'name', 'symbol']
 
-        # Проверяем минимальную сумму
-        if data['amount_from'] < exchange_rate.min_amount:
-            raise serializers.ValidationError(
-                f"Минимальная сумма обмена: {exchange_rate.min_amount}"
-            )
 
-        # Проверяем корректность расчета
-        expected_amount = round(
-            data['amount_from'] * data['rate'],
-            data['to_currency'].decimal_places
-        )
-        if abs(expected_amount - data['amount_to']) > 0.00000001:
-            raise serializers.ValidationError(
-                "Сумма к получению рассчитана неверно"
-            )
+class AddressSerializer(serializers.ModelSerializer):
+    """Сериализатор для адреса доставки."""
+    
+    class Meta:
+        model = Address
+        fields = [
+            'id', 'country', 'city', 'street', 'house_number',
+            'postal_code', 'full_address', 'latitude', 'longitude'
+        ]
 
-        return data
+
+class OrderProfitSerializer(serializers.ModelSerializer):
+    """Сериализатор для прибыли по заказу."""
+    
+    currency = CurrencySerializer(read_only=True)
+    
+    class Meta:
+        model = OrderProfit
+        fields = ['id', 'currency', 'amount', 'created_at']
+        read_only_fields = ['created_at']
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True)
-    status_display = serializers.CharField(
-        source='get_status_display',
-        read_only=True
-    )
-
+    """Сериализатор для заказа."""
+    
+    user = UserSerializer(read_only=True)
+    branch = BranchSerializer(read_only=True)
+    currency_from = CurrencySerializer(read_only=True)
+    currency_to = CurrencySerializer(read_only=True)
+    delivery_address = AddressSerializer(read_only=True)
+    profits = OrderProfitSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Order
         fields = [
-            'id', 'tracking_code', 'office', 'user',
-            'status', 'status_display',
-            'whatsapp', 'telegram', 'needs_delivery', 'delivery_address',
-            'comment', 'created_at', 'items',
-            'total_from_amount', 'total_to_amount'
+            'id', 'user', 'branch', 'currency_from', 'currency_to',
+            'amount_from', 'amount_to', 'applied_rate', 'status',
+            'delivery', 'delivery_address', 'created_at', 'completed_at',
+            'profits', 'is_completed', 'is_canceled', 'is_pending'
         ]
-        read_only_fields = ['tracking_code', 'status', 'user', 'created_at',
-                            'total_from_amount', 'total_to_amount']
+        read_only_fields = [
+            'id', 'user', 'amount_to', 'applied_rate', 'created_at',
+            'completed_at', 'profits', 'is_completed', 'is_canceled',
+            'is_pending'
+        ]
 
-    @transaction.atomic
+
+class OrderListSerializer(serializers.ModelSerializer):
+    """Сериализатор для списка заказов."""
+    
+    currency_from = CurrencySerializer(read_only=True)
+    currency_to = CurrencySerializer(read_only=True)
+    branch = BranchSerializer(read_only=True)
+    
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'currency_from', 'currency_to', 'branch',
+            'amount_from', 'amount_to', 'status', 'delivery',
+            'created_at', 'is_completed', 'is_canceled', 'is_pending'
+        ]
+        read_only_fields = [
+            'id', 'amount_to', 'created_at', 'is_completed',
+            'is_canceled', 'is_pending'
+        ]
+
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания заказа."""
+    
+    delivery_address = AddressSerializer(required=False)
+    
+    class Meta:
+        model = Order
+        fields = [
+            'branch', 'currency_from', 'currency_to', 'amount_from',
+            'delivery', 'delivery_address'
+        ]
+    
+    def validate(self, data):
+        """Валидация данных заказа."""
+        currency_from = data.get('currency_from')
+        currency_to = data.get('currency_to')
+        amount_from = data.get('amount_from')
+        branch = data.get('branch')
+        
+        # Проверяем, что валюты разные
+        if currency_from == currency_to:
+            raise serializers.ValidationError(
+                "Валюты обмена должны быть разными"
+            )
+        
+        # Проверяем, что сумма положительная
+        if amount_from <= 0:
+            raise serializers.ValidationError(
+                "Сумма обмена должна быть положительной"
+            )
+        
+        # Проверяем, что филиал активен
+        if not branch.is_active:
+            raise serializers.ValidationError(
+                "Выбранный филиал неактивен"
+            )
+        
+        return data
+    
     def create(self, validated_data):
-        items_data = validated_data.pop('items')
-        order = Order.objects.create(**validated_data)
-
-        for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
-
+        """Создание заказа с автоматическим расчетом."""
+        delivery_address_data = validated_data.pop('delivery_address', None)
+        user = self.context['request'].user
+        
+        # Создаем адрес доставки, если передан
+        delivery_address = None
+        if delivery_address_data:
+            delivery_address = Address.objects.create(**delivery_address_data)
+        
+        # Получаем курс обмена
+        currency_from = validated_data['currency_from']
+        currency_to = validated_data['currency_to']
+        branch = validated_data['branch']
+        amount_from = validated_data['amount_from']
+        
+        # Ищем подходящий курс
+        from exchange.models import ExchangeRate
+        from django.db.models import Q
+        
+        rate_obj = ExchangeRate.objects.filter(
+            currency_from=currency_from,
+            currency_to=currency_to,
+            branch=branch,
+            visible=True,
+            min_amount__lte=amount_from
+        ).filter(
+            Q(max_amount__isnull=True) | Q(max_amount__gte=amount_from)
+        ).first()
+        
+        if not rate_obj:
+            raise serializers.ValidationError(
+                "Курс обмена не найден для указанной суммы"
+            )
+        
+        # Рассчитываем сумму к получению
+        amount_to = amount_from * rate_obj.rate
+        
+        # Создаем заказ
+        order = Order.objects.create(
+            user=user,
+            branch=branch,
+            currency_from=currency_from,
+            currency_to=currency_to,
+            amount_from=amount_from,
+            amount_to=amount_to,
+            applied_rate=rate_obj.rate,
+            delivery=validated_data.get('delivery', False),
+            delivery_address=delivery_address
+        )
+        
         return order
 
-    def to_representation(self, instance):
-        """Добавляем дополнительную информацию при отображении"""
-        data = super().to_representation(instance)
-        data['total_items'] = instance.items.count()
-        data['status_display'] = instance.get_status_display()
-        return data
 
-
-class OrderStatusUpdateSerializer(serializers.ModelSerializer):
+class OrderUpdateSerializer(serializers.ModelSerializer):
+    """Сериализатор для обновления заказа."""
+    
     class Meta:
         model = Order
         fields = ['status']
-
+    
     def validate_status(self, value):
-        instance = self.instance
-        if not instance.can_transition_to(value):
-            current_status = instance.get_status_display()
-            new_status = dict(Order.STATUS_CHOICES)[value]
+        """Валидация изменения статуса."""
+        current_status = self.instance.status
+        
+        # Разрешенные переходы статусов
+        allowed_transitions = {
+            'pending': ['completed', 'canceled'],
+            'completed': [],  # Завершенный заказ нельзя изменить
+            'canceled': [],   # Отмененный заказ нельзя изменить
+        }
+        
+        if value not in allowed_transitions.get(current_status, []):
             raise serializers.ValidationError(
-                f"Невозможно изменить статус с '{current_status}' "
-                f"на '{new_status}'. "
-                f"Доступные статусы: {[dict(Order.STATUS_CHOICES)[status] for status in Order.STATUS_FLOW[instance.status]]}"
+                f"Нельзя изменить статус с '{current_status}' на '{value}'"
             )
+        
         return value
-
-
-class OrderTrackingSerializer(serializers.ModelSerializer):
-    """Сериализатор для отслеживания заказа по коду"""
-    items = OrderItemSerializer(many=True, read_only=True)
-    status_display = serializers.CharField(
-        source='get_status_display',
-        read_only=True
-    )
-
-    class Meta:
-        model = Order
-        fields = [
-            'tracking_code', 'status', 'status_display',
-            'created_at', 'items'
-        ]
-
-
-class OrderDocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrderDocument
-        fields = ['id', 'document_type', 'file', 'uploaded_at']
-        read_only_fields = ['uploaded_at']
-
-
-class ReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Review
-        fields = ['id', 'order', 'rating', 'text',
-                  'created_at', 'is_published']
-        read_only_fields = ['created_at', 'is_published']
-
-
-class ReviewCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания отзыва"""
-    class Meta:
-        model = Review
-        fields = ['order', 'rating', 'text']
-
-    def validate_order(self, value):
-        """Проверка что заказ принадлежит пользователю и завершен"""
-        user = self.context['request'].user
-        if value.user != user:
-            raise serializers.ValidationError(
-                "Вы не можете оставить отзыв к чужому заказу"
-            )
-        if value.status != 'completed':
-            raise serializers.ValidationError(
-                "Отзыв можно оставить только к завершенному заказу"
-            )
-        if Review.objects.filter(order=value).exists():
-            raise serializers.ValidationError(
-                "Отзыв к этому заказу уже существует"
-            )
-        return value
-
-
-class ReviewDetailSerializer(serializers.ModelSerializer):
-    """Сериализатор для детального отображения отзыва"""
-    display_name = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Review
-        fields = ['id', 'order', 'rating', 'text', 'created_at',
-                  'is_visible', 'display_name']
-        read_only_fields = ['created_at', 'display_name']
-
-
-class ReviewPublicSerializer(serializers.ModelSerializer):
-    """Сериализатор для публичного отображения отзыва"""
-    display_name = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Review
-        fields = ['rating', 'text', 'created_at', 'display_name']

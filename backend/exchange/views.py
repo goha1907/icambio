@@ -1,103 +1,65 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from users.permissions import IsAdministrator, IsOwner
-from exchange.models import (
-    Currency,
-    ExchangeRate,
-    ExchangeOffice,
-    CurrencyBalance
+from rest_framework import viewsets, permissions, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Currency, ExchangeRate, Purchase
+from .serializers import (
+    CurrencySerializer, CurrencyCreateSerializer, CurrencyUpdateSerializer,
+    ExchangeRateSerializer, ExchangeRateCreateSerializer, ExchangeRateUpdateSerializer,
+    PurchaseSerializer, PurchaseCreateSerializer, PurchaseUpdateSerializer
 )
-from exchange.serializers import (
-    CurrencySerializer,
-    ExchangeRateSerializer,
-    ExchangeOfficeSerializer,
-    CurrencyBalanceSerializer
-)
-from exchange.services import calculate_exchange
 
 
 class CurrencyViewSet(viewsets.ModelViewSet):
+    """ViewSet для управления валютами"""
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['is_active']
+    search_fields = ['code', 'name']
+    ordering_fields = ['code', 'name']
+    ordering = ['code']
 
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdministrator | IsOwner]
-        elif self.action in ['list', 'retrieve']:
-            permission_classes = []  # Публичный доступ для чтения
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CurrencyCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return CurrencyUpdateSerializer
+        return CurrencySerializer
 
 
 class ExchangeRateViewSet(viewsets.ModelViewSet):
-    queryset = ExchangeRate.objects.filter(is_active=True)
+    """ViewSet для управления курсами обмена"""
+    queryset = ExchangeRate.objects.select_related('from_currency', 'to_currency')
     serializer_class = ExchangeRateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['from_currency', 'to_currency', 'visible']
+    search_fields = ['from_currency__code', 'to_currency__code']
+    ordering_fields = ['rate', 'created_at', 'updated_at']
+    ordering = ['-updated_at']
 
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdministrator | IsOwner]
-        elif self.action in ['list', 'retrieve']:
-            permission_classes = []  # Публичный доступ для чтения
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
-
-    @action(detail=True, methods=['post'])
-    def calculate(self, request, pk=None):
-        """Расчет суммы обмена"""
-        rate = self.get_object()
-        data = request.data
-        try:
-            result = calculate_exchange(
-                rate,
-                amount_from=data.get('amount_from'),
-                amount_to=data.get('amount_to'),
-            )
-            return Response(result)
-        except Exception as exc:
-            return Response(
-                {'error': str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ExchangeRateCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return ExchangeRateUpdateSerializer
+        return ExchangeRateSerializer
 
 
-class ExchangeOfficeViewSet(viewsets.ModelViewSet):
-    queryset = ExchangeOffice.objects.all()
-    serializer_class = ExchangeOfficeSerializer
+class PurchaseViewSet(viewsets.ModelViewSet):
+    """ViewSet для управления закупками валют"""
+    queryset = Purchase.objects.select_related('branch', 'currency')
+    serializer_class = PurchaseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['branch', 'currency', 'purchase_date']
+    search_fields = ['currency__code', 'branch__name', 'notes']
+    ordering_fields = ['purchase_date', 'amount', 'rate', 'total_cost']
+    ordering = ['-purchase_date']
 
-    def get_permissions(self):
-        """Только владелец может управлять обменными пунктами"""
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsOwner]
-        else:
-            permission_classes = [IsAuthenticated]
-        return [permission() for permission in permission_classes]
-
-    @action(detail=True)
-    def balances(self, request, pk=None):
-        """Получение всех балансов для конкретного обменного пункта"""
-        office = self.get_object()
-        balances = office.balances.all()
-        serializer = CurrencyBalanceSerializer(balances, many=True)
-        return Response(serializer.data)
-
-
-class CurrencyBalanceViewSet(viewsets.ModelViewSet):
-    serializer_class = CurrencyBalanceSerializer
-    permission_classes = [IsOwner]  # Только владелец может управлять балансами
-
-    def get_queryset(self):
-        return CurrencyBalance.objects.select_related('currency', 'office')
-
-    @action(detail=False)
-    def by_office(self, request):
-        """Получение балансов по ID обменного пункта"""
-        office_id = request.query_params.get('office_id')
-        if office_id:
-            balances = self.get_queryset().filter(office_id=office_id)
-            serializer = self.get_serializer(balances, many=True)
-            return Response(serializer.data)
-        return Response({"error": "Требуется параметр office_id"}, status=400)
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return PurchaseCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return PurchaseUpdateSerializer
+        return PurchaseSerializer

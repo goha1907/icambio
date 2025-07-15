@@ -1,17 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from exchange.views import (
-    CurrencyViewSet,
-    ExchangeRateViewSet,
-    ExchangeOfficeViewSet,
-    CurrencyBalanceViewSet
-)
+from .views import CurrencyViewSet, ExchangeRateViewSet, PurchaseViewSet
 
 router = DefaultRouter()
-router.register('currencies', CurrencyViewSet, basename='currency')
-router.register('rates', ExchangeRateViewSet, basename='rate')
-router.register('offices', ExchangeOfficeViewSet, basename='office')
-router.register('balances', CurrencyBalanceViewSet, basename='balance')
+router.register(r'currencies', CurrencyViewSet)
+router.register(r'exchange-rates', ExchangeRateViewSet)
+router.register(r'purchases', PurchaseViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

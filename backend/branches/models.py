@@ -6,7 +6,7 @@ class Branch(models.Model):
     """Модель филиала согласно схеме БД."""
     
     name = models.CharField('Название', max_length=200, blank=False)
-    email = models.EmailField('Email', unique=True, blank=True)
+    email = models.EmailField('Email', blank=True)
     whatsapp = models.BigIntegerField('WhatsApp', null=True, blank=True)
     telegram = models.CharField('Telegram', max_length=100, blank=True)
     instagram = models.CharField('Instagram', max_length=100, blank=True)
@@ -68,9 +68,9 @@ class BranchHours(models.Model):
         weekday_name = dict(self.WEEKDAY_CHOICES)[self.weekday]
         if self.is_open and self.open_time and self.close_time:
             return (
-            f"{self.branch.name} - {weekday_name}: "
-            f"{self.open_time}-{self.close_time}"
-        )
+                f"{self.branch.name} - {weekday_name}: "
+                f"{self.open_time}-{self.close_time}"
+            )
         elif self.is_open:
             return f"{self.branch.name} - {weekday_name}: открыт"
         else:

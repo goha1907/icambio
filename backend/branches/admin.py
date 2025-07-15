@@ -55,5 +55,13 @@ class BranchCurrencyAdmin(admin.ModelAdmin):
     list_filter = ['branch', 'currency']
     search_fields = ['branch__name', 'currency__code', 'currency__name']
     
+    fieldsets = (
+        (None, {
+            'fields': ('branch', 'currency', 'amount')
+        }),
+    )
+    
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('branch', 'currency')
+        return super().get_queryset(request).select_related(
+            'branch', 'currency'
+        )

@@ -24,10 +24,13 @@ urlpatterns = [
         name='redoc'
     ),
     
-    # API URLs (временно отключены для рефакторинга)
-    # path('api/v1/', include('users.urls')),
-    # path('api/v1/', include('orders.urls')),
-    # path('api/v1/', include('exchange.urls')),
+    # API URLs
+    path('api/v1/users/', include('users.urls')),
+    path('api/v1/branches/', include('branches.urls')),
+    path('api/v1/exchange/', include('exchange.urls')),
+    path('api/v1/orders/', include('orders.urls')),
+    path('api/v1/reviews/', include('reviews.urls')),
+    path('api/v1/core/', include('core.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Debug Toolbar URLs (только в development)
