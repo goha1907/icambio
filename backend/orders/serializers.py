@@ -8,7 +8,7 @@ from core.models import Address
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользователя в заказе."""
-    
+
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'last_name']
@@ -61,7 +61,7 @@ class OrderSerializer(serializers.ModelSerializer):
     currency_to = CurrencySerializer(read_only=True)
     delivery_address = AddressSerializer(read_only=True)
     profits = OrderProfitSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Order
         fields = [
@@ -101,14 +101,14 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания заказа."""
     
     delivery_address = AddressSerializer(required=False)
-    
+
     class Meta:
         model = Order
         fields = [
             'branch', 'currency_from', 'currency_to', 'amount_from',
             'delivery', 'delivery_address'
         ]
-    
+
     def validate(self, data):
         """Валидация данных заказа."""
         currency_from = data.get('currency_from')
@@ -192,7 +192,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
 class OrderUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для обновления заказа."""
-    
+
     class Meta:
         model = Order
         fields = ['status']

@@ -38,11 +38,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         elif self.action == 'list':
             return OrderListSerializer
         return OrderSerializer
-    
+
     def perform_create(self, serializer):
         """Создание заказа с привязкой к пользователю."""
         serializer.save(user=self.request.user)
-    
+
     @action(detail=False, methods=['get'])
     def my_orders(self, request):
         """Получить заказы текущего пользователя."""
@@ -87,7 +87,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(order)
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['get'])
     def profits(self, request, pk=None):
         """Получить прибыль по заказу."""
