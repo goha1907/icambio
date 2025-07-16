@@ -98,7 +98,8 @@ import { Button } from '@/shared/ui/Button';
 --destructive: #EF4444;       /* Для ошибок */
 --success: #10B981;           /* Для успеха */
 --info: #3B82F6;              /* Для информации */
---muted-foreground: ...;      /* Для вторичного текста */
+--warning: #F59E0B;           /* Для предупреждений */
+--muted-foreground: #6B7280;  /* Для вторичного текста */
 ```
 
 ### Использование в компонентах

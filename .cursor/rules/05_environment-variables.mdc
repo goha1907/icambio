@@ -31,17 +31,27 @@ SECRET_KEY=...
 DEBUG=True
 ALLOWED_HOSTS=...
 
-# Supabase (backend)
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
-SUPABASE_JWT_SECRET=...
+# База данных
+DATABASE_URL=sqlite:///db.sqlite3  # Разработка
+# DATABASE_URL=postgresql://...     # Продакшн
+
+# JWT настройки
+JWT_SECRET_KEY=...
+JWT_ACCESS_TOKEN_LIFETIME=5
+JWT_REFRESH_TOKEN_LIFETIME=1
+
+# Email настройки
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=...
+EMAIL_HOST_PASSWORD=...
 ```
 
 #### Frontend (Vite):
 ```env
 # Vite требует префикс VITE_
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
+VITE_API_URL=http://localhost:8000/api/v1
+VITE_APP_NAME=iCambio
 ```
 
 ### 3. Безопасность
@@ -82,28 +92,30 @@ cd frontend && yarn dev
 #### Development (.env):
 ```env
 DEBUG=True
-SUPABASE_URL=https://your-dev-project.supabase.co
+DATABASE_URL=sqlite:///db.sqlite3
+JWT_SECRET_KEY=your-dev-secret-key
 ```
 
 #### Production:
 - Используйте переменные окружения сервера
 - Никогда не храните production ключи в файлах
 - Используйте секреты в CI/CD системах
+- Используйте PostgreSQL: `DATABASE_URL=postgresql://...`
 
 ### 6. Валидация
 
 #### Backend (Django):
 ```python
 # settings.py должен содержать валидацию
-if not SUPABASE_URL:
-    raise ValueError("SUPABASE_URL environment variable is required")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required")
 ```
 
 #### Frontend (Vite):
 ```typescript
-// supabase.ts должен содержать проверку
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+// api.ts должен содержать проверку
+if (!apiUrl) {
+  throw new Error('Missing API URL environment variable')
 }
 ```
 
@@ -136,7 +148,7 @@ export default defineConfig(({ mode }) => {
 ## 🚨 Чрезвычайные ситуации
 
 ### Если токен попал в Git:
-1. Немедленно смените токен в Supabase
+1. Немедленно смените JWT_SECRET_KEY
 2. Удалите токен из истории Git
 3. Обновите `.env` файл
 4. Проинформируйте команду

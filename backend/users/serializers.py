@@ -49,14 +49,14 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             'username', 'first_name', 'last_name', 'whatsapp',
             'telegram', 'address'
         ]
-    
+
     def validate_username(self, value):
         if User.objects.exclude(pk=self.instance.pk).filter(
             username=value
         ).exists():
             raise serializers.ValidationError("Этот никнейм уже занят")
         return value
-    
+
     def update(self, instance, validated_data):
         address_data = validated_data.pop('address', None)
         

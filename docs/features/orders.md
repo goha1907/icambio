@@ -27,34 +27,31 @@
 
 ## 3. Основные API-эндпоинты (Бэкенд)
 
-### Заказы (`/api/orders/`)
--   `GET /api/orders/`: Получение списка заказов (пользователь видит свои, персонал — все).
--   `POST /api/orders/`: Создание нового заказа.
--   `GET /api/orders/{id}/`: Получение деталей заказа.
--   `PATCH /api/orders/{id}/update_status/`: Обновление статуса заказа (доступно операторам, администраторам, владельцам).
--   `POST /api/orders/{id}/upload_document/`: Загрузка документа к заказу.
--   `GET /api/orders/{id}/documents/`: Получение списка документов заказа.
--   `DELETE /api/orders/{id}/`: Удаление заказа (только для администраторов/владельцев).
+### Заказы (`/api/v1/orders/`)
+-   `GET /api/v1/orders/`: Получение списка заказов (пользователь видит свои, персонал — все).
+-   `POST /api/v1/orders/`: Создание нового заказа.
+-   `GET /api/v1/orders/{id}/`: Получение деталей заказа.
+-   `PATCH /api/v1/orders/{id}/update_status/`: Обновление статуса заказа (доступно операторам, администраторам, владельцам).
+-   `DELETE /api/v1/orders/{id}/`: Удаление заказа (только для администраторов/владельцев).
 
 ### Отслеживание заказа (публичный)
--   `GET /api/orders/track/{tracking_code}/`: Публичное отслеживание заказа по коду (без аутентификации).
+-   `GET /api/v1/orders/track/{tracking_code}/`: Публичное отслеживание заказа по коду (без аутентификации).
 
-### Отзывы (`/api/reviews/`)
--   `GET /api/reviews/`: Получение списка отзывов (пользователь видит свои, персонал — все, администраторы/владельцы — все).
--   `POST /api/reviews/`: Создание отзыва (только для аутентифицированных пользователей к своим завершенным заказам).
--   `GET /api/reviews/{id}/`: Получение деталей отзыва.
--   `PUT/PATCH /api/reviews/{id}/`: Обновление отзыва (только для администраторов/владельцев).
--   `DELETE /api/reviews/{id}/`: Удаление отзыва (только для администраторов/владельцев).
--   `GET /api/reviews/list_public/`: Публичный список видимых отзывов для отображения на сайте (без аутентификации).
+### Отзывы (`/api/v1/reviews/`)
+-   `GET /api/v1/reviews/`: Получение списка отзывов (пользователь видит свои, персонал — все, администраторы/владельцы — все).
+-   `POST /api/v1/reviews/`: Создание отзыва (только для аутентифицированных пользователей к своим завершенным заказам).
+-   `GET /api/v1/reviews/{id}/`: Получение деталей отзыва.
+-   `PUT/PATCH /api/v1/reviews/{id}/`: Обновление отзыва (только для администраторов/владельцев).
+-   `DELETE /api/v1/reviews/{id}/`: Удаление отзыва (только для администраторов/владельцев).
+-   `GET /api/v1/reviews/list_public/`: Публичный список видимых отзывов для отображения на сайте (без аутентификации).
 
 ---
 
 ## 4. Модели данных (Бэкенд)
 
--   **`Order`**: `orders.models.Order` (user, office, tracking_code, status, whatsapp, telegram, needs_delivery, delivery_address, comment, created_at, updated_at). Включает логику переходов между статусами.
--   **`OrderItem`**: `orders.models.OrderItem` (order, from_currency, to_currency, amount_from, amount_to, rate). Элементы обмена в рамках заказа.
--   **`OrderDocument`**: `orders.models.OrderDocument` (order, document_type, file, uploaded_at, uploaded_by). Документы, прикрепленные к заказу.
--   **`Review`**: `orders.models.Review` (order, rating, text, created_at, is_visible). Отзывы к заказам.
+-   **`Order`**: `orders.models.Order` (user, branch, currency_from, currency_to, amount_from, amount_to, applied_rate, status, delivery, delivery_address, created_at, completed_at). Включает логику переходов между статусами.
+-   **`OrderProfit`**: `orders.models.OrderProfit` (order, currency, amount). Прибыль по заказу.
+-   **`Review`**: `reviews.models.Review` (user, order, rating, comment, visible, created_at). Отзывы к заказам.
 
 ---
 

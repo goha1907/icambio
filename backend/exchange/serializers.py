@@ -30,7 +30,7 @@ class ExchangeRateSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ExchangeRate"""
     from_currency_code = serializers.CharField(source='from_currency.code', read_only=True)
     to_currency_code = serializers.CharField(source='to_currency.code', read_only=True)
-    
+
     class Meta:
         model = ExchangeRate
         fields = [
@@ -72,7 +72,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
 
 class PurchaseCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания закупки"""
-    
+
     class Meta:
         model = Purchase
         fields = ['branch', 'currency', 'amount', 'rate', 'total_cost', 'notes']

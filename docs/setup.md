@@ -43,26 +43,45 @@ cd icambio
     ALLOWED_HOSTS=localhost,127.0.0.1
 
     # Frontend URL
-    FRONTEND_URL=http://localhost:5173
+    FRONTEND_URL=http://localhost:3000
 
-    # Основной URL проекта Supabase
-    VITE_SUPABASE_URL=your_supabase_url_here
+    # Email settings (для Django Allauth)
+    EMAIL_HOST_USER=your-email@gmail.com
+    EMAIL_HOST_PASSWORD=your-app-password
+    DEFAULT_FROM_EMAIL=your-email@gmail.com
 
-    # Public anon key (безопасно для фронтенда)
-    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
-
-    # Service role key (только для бэкенда)
-    SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
-
-    # JWT Secret (только для бэкенда)
-    SUPABASE_JWT_SECRET=your_supabase_jwt_secret_here
-
-    EMAIL_HOST_USER=
-    EMAIL_HOST_PASSWORD=
-    DEFAULT_FROM_EMAIL=
+    # Database
+    # Разработка (SQLite)
+    DATABASE_URL=sqlite:///db.sqlite3
+    
+    # Продакшн (PostgreSQL) - раскомментируйте для продакшна
+    # DATABASE_URL=postgresql://username:password@localhost:5432/icambio_db
     ```
 
-3.  **Применение миграций и создание суперпользователя:**
+3.  **Настройка базы данных:**
+
+    ### Разработка (SQLite)
+    SQLite используется по умолчанию и не требует дополнительной настройки.
+
+    ### Продакшн (PostgreSQL)
+    Для продакшна рекомендуется использовать PostgreSQL:
+
+    ```bash
+    # Установка PostgreSQL (Ubuntu/Debian)
+    sudo apt-get install postgresql postgresql-contrib
+    
+    # Создание базы данных
+    sudo -u postgres psql
+    CREATE DATABASE icambio_db;
+    CREATE USER icambio_user WITH PASSWORD 'your_password';
+    GRANT ALL PRIVILEGES ON DATABASE icambio_db TO icambio_user;
+    \q
+    
+    # Установка Python драйвера для PostgreSQL
+    pip install psycopg2-binary
+    ```
+
+4.  **Применение миграций и создание суперпользователя:**
 
     ```bash
     cd backend
@@ -72,7 +91,7 @@ cd icambio
     cd ..
     ```
 
-4.  **Запуск Django-сервера:**
+5.  **Запуск Django-сервера:**
 
     ```bash
     cd backend
@@ -118,4 +137,17 @@ cd icambio
 
 `http://127.0.0.1:8000/admin/`
 
-Используйте email и пароль суперпользователя, созданные ранее. 
+Используйте email и пароль суперпользователя, созданные ранее.
+
+---
+
+## 6. Аутентификация
+
+Проект использует **Django Allauth** для аутентификации пользователей:
+
+- **Регистрация:** `/accounts/signup/`
+- **Вход:** `/accounts/login/`
+- **Выход:** `/accounts/logout/`
+- **Сброс пароля:** `/accounts/password/reset/`
+
+Все эндпоинты аутентификации доступны через Django REST Framework API. 

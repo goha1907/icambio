@@ -63,7 +63,7 @@ export function ExchangePage() {
     reValidateMode: 'onChange',
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, /* remove */ } = useFieldArray({
     control: form.control,
     name: 'pairs',
   });

@@ -44,22 +44,34 @@ class SupabaseJWTAuthentication(BaseAuthentication):
         Декодирует JWT токен от Supabase с явной проверкой секрета и логированием ошибок
         """
         try:
+            # Сначала пробуем Supabase JWT
             jwt_secret = settings.SUPABASE_JWT_SECRET
-            if not jwt_secret:
-                logging.error('SUPABASE_JWT_SECRET is not set')
-                raise AuthenticationFailed('SUPABASE_JWT_SECRET is not set')
+            if jwt_secret:
+                try:
+                    payload = jwt.decode(
+                        token,
+                        jwt_secret,
+                        algorithms=['HS256'],
+                        options={'verify_aud': False}
+                    )
+                    return payload
+                except jwt.ExpiredSignatureError:
+                    logging.warning('Supabase JWT expired')
+                    raise AuthenticationFailed('Token has expired')
+                except jwt.InvalidTokenError:
+                    # Если не Supabase токен, пробуем Django токен
+                    pass
+            
+            # Тестовая версия - используем Django SECRET_KEY
             payload = jwt.decode(
                 token,
-                jwt_secret,
-                algorithms=['HS256'],
-                options={'verify_aud': False}
+                settings.SECRET_KEY,
+                algorithms=['HS256']
             )
             return payload
-        except jwt.ExpiredSignatureError:
-            logging.warning('Supabase JWT expired')
-            raise AuthenticationFailed('Token has expired')
+            
         except jwt.InvalidTokenError as e:
-            logging.warning(f'Supabase JWT invalid: {e}')
+            logging.warning(f'JWT invalid: {e}')
             raise AuthenticationFailed(f'Invalid token: {str(e)}')
 
     def _get_or_create_user(self, payload: dict) -> User:
@@ -67,31 +79,41 @@ class SupabaseJWTAuthentication(BaseAuthentication):
         Получает или создаёт пользователя на основе email из JWT
         """
         email = payload.get('email')
+        
+        # Отладочная информация
+        logger = logging.getLogger(__name__)
+        logger.info(f"Processing JWT payload for email: {email}")
+        logger.info(f"Payload keys: {list(payload.keys())}")
+        logger.info(f"User metadata: {payload.get('user_metadata', {})}")
 
         if not email:
             raise AuthenticationFailed('Email not found in token payload')
 
         # Ищем пользователя по email
         try:
-            return User.objects.get(email=email)
+            user = User.objects.get(email=email)
+            logger.info(f"Found existing user: {user.email}")
+            return user
         except User.DoesNotExist:
+            logger.info(f"User not found, creating new user for: {email}")
             pass
 
         # Создаем нового пользователя
         user_metadata = payload.get('user_metadata', {})
         
-        user = User.objects.create(
-            email=email,
-            is_active=True,
-            first_name=user_metadata.get('first_name', ''),
-            last_name=user_metadata.get('last_name', ''),
-            username=user_metadata.get('username') or email.split('@')[0],
-        )
-
-        logger = logging.getLogger(__name__)
-        logger.info(f"Created new user from Supabase: {email}")
-
-        return user
+        try:
+            user = User.objects.create(
+                email=email,
+                is_active=True,
+                first_name=user_metadata.get('first_name', ''),
+                last_name=user_metadata.get('last_name', ''),
+                username=user_metadata.get('username') or email.split('@')[0],
+            )
+            logger.info(f"Successfully created new user from Supabase: {email}")
+            return user
+        except Exception as e:
+            logger.error(f"Error creating user: {str(e)}")
+            raise AuthenticationFailed(f'Error creating user: {str(e)}')
 
 
 class SupabaseBackend(BaseBackend):

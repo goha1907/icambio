@@ -14,7 +14,7 @@ class Order(models.Model):
         ('completed', 'Выполнен'),
         ('canceled', 'Отменён'),
     ]
-    
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
