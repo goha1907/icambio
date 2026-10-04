@@ -1,0 +1,4 @@
+name,email,address_id,is_active
+Главный офис,main@branch.com,1,True
+Питерский филиал,spb@branch.com,2,True
+Онлайн-обменник,online@branch.com,,True 

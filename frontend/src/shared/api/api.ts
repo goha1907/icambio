@@ -15,10 +15,10 @@ const api = axios.create({
 // Interceptor для добавления токена к запросам
 api.interceptors.request.use(
   (config) => {
-    const { session } = useAuthStore.getState()
+    const { tokens } = useAuthStore.getState()
     
-    if (session?.access_token) {
-      config.headers.Authorization = `Bearer ${session.access_token}`
+    if (tokens?.access) {
+      config.headers.Authorization = `Bearer ${tokens.access}`
     }
     
     return config
@@ -33,7 +33,7 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     const { response } = error
     
     if (response?.status === 401) {

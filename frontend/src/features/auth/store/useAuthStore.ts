@@ -1,36 +1,37 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { SupabaseSession, TUser } from '@/types'
+import type { TUser, DjangoJWTResponse } from '@/types'
 
 interface AuthState {
   user: TUser | null
-  session: SupabaseSession | null
+  tokens: DjangoJWTResponse | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
   
   // Actions
-  setAuth: (user: TUser | null, session: SupabaseSession | null) => void
+  setAuth: (user: TUser | null, tokens: DjangoJWTResponse | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   logout: () => void
+  updateTokens: (tokens: DjangoJWTResponse) => void
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      session: null,
+      tokens: null,
       isAuthenticated: false,
       isLoading: true,
       error: null,
 
-      setAuth: (user, session) => {
-        console.log('AuthStore: Setting auth', { hasUser: !!user, hasSession: !!session });
+      setAuth: (user, tokens) => {
+        console.log('AuthStore: Setting auth', { hasUser: !!user, hasTokens: !!tokens });
         set({
           user,
-          session,
-          isAuthenticated: !!(user && session),
+          tokens,
+          isAuthenticated: !!(user && tokens),
           error: null,
         })
       },
@@ -47,7 +48,12 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         console.log('AuthStore: Logging out');
-        set({ user: null, session: null, isAuthenticated: false, error: null })
+        set({ user: null, tokens: null, isAuthenticated: false, error: null })
+      },
+
+      updateTokens: (tokens: DjangoJWTResponse) => {
+        console.log('AuthStore: Updating tokens');
+        set({ tokens })
       }
     }),
     {
@@ -55,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
-        session: state.session,
+        tokens: state.tokens,
         isAuthenticated: state.isAuthenticated
       }),
       onRehydrateStorage: () => (state) => {

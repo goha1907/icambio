@@ -36,7 +36,7 @@ import {
  */
 export const ChangePasswordForm: React.FC = () => {
   const navigate = useNavigate();
-  const { changePasswordWithReauth, isLoading } = useAuth();
+  const { changePassword, isLoading } = useAuth();
   
   // Состояния компонента
   // Локальные переключатели показа пароля и ручная проверка больше не нужны
@@ -71,9 +71,9 @@ export const ChangePasswordForm: React.FC = () => {
    */
   const onSubmit = async (data: ChangePasswordFormData) => {
     try {
-    const result = await changePasswordWithReauth(data.oldPassword, data.newPassword);
+      const result = await changePassword(data.newPassword);
       
-    if (result.error) {
+      if (result.error) {
         // Ошибки показываются через toast в useAuth
         return;
       }

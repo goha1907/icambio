@@ -1,10 +1,12 @@
 from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from users.permissions import IsOperator, IsOperator, IsOperator
 from .models import Currency, ExchangeRate, Purchase
 from .serializers import (
     CurrencySerializer, CurrencyCreateSerializer, CurrencyUpdateSerializer,
-    ExchangeRateSerializer, ExchangeRateCreateSerializer, ExchangeRateUpdateSerializer,
-    PurchaseSerializer, PurchaseCreateSerializer, PurchaseUpdateSerializer
+    ExchangeRateSerializer, ExchangeRateCreateSerializer,
+    ExchangeRateUpdateSerializer, PurchaseSerializer, PurchaseCreateSerializer,
+    PurchaseUpdateSerializer
 )
 
 
@@ -12,11 +14,13 @@ class CurrencyViewSet(viewsets.ModelViewSet):
     """ViewSet для управления валютами"""
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['is_active']
+    permission_classes = [IsOperator]
+    filter_backends = [
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter
+    ]
+    filterset_fields = ['code', 'name']
     search_fields = ['code', 'name']
-    ordering_fields = ['code', 'name']
+    ordering_fields = ['code', 'name', 'created_at']
     ordering = ['code']
 
     def get_serializer_class(self):
@@ -29,13 +33,22 @@ class CurrencyViewSet(viewsets.ModelViewSet):
 
 class ExchangeRateViewSet(viewsets.ModelViewSet):
     """ViewSet для управления курсами обмена"""
-    queryset = ExchangeRate.objects.select_related('from_currency', 'to_currency')
+    queryset = ExchangeRate.objects.select_related(
+        'currency_from', 'currency_to', 'branch'
+    )
     serializer_class = ExchangeRateSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['from_currency', 'to_currency', 'visible']
-    search_fields = ['from_currency__code', 'to_currency__code']
-    ordering_fields = ['rate', 'created_at', 'updated_at']
+    permission_classes = [IsOperator]
+    filter_backends = [
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter
+    ]
+    filterset_fields = [
+        'currency_from', 'currency_to', 'branch', 'visible', 'is_hot',
+        'in_filter'
+    ]
+    search_fields = [
+        'currency_from__code', 'currency_to__code', 'branch__name'
+    ]
+    ordering_fields = ['rate', 'min_amount', 'max_amount', 'updated_at']
     ordering = ['-updated_at']
 
     def get_serializer_class(self):
@@ -48,14 +61,24 @@ class ExchangeRateViewSet(viewsets.ModelViewSet):
 
 class PurchaseViewSet(viewsets.ModelViewSet):
     """ViewSet для управления закупками валют"""
-    queryset = Purchase.objects.select_related('branch', 'currency')
+    queryset = Purchase.objects.select_related(
+        'branch', 'currency_from', 'currency_to', 'user'
+    )
     serializer_class = PurchaseSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['branch', 'currency', 'purchase_date']
-    search_fields = ['currency__code', 'branch__name', 'notes']
-    ordering_fields = ['purchase_date', 'amount', 'rate', 'total_cost']
-    ordering = ['-purchase_date']
+    permission_classes = [IsOperator]
+    filter_backends = [
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter
+    ]
+    filterset_fields = [
+        'branch', 'currency_from', 'currency_to', 'source', 'user'
+    ]
+    search_fields = [
+        'currency_from__code', 'currency_to__code', 'branch__name', 'note'
+    ]
+    ordering_fields = [
+        'created_at', 'amount_from', 'amount_to', 'applied_rate'
+    ]
+    ordering = ['-created_at']
 
     def get_serializer_class(self):
         if self.action == 'create':

@@ -67,8 +67,9 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'branch', 'currency_from', 'currency_to',
             'amount_from', 'amount_to', 'applied_rate', 'status',
-            'delivery', 'delivery_address', 'created_at', 'completed_at',
-            'profits', 'is_completed', 'is_canceled', 'is_pending'
+            'delivery', 'delivery_address', 'comment', 'created_at', 
+            'completed_at', 'profits', 'is_completed', 'is_canceled', 
+            'is_pending'
         ]
         read_only_fields = [
             'id', 'user', 'amount_to', 'applied_rate', 'created_at',
@@ -89,7 +90,7 @@ class OrderListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'currency_from', 'currency_to', 'branch',
             'amount_from', 'amount_to', 'status', 'delivery',
-            'created_at', 'is_completed', 'is_canceled', 'is_pending'
+            'comment', 'created_at', 'is_completed', 'is_canceled', 'is_pending'
         ]
         read_only_fields = [
             'id', 'amount_to', 'created_at', 'is_completed',
@@ -106,7 +107,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'branch', 'currency_from', 'currency_to', 'amount_from',
-            'delivery', 'delivery_address'
+            'delivery', 'delivery_address', 'comment'
         ]
 
     def validate(self, data):
@@ -184,7 +185,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             amount_to=amount_to,
             applied_rate=rate_obj.rate,
             delivery=validated_data.get('delivery', False),
-            delivery_address=delivery_address
+            delivery_address=delivery_address,
+            comment=validated_data.get('comment', '')
         )
         
         return order
@@ -195,7 +197,7 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['status']
+        fields = ['status', 'comment']
     
     def validate_status(self, value):
         """Валидация изменения статуса."""

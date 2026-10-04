@@ -1,4 +1,6 @@
 import uuid
+import random
+import string
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from core.models import Address
@@ -24,6 +26,56 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
         return self.create_user(email, password, **extra_fields)
+    
+    def create_user_with_code(self, email, password=None, **extra_fields):
+        """Создает пользователя с гарантированно уникальным кодом."""
+        from django.db import IntegrityError
+        
+        for _ in range(10):
+            extra_fields['referral_code'] = self.generate_unique_referral_code()
+            try:
+                return self.create_user(
+                    email=email, password=password, **extra_fields
+                )
+            except IntegrityError:
+                continue
+        raise Exception(
+            "Не удалось создать пользователя с уникальным кодом"
+        )
+
+    def generate_referral_code(length=8):
+        """Генерирует случайный реферальный код заданной длины."""
+        characters = string.ascii_uppercase + string.digits
+        return ''.join(random.choices(characters, k=length))
+
+    def generate_unique_referral_code(self):
+        """Генерирует уникальный реферальный код с проверкой в БД."""
+        max_attempts = 10  # Ограничиваем количество попыток
+        
+        for attempt in range(max_attempts):
+            # Генерируем код на основе UUID для высокой энтропии
+            code = uuid.uuid4().hex[:8].upper()
+            
+            # Проверяем уникальность в БД
+            if not self.get_queryset().filter(
+                referral_code=code
+            ).exists():
+                return code
+        
+        # Если UUID не помог, используем случайную генерацию
+        for attempt in range(max_attempts):
+            code = self.generate_referral_code()
+            if not self.get_queryset().filter(
+                referral_code=code
+            ).exists():
+                return code
+        
+        # Если и это не помогло, добавляем timestamp
+        import time
+        timestamp = str(int(time.time()))[-4:]
+        code = f"{uuid.uuid4().hex[:4].upper()}{timestamp}"
+        
+        return code
 
 
 class User(AbstractUser):
@@ -45,7 +97,12 @@ class User(AbstractUser):
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
     
     whatsapp = models.BigIntegerField('WhatsApp', null=True, blank=True)
-    telegram = models.CharField('Telegram', max_length=100, blank=True)
+    telegram = models.CharField(
+        'Telegram',
+        max_length=100,
+        null=True,
+        blank=True
+    )
     
     address = models.ForeignKey(
         Address,
@@ -57,10 +114,13 @@ class User(AbstractUser):
     )
     
     referral_code = models.CharField(
-        'Реферальный код',
         max_length=20,
         unique=True,
-        blank=False
+        blank=False,
+        null=False,
+        verbose_name='Реферальный код',
+        default='',
+        help_text='Уникальный реферальный код пользователя'
     )
     referred_by_code = models.CharField(
         'Код реферера',
@@ -82,8 +142,9 @@ class User(AbstractUser):
         default='user',
         choices=[
             ('user', 'Пользователь'),
-            ('admin', 'Администратор'),
             ('operator', 'Оператор'),
+            ('admin', 'Администратор'),
+            ('owner', 'Владелец'),
         ]
     )
     
@@ -104,16 +165,12 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         if not self.referral_code:
-            # Генерируем уникальный реферальный код
-            import secrets
-            import string
-            alphabet = string.ascii_uppercase + string.digits
-            while True:
-                code = ''.join(secrets.choice(alphabet) for _ in range(8))
-                if not User.objects.filter(referral_code=code).exists():
-                    self.referral_code = code
-                    break
+            self.referral_code = self.generate_referral_code()
         super().save(*args, **kwargs)
+
+    def generate_referral_code(self):
+        import uuid
+        return uuid.uuid4().hex[:10]
 
     @property
     def referral_link(self):

@@ -1,6 +1,7 @@
 
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from users.permissions import IsOperator, IsOperator
 from .models import Address, CurrencyMovement
 from .serializers import (
     AddressSerializer, AddressCreateSerializer, AddressUpdateSerializer,
@@ -13,11 +14,15 @@ class AddressViewSet(viewsets.ModelViewSet):
     """ViewSet для управления адресами"""
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['country', 'city', 'state']
-    search_fields = ['street', 'city', 'state', 'country', 'full_address']
-    ordering_fields = ['city', 'state', 'country']
+    permission_classes = [IsOperator]
+    filter_backends = [
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter
+    ]
+    filterset_fields = ['country', 'city']
+    search_fields = [
+        'street', 'city', 'country', 'full_address', 'house_number'
+    ]
+    ordering_fields = ['city', 'country', 'created_at']
     ordering = ['country', 'city']
 
     def get_serializer_class(self):
@@ -30,14 +35,23 @@ class AddressViewSet(viewsets.ModelViewSet):
 
 class CurrencyMovementViewSet(viewsets.ModelViewSet):
     """ViewSet для управления движениями валют"""
-    queryset = CurrencyMovement.objects.select_related('branch', 'currency')
+    queryset = CurrencyMovement.objects.select_related(
+        'branch', 'currency', 'user', 'order', 'purchase',
+        'referral_transaction'
+    )
     serializer_class = CurrencyMovementSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['branch', 'currency', 'movement_type', 'movement_date']
-    search_fields = ['currency__code', 'branch__name', 'notes']
-    ordering_fields = ['movement_date', 'amount', 'balance_before', 'balance_after']
-    ordering = ['-movement_date']
+    permission_classes = [IsOperator]
+    filter_backends = [
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter
+    ]
+    filterset_fields = [
+        'branch', 'currency', 'type', 'user', 'order', 'purchase'
+    ]
+    search_fields = [
+        'currency__code', 'branch__name', 'reason', 'user__email'
+    ]
+    ordering_fields = ['created_at', 'amount']
+    ordering = ['-created_at']
 
     def get_serializer_class(self):
         if self.action == 'create':

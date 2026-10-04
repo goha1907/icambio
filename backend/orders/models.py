@@ -76,6 +76,12 @@ class Order(models.Model):
         related_name='delivery_orders'
     )
     
+    comment = models.TextField(
+        'Комментарий',
+        blank=True,
+        help_text='Комментарий пользователя или оператора к заказу'
+    )
+    
     created_at = models.DateTimeField('Создан', auto_now_add=True)
     completed_at = models.DateTimeField('Завершен', null=True, blank=True)
 

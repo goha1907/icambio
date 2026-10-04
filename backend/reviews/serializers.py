@@ -119,4 +119,6 @@ class ReviewPublicSerializer(serializers.ModelSerializer):
             'id', 'rating', 'comment', 'created_at',
             'user_name', 'order_summary'
         ]
-        read_only_fields = ['id', 'created_at', 'user_name', 'order_summary'] 
+        read_only_fields = [
+            'id', 'created_at', 'user_name', 'order_summary'
+        ] 

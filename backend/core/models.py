@@ -10,10 +10,6 @@ class Address(models.Model):
     house_number = models.CharField('Номер дома', max_length=20, blank=True)
     postal_code = models.CharField('Почтовый индекс', max_length=20, blank=True)
     
-    full_address = models.TextField(
-        'Полный адрес',
-        blank=True
-    )
     latitude = models.DecimalField(
         'Широта',
         max_digits=9,
@@ -39,29 +35,20 @@ class Address(models.Model):
     def __str__(self):
         return self.full_address
 
-    def save(self, *args, **kwargs):
-        # Автоматически формируем полный адрес, если он не задан
-        if not self.full_address:
-            parts = []
-            if self.street and self.house_number:
-                parts.append(f"{self.street}, {self.house_number}")
-            elif self.street:
-                parts.append(self.street)
-            
-            if self.city:
-                parts.append(self.city)
-            
-            if self.country:
-                parts.append(self.country)
-            
-            if self.postal_code:
-                parts.append(self.postal_code)
-            
-            self.full_address = (
-                ', '.join(parts) if parts else 'Адрес не указан'
-            )
-        
-        super().save(*args, **kwargs)
+    @property
+    def full_address(self):
+        parts = []
+        if self.street and self.house_number:
+            parts.append(f"{self.street}, {self.house_number}")
+        elif self.street:
+            parts.append(self.street)
+        if self.city:
+            parts.append(self.city)
+        if self.country:
+            parts.append(self.country)
+        if self.postal_code:
+            parts.append(self.postal_code)
+        return ', '.join(parts) if parts else 'Адрес не указан'
 
 
 class CurrencyMovement(models.Model):

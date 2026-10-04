@@ -1,314 +1,168 @@
-import { useEffect, useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
-import { authService, type LoginCredentials, type RegisterCredentials } from '../services/authService'
-import toast from 'react-hot-toast'
-import type { TUser, SupabaseSession } from '@/types'
-import { supabase } from '@/shared/config/supabase'
-import { useNavigate } from 'react-router-dom'
+import { authService } from '../services/authService'
+import type { LoginCredentials, RegisterData, TUser } from '@/types'
 
 export const useAuth = () => {
-  const { user, session, isAuthenticated, isLoading, setAuth, setLoading, logout: logoutStore } = useAuthStore()
-  const navigate = useNavigate()
-
-  // Добавляем дебаг информацию
-  console.log('useAuth state:', { 
-    user: user?.email, 
-    isAuthenticated, 
+  const {
+    user,
+    tokens,
+    isAuthenticated,
     isLoading,
-    hasSession: !!session 
-  });
+    error,
+    setAuth,
+    setLoading,
+    setError,
+    logout: logoutStore,
+    updateTokens,
+  } = useAuthStore()
 
-  // Инициализация состояния авторизации при загрузке приложения
+  // Инициализация состояния аутентификации при загрузке приложения
   useEffect(() => {
-    let isMounted = true;
-    
     const initializeAuth = async () => {
-      console.log('useAuth: Starting auth initialization...');
-      
       try {
-        // Сначала проверяем текущую сессию из Supabase
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (!isMounted) return;
-        
-        console.log('useAuth: Current session check:', { hasSession: !!currentSession, error });
-        
-        if (error) {
-          console.log('useAuth: Session error, clearing auth');
-          setAuth(null, null);
-        } else if (currentSession && currentSession.user) {
-          console.log('useAuth: Found valid session, setting user');
-          const user: TUser = {
-            ...currentSession.user,
-            id: currentSession.user.id,
-            email: currentSession.user.email || '',
-            username: currentSession.user.user_metadata?.username || undefined,
-            first_name: currentSession.user.user_metadata?.first_name || undefined,
-            last_name: currentSession.user.user_metadata?.last_name || undefined,
-            whatsapp: currentSession.user.user_metadata?.whatsapp || undefined,
-            telegram: currentSession.user.user_metadata?.telegram || undefined,
-            preferred_delivery_address: currentSession.user.user_metadata?.preferred_delivery_address || undefined,
-            referral_link: undefined,
-            referralBalance: undefined,
-          };
-          setAuth(user, currentSession as SupabaseSession);
-        } else {
-          console.log('useAuth: No valid session, clearing auth');
-          setAuth(null, null);
+        // Если есть токены, проверяем их валидность
+        if (tokens?.access) {
+          const result = await authService.getCurrentUser()
+          if (result.user) {
+            setAuth(result.user, tokens)
+          } else {
+            // Токен недействителен, очищаем состояние
+            logoutStore()
+          }
         }
       } catch (error) {
-        console.log('useAuth: Auth initialization error:', error);
-        if (isMounted) {
-          setAuth(null, null);
-        }
+        console.error('Auth initialization error:', error)
+        logoutStore()
       } finally {
-        if (isMounted) {
-          console.log('useAuth: Setting loading to false');
-          setLoading(false);
-        }
+        setLoading(false)
       }
-    };
-
-    // Запускаем инициализацию
-    initializeAuth();
-
-    // Подписка на изменения состояния аутентификации
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return;
-
-      console.log('useAuth: Auth state change:', event, session?.user?.email);
-
-      if (event === 'SIGNED_IN' && session && session.user) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlType = urlParams.get('type');
-        
-        // Проверяем тип события
-        if (urlType === 'recovery') {
-          console.log('useAuth: Password recovery signin, redirecting to set-new-password');
-          navigate('/set-new-password');
-          return;
-        }
-
-        // Создаем пользователя из сессии
-        const user: TUser = {
-          ...session.user,
-          id: session.user.id,
-          email: session.user.email || '',
-          username: session.user.user_metadata?.username || undefined,
-          first_name: session.user.user_metadata?.first_name || undefined,
-          last_name: session.user.user_metadata?.last_name || undefined,
-          whatsapp: session.user.user_metadata?.whatsapp || undefined,
-          telegram: session.user.user_metadata?.telegram || undefined,
-          preferred_delivery_address: session.user.user_metadata?.preferred_delivery_address || undefined,
-          referral_link: undefined,
-          referralBalance: undefined,
-        };
-        
-        console.log('useAuth: Setting user from auth state change');
-        setAuth(user, session as SupabaseSession);
-
-        // Стандартная Supabase логика - если подтверждение email, сразу авторизуем и перенаправляем на главную
-        if (urlType === 'signup') {
-          toast.success('Email подтвержден! Добро пожаловать!');
-          navigate('/');
-        }
-      } else if (event === 'SIGNED_OUT') {
-        console.log('useAuth: User signed out');
-        setAuth(null, null);
-      }
-    });
-
-    // Cleanup функция
-    return () => {
-      console.log('useAuth: Cleaning up...');
-      isMounted = false;
-      subscription.unsubscribe();
     }
-    
-  }, [setAuth, setLoading, navigate])
 
+    if (isLoading) {
+      initializeAuth()
+    }
+  }, [tokens, isLoading, setAuth, setLoading, logoutStore])
+
+  // Логин
   const login = useCallback(async (credentials: LoginCredentials) => {
+    setLoading(true)
     try {
-      setLoading(true)
       const result = await authService.login(credentials)
-      
-      if (result.error) {
-        toast.error((result.error as any).message || String(result.error))
-        return { success: false, error: result.error }
-      }
-
-      if (result.user && result.session) {
-        setAuth(result.user, result.session)
-        toast.success('Успешный вход в систему!')
+      if (result.user && result.tokens) {
+        setAuth(result.user, result.tokens)
         return { success: true }
       }
-
-      return { success: false, error: 'Неизвестная ошибка' }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
+      setError(result.error || 'Ошибка входа')
+      return { success: false, error: result.error }
     } finally {
       setLoading(false)
     }
-  }, [setAuth, setLoading])
+  }, [setAuth, setLoading, setError])
 
-  const register = useCallback(async (credentials: RegisterCredentials) => {
+  // Регистрация
+  const register = useCallback(async (credentials: RegisterData) => {
+    setLoading(true)
     try {
-      setLoading(true)
       const result = await authService.register(credentials)
-      
-      if (result.error) {
-        toast.error((result.error as any).message || String(result.error))
-        return { success: false, error: result.error }
+      if (result.user && result.tokens) {
+        setAuth(result.user, result.tokens)
+        return { success: true }
       }
-
-      // Для Supabase с подтверждением email - всегда считаем что нужно подтверждение
-      if (result.user) {
-        // НЕ устанавливаем auth состояние, так как пользователь должен сначала подтвердить email
-        toast.success('Регистрация прошла успешно! Проверьте email для подтверждения.')
-        return { success: true, needsConfirmation: true }
-      }
-
-      return { success: false, error: 'Неизвестная ошибка' }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
+      setError(result.error || 'Ошибка регистрации')
+      return { success: false, error: result.error }
     } finally {
       setLoading(false)
     }
-  }, [setLoading])
+  }, [setAuth, setLoading, setError])
 
+  // Логаут
   const logout = useCallback(async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-      const result = await authService.logout()
-      
-      if (result.error) {
-        toast.error((result.error as any).message || String(result.error))
-        return { success: false, error: result.error }
-      }
-
+      await authService.logout()
       logoutStore()
-      toast.success('Вы вышли из системы')
       return { success: true }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
     } finally {
       setLoading(false)
     }
   }, [logoutStore, setLoading])
 
-  const changePasswordWithReauth = useCallback(async (oldPassword: string, newPassword: string) => {
+  // Обновление токенов
+  const refreshTokens = useCallback(async () => {
+    setLoading(true)
     try {
-      setLoading(true)
-      const result = await authService.changePasswordWithReauth(oldPassword, newPassword)
-      
-      if (result.error) {
-        toast.error(result.error)
-        return { success: false, error: result.error }
+      const result = await authService.refreshTokens()
+      if (result.tokens) {
+        updateTokens(result.tokens)
+        setAuth(result.user, result.tokens)
+        return { success: true }
       }
-
-      toast.success('Пароль успешно изменен!')
-      return { success: true }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
+      setError(result.error || 'Ошибка обновления токенов')
+      return { success: false, error: result.error }
     } finally {
       setLoading(false)
     }
-  }, [setLoading])
+  }, [setAuth, setLoading, setError, updateTokens])
 
+  // Сброс пароля
   const resetPassword = useCallback(async (email: string) => {
+    setLoading(true)
     try {
-      setLoading(true)
       const result = await authService.resetPassword(email)
-      
-      if (result.error) {
-        toast.error(result.error)
-        return { success: false, error: result.error }
+      if (!result.error) {
+        return { success: true }
       }
-
-      toast.success('Инструкции по восстановлению пароля отправлены на ваш email!')
-      return { success: true }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
+      setError(result.error)
+      return { success: false, error: result.error }
     } finally {
       setLoading(false)
     }
-  }, [setLoading])
+  }, [setLoading, setError])
 
+  // Смена пароля
   const changePassword = useCallback(async (newPassword: string) => {
+    setLoading(true)
     try {
-      setLoading(true)
       const result = await authService.changePassword(newPassword)
-      
-      if (result.error) {
-        toast.error(result.error)
-        return { success: false, error: result.error }
+      if (!result.error) {
+        return { success: true }
       }
-
-      toast.success('Пароль успешно установлен!')
-      return { success: true }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
+      setError(result.error)
+      return { success: false, error: result.error }
     } finally {
       setLoading(false)
     }
-  }, [setLoading])
+  }, [setLoading, setError])
 
-  const updateProfile = useCallback(async (data: any) => {
+  // Обновление профиля
+  const updateProfile = useCallback(async (updates: Partial<TUser>) => {
+    setLoading(true)
     try {
-      setLoading(true)
-      const result = await authService.updateProfile(data)
-      
-      if (result.error) {
-        return { error: result.error }
+      const result = await authService.updateProfile(updates)
+      if (!result.error) {
+        // Можно обновить пользователя через getCurrentUser, если нужно
+        return { success: true }
       }
-
-      // После успешного обновления, обновляем состояние пользователя
-      if (user) {
-        const updatedUser: TUser = {
-          ...user,
-          ...data,
-        }
-        setAuth(updatedUser, session)
-      }
-
-      return { success: true }
-    } catch (error) {
-      return { error: 'Произошла ошибка при обновлении профиля' }
+      setError(result.error)
+      return { success: false, error: result.error }
     } finally {
       setLoading(false)
     }
-  }, [user, session, setAuth, setLoading])
-
-  const getAccessToken = useCallback((): string | null => {
-    return session?.access_token || null
-  }, [session])
+  }, [setLoading, setError])
 
   return {
     user,
-    session,
+    tokens,
     isAuthenticated,
     isLoading,
+    error,
     login,
     register,
     logout,
+    refreshTokens,
     resetPassword,
-    getAccessToken,
     changePassword,
-    changePasswordWithReauth,
     updateProfile,
   }
 }

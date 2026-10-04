@@ -10,23 +10,30 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("reviews", "0001_initial"),
+        ("exchange", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="review",
+            model_name="purchase",
             name="user",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="reviews",
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
                 to=settings.AUTH_USER_MODEL,
                 verbose_name="Пользователь",
             ),
         ),
         migrations.AlterUniqueTogether(
-            name="review",
-            unique_together={("user", "order")},
+            name="exchangerate",
+            unique_together={("currency_from", "currency_to", "branch", "min_amount")},
+        ),
+        migrations.AddIndex(
+            model_name="purchase",
+            index=models.Index(
+                fields=["branch", "currency_to"], name="purchases_branch__ded84a_idx"
+            ),
         ),
     ]

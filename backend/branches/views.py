@@ -14,7 +14,7 @@ from branches.serializers import (
 class BranchViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с филиалами."""
     
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Публичный доступ для просмотра филиалов
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['is_active']
     search_fields = ['name', 'email', 'address__city', 'address__country']
@@ -52,7 +52,7 @@ class BranchHoursViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с графиком работы филиалов."""
     
     serializer_class = BranchHoursSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Публичный доступ для просмотра графика
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['branch', 'weekday', 'is_open']
     
@@ -64,7 +64,7 @@ class BranchCurrencyViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с валютами филиалов."""
     
     serializer_class = BranchCurrencySerializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Публичный доступ для просмотра валют
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['branch', 'currency']
     

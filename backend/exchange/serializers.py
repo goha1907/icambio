@@ -7,7 +7,9 @@ class CurrencySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Currency
-        fields = ['id', 'code', 'name', 'symbol', 'is_active']
+        fields = [
+            'id', 'code', 'name', 'symbol', 'decimal_places', 'created_at'
+        ]
 
 
 class CurrencyCreateSerializer(serializers.ModelSerializer):
@@ -15,7 +17,7 @@ class CurrencyCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Currency
-        fields = ['code', 'name', 'symbol', 'is_active']
+        fields = ['code', 'name', 'symbol', 'decimal_places']
 
 
 class CurrencyUpdateSerializer(serializers.ModelSerializer):
@@ -23,21 +25,30 @@ class CurrencyUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Currency
-        fields = ['name', 'symbol', 'is_active']
+        fields = ['name', 'symbol', 'decimal_places']
 
 
 class ExchangeRateSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ExchangeRate"""
-    from_currency_code = serializers.CharField(source='from_currency.code', read_only=True)
-    to_currency_code = serializers.CharField(source='to_currency.code', read_only=True)
+    currency_from_code = serializers.CharField(
+        source='currency_from.code', read_only=True
+    )
+    currency_to_code = serializers.CharField(
+        source='currency_to.code', read_only=True
+    )
+    branch_name = serializers.CharField(
+        source='branch.name', read_only=True
+    )
 
     class Meta:
         model = ExchangeRate
         fields = [
-            'id', 'from_currency', 'to_currency', 'rate', 'visible',
-            'created_at', 'updated_at', 'from_currency_code', 'to_currency_code'
+            'id', 'currency_from', 'currency_to', 'branch', 'min_amount',
+            'max_amount', 'rate', 'is_hot', 'visible', 'in_filter',
+            'updated_at', 'currency_from_code', 'currency_to_code',
+            'branch_name'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'updated_at']
 
 
 class ExchangeRateCreateSerializer(serializers.ModelSerializer):
@@ -45,7 +56,10 @@ class ExchangeRateCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ExchangeRate
-        fields = ['from_currency', 'to_currency', 'rate', 'visible']
+        fields = [
+            'currency_from', 'currency_to', 'branch', 'min_amount',
+            'max_amount', 'rate', 'is_hot', 'visible', 'in_filter'
+        ]
 
 
 class ExchangeRateUpdateSerializer(serializers.ModelSerializer):
@@ -53,21 +67,36 @@ class ExchangeRateUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ExchangeRate
-        fields = ['rate', 'visible']
+        fields = [
+            'min_amount', 'max_amount', 'rate', 'is_hot', 'visible',
+            'in_filter'
+        ]
 
 
 class PurchaseSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Purchase"""
-    currency_code = serializers.CharField(source='currency.code', read_only=True)
-    branch_name = serializers.CharField(source='branch.name', read_only=True)
+    currency_from_code = serializers.CharField(
+        source='currency_from.code', read_only=True
+    )
+    currency_to_code = serializers.CharField(
+        source='currency_to.code', read_only=True
+    )
+    branch_name = serializers.CharField(
+        source='branch.name', read_only=True
+    )
+    user_email = serializers.CharField(
+        source='user.email', read_only=True
+    )
     
     class Meta:
         model = Purchase
         fields = [
-            'id', 'branch', 'currency', 'amount', 'rate', 'total_cost',
-            'purchase_date', 'notes', 'currency_code', 'branch_name'
+            'id', 'branch', 'currency_from', 'currency_to', 'amount_from',
+            'amount_to', 'applied_rate', 'source', 'user', 'note',
+            'created_at', 'currency_from_code', 'currency_to_code',
+            'branch_name', 'user_email'
         ]
-        read_only_fields = ['id', 'purchase_date']
+        read_only_fields = ['id', 'created_at']
 
 
 class PurchaseCreateSerializer(serializers.ModelSerializer):
@@ -75,7 +104,10 @@ class PurchaseCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Purchase
-        fields = ['branch', 'currency', 'amount', 'rate', 'total_cost', 'notes']
+        fields = [
+            'branch', 'currency_from', 'currency_to', 'amount_from',
+            'amount_to', 'applied_rate', 'source', 'note'
+        ]
 
 
 class PurchaseUpdateSerializer(serializers.ModelSerializer):
@@ -83,4 +115,6 @@ class PurchaseUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Purchase
-        fields = ['amount', 'rate', 'total_cost', 'notes']
+        fields = [
+            'amount_from', 'amount_to', 'applied_rate', 'source', 'note'
+        ]

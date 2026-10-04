@@ -54,6 +54,17 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_extensions',
     'drf_spectacular',
+    
+    # Django Allauth
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.apple',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
+    'allauth.socialaccount.providers.vk',
+    'allauth.socialaccount.providers.yandex',
 
     # Local apps
     'core',
@@ -71,6 +82,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Django Allauth middleware
     'users.middleware.AutoUserCreationMiddleware',  # Автоматическое создание пользователей
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -101,17 +113,17 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 TEST_DATABASE_URL = os.getenv('TEST_DATABASE_URL')
 
 if DATABASE_URL:
-    # Используем PostgreSQL от Supabase
+    # Используем PostgreSQL или другую БД, если указано в DATABASE_URL
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL)
     }
-    # Отдельная тестовая БД, если указана
+    # Опционально: отдельная тестовая БД
     if TEST_DATABASE_URL:
         DATABASES['default']['TEST'] = {
             'NAME': dj_database_url.parse(TEST_DATABASE_URL)['NAME']
         }
 else:
-    # Временно используем SQLite для разработки
+    # По умолчанию используем SQLite для разработки
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -174,74 +186,73 @@ if DEBUG:
         },
     }
 
-# REST Framework settings with Supabase authentication
+# REST Framework settings with Django Allauth + DRF Simple JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'users.authentication.SupabaseJWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,  # По умолчанию 10 элементов на страницу
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
-# Authentication backends
+# Django Allauth settings
+SITE_ID = 1
+
 AUTHENTICATION_BACKENDS = [
-    'users.authentication.SupabaseBackend',
     'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# IMPORTANT: Supabase Auth Synchronization
-# Supabase manages auth.users table, but Django has separate users.User model.
-# Make sure to implement auto-creation of users.User in SupabaseJWTAuthentication
-# or SupabaseBackend to avoid AnonymousUser issues when JWT is valid.
-# Alternative: use UUID primary key in users.User that matches Supabase user ID.
+# Django Allauth configuration
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
-# Supabase settings - READ FROM ENVIRONMENT VARIABLES
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
-SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
-SUPABASE_JWT_SECRET = os.getenv('SUPABASE_JWT_SECRET')
+# Email confirmation settings
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
+ACCOUNT_RATE_LIMITS = {
+    'login_failed': '5/5m',  # 5 попыток за 5 минут
+    'signup': '10/h',        # 10 регистраций в час
+    'password_reset': '5/h', # 5 сбросов пароля в час
+}
 
-# Validate that required Supabase environment variables are set
-# Временно отключено для первоначальной настройки
-if DEBUG and not SUPABASE_URL:
-    logging.warning("SUPABASE_URL not set - using placeholder")
-elif not DEBUG and not SUPABASE_URL:
-    raise ValueError("SUPABASE_URL environment variable is required")
+# Social account settings
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
-if DEBUG and not SUPABASE_JWT_SECRET:
-    logging.warning("SUPABASE_JWT_SECRET not set - using placeholder")
-elif not DEBUG and not SUPABASE_JWT_SECRET:
-    raise ValueError("SUPABASE_JWT_SECRET environment variable is required")
-
-# Djoser removed - using Supabase Auth instead
-# All authentication is managed by Supabase, not Django
-
-# CORS настройки
-DEFAULT_CORS_ORIGINS = [
-    "http://localhost:5173",  # Оставляем для обратной совместимости
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-
-# Берём список разрешённых источников из переменной окружения (через запятую)
-env_cors_origins = os.getenv('CORS_ALLOWED_ORIGINS')
-CORS_ALLOWED_ORIGINS = (
-    [origin.strip() for origin in env_cors_origins.split(',') if origin.strip()]
-    if env_cors_origins else DEFAULT_CORS_ORIGINS
-)
-
-CORS_ALLOW_CREDENTIALS = True
-
-# Разрешаем все источники **только** когда DEBUG=True и явно установлена переменная ALLOW_ALL_CORS
-# IMPORTANT: Всегда устанавливайте ALLOW_ALL_CORS=False в .env для production/staging
-ALLOW_ALL_CORS = os.getenv('ALLOW_ALL_CORS', 'False') == 'True'
-CORS_ALLOW_ALL_ORIGINS = DEBUG and ALLOW_ALL_CORS
-
-if DEBUG and ALLOW_ALL_CORS:
-    logging.warning("CORS_ALLOW_ALL_ORIGINS is enabled. Do NOT use in production!")
-elif not DEBUG and ALLOW_ALL_CORS:
-    raise ValueError("ALLOW_ALL_CORS cannot be True in production environment")
+# DRF Simple JWT settings
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=int(os.getenv('JWT_ACCESS_TOKEN_LIFETIME', 5))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=int(os.getenv('JWT_REFRESH_TOKEN_LIFETIME', 1))),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY', SECRET_KEY),
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    
+    'JTI_CLAIM': 'jti',
+}
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # выводит письма в консоль
@@ -274,3 +285,114 @@ if DEBUG:
         '127.0.0.1',
         'localhost',
     ]
+
+# CORS настройки
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:5173",  # Оставляем для обратной совместимости
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Берём список разрешённых источников из переменной окружения (через запятую)
+env_cors_origins = os.getenv('CORS_ALLOWED_ORIGINS')
+CORS_ALLOWED_ORIGINS = (
+    [origin.strip() for origin in env_cors_origins.split(',') if origin.strip()]
+    if env_cors_origins else DEFAULT_CORS_ORIGINS
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Разрешаем все источники **только** когда DEBUG=True и явно установлена переменная ALLOW_ALL_CORS
+# IMPORTANT: Всегда устанавливайте ALLOW_ALL_CORS=False в .env для production/staging
+ALLOW_ALL_CORS = os.getenv('ALLOW_ALL_CORS', 'False') == 'True'
+CORS_ALLOW_ALL_ORIGINS = DEBUG and ALLOW_ALL_CORS
+
+if DEBUG and ALLOW_ALL_CORS:
+    logging.warning("CORS_ALLOW_ALL_ORIGINS is enabled. Do NOT use in production!")
+elif not DEBUG and ALLOW_ALL_CORS:
+    raise ValueError("ALLOW_ALL_CORS cannot be True in production environment")
+
+# ==============================================
+# 🔒 PRODUCTION SECURITY SETTINGS
+# ==============================================
+
+# Security settings for production
+if not DEBUG:
+    # HTTPS settings
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Cookie settings
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_HTTPONLY = True
+    
+    # Additional security headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # Content Security Policy (CSP)
+    SECURE_CSP_HEADER = {
+        'default-src': ["'self'"],
+        'script-src': ["'self'", "'unsafe-inline'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
+        'img-src': ["'self'", "data:", "https:"],
+        'connect-src': ["'self'"],
+        'font-src': ["'self'"],
+        'object-src': ["'none'"],
+        'media-src': ["'self'"],
+        'frame-src': ["'none'"],
+    }
+    
+    # Rate limiting settings
+    RATELIMIT_ENABLE = True
+    RATELIMIT_USE_CACHE = 'default'
+    
+    # Logging configuration for production
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                'style': '{',
+            },
+            'simple': {
+                'format': '{levelname} {message}',
+                'style': '{',
+            },
+        },
+        'handlers': {
+            'file': {
+                'level': 'INFO',
+                'class': 'logging.FileHandler',
+                'filename': BASE_DIR / 'logs' / 'django.log',
+                'formatter': 'verbose',
+            },
+            'console': {
+                'level': 'INFO',
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple',
+            },
+        },
+        'root': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console', 'file'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+            'django.security': {
+                'handlers': ['console', 'file'],
+                'level': 'WARNING',
+                'propagate': False,
+            },
+        },
+    }

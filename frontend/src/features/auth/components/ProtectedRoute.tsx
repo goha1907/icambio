@@ -26,39 +26,39 @@ interface ProtectedRouteProps {
 
 /**
  * ProtectedRoute — компонент-обёртка для защищённых маршрутов.
- * 
+ *
  * Выполняет две основные проверки перед рендерингом вложенных маршрутов (`<Outlet />`):
  * 1. Пользователь аутентифицирован (`useAuth().isAuthenticated`).
- * 2. Пользователь обладает хотя бы одной из требуемых ролей (`user.user_metadata.roles`).
- * 
+ * 2. Пользователь обладает хотя бы одной из требуемых ролей (`user.roles`).
+ *
  * При отсутствии аутентификации происходит редирект на страницу логина. Если же
  * аутентификация прошла, но роли не совпадают, отображается страница "Доступ
  * запрещён" (можно заменить через `accessDeniedComponent`).
- * 
+ *
  * @param {ProtectedRouteProps}  props                                   Параметры компонента
  * @param {string}               [props.redirectTo="/login"]           URL для редиректа неавторизованных пользователей
- * @param {string[]}             [props.requiredRoles]                   Список ролей, необходимых для доступа. Роли читаются из `user.user_metadata.roles`
+ * @param {string[]}             [props.requiredRoles]                   Список ролей, необходимых для доступа. Роли читаются из `user.roles`
  * @param {React.ReactNode}      [props.fallback]                        Кастомный элемент для состояния загрузки
  * @param {React.ReactNode}      [props.accessDeniedComponent]           Кастомный элемент для отображения ошибки доступа
  * @param {string}               [props.className]                       Дополнительные CSS-классы контейнера состояний
  * @param {boolean}              [props.showDetailedErrors=false]        Показывать ли подробности о требуемых/текущих ролях
  * @returns {JSX.Element} Компонент `<Outlet />`, либо состояние загрузки, либо редирект/отказ в доступе
- * 
+ *
  * @example
  * // 1. Базовое использование (только проверка аутентификации)
  * <ProtectedRoute />
- * 
+ *
  * @example
  * // 2. Кастомный путь редиректа
  * <ProtectedRoute redirectTo="/auth/signin" />
- * 
+ *
  * @example
  * // 3. Проверка ролей пользователя
  * <ProtectedRoute 
  *   requiredRoles={['admin', 'moderator']}
  *   accessDeniedComponent={<CustomAccessDenied />}
  * />
- * 
+ *
  * @example
  * // 4. Кастомное состояние загрузки
  * <ProtectedRoute 
@@ -125,8 +125,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Проверка ролей пользователя (если указаны требуемые роли)
   if (requiredRoles.length > 0) {
-    // Получаем роли пользователя (предполагаем, что они в user_metadata)
-    const userRoles = user?.user_metadata?.roles || [];
+    // Получаем роли пользователя (предполагаем, что они есть в user.roles)
+    const userRoles = user?.roles || [];
     
     // Проверяем, есть ли у пользователя хотя бы одна из требуемых ролей
     const hasRequiredRole = requiredRoles.some(role => 

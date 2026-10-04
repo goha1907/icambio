@@ -6,16 +6,18 @@ class Branch(models.Model):
     """Модель филиала согласно схеме БД."""
     
     name = models.CharField('Название', max_length=200, blank=False)
-    email = models.EmailField('Email', blank=True)
+    email = models.EmailField('Email', null=True, blank=True)
     whatsapp = models.BigIntegerField('WhatsApp', null=True, blank=True)
-    telegram = models.CharField('Telegram', max_length=100, blank=True)
-    instagram = models.CharField('Instagram', max_length=100, blank=True)
+    telegram = models.CharField('Telegram', max_length=100, null=True, blank=True)
+    instagram = models.CharField('Instagram', max_length=100, null=True, blank=True)
     
     address = models.ForeignKey(
         Address,
         on_delete=models.CASCADE,
         verbose_name='Адрес филиала',
-        related_name='branches'
+        related_name='branches',
+        null=True,
+        blank=True
     )
     
     is_active = models.BooleanField('Активен', default=True)
@@ -47,7 +49,9 @@ class BranchHours(models.Model):
         Branch,
         on_delete=models.CASCADE,
         verbose_name='Филиал',
-        related_name='hours'
+        related_name='hours',
+        null=True,
+        blank=True
     )
     weekday = models.IntegerField(
         'День недели',

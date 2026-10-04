@@ -1,27 +1,39 @@
-// Базовые типы пользователя
-import { User as SupabaseUser, Session as SupabaseSession } from '@supabase/supabase-js';
-
-// Интерфейс для данных профиля, хранящихся в user_metadata или отдельной таблице
+// Базовые типы пользователя для Django API
 export interface IUserProfile {
-  id: string; // ID пользователя из нашей БД Django
+  id: string;
   username?: string;
   email: string;
   first_name?: string;
   last_name?: string;
   whatsapp?: string;
   telegram?: string;
-  preferred_delivery_address?: string; // Предпочитаемый адрес доставки
-  referral_code?: string; // Мой уникальный реферальный код (REF123ABC)
-  referral_link?: string; // Моя реферальная ссылка
-  invited_by_code?: string; // Код того, кто меня пригласил
-  referralBalance?: number; // Баланс бонусов (пока неактивный)
-  referrals?: TUser[]; // Мои рефералы для отображения в списке
+  preferred_delivery_address?: string;
+  referral_code?: string;
+  referral_link?: string;
+  invited_by_code?: string;
+  referralBalance?: number;
+  referrals?: TUser[];
+  roles?: string[]; // Добавлено для поддержки проверки ролей
 }
 
 // Объединенный тип пользователя для фронтенда
-export type TUser = SupabaseUser & IUserProfile;
+export type TUser = IUserProfile;
 
-export type { SupabaseUser, SupabaseSession };
+// Типы для Django JWT аутентификации
+export interface DjangoJWTResponse {
+  access: string;
+  refresh: string;
+}
+
+export interface DjangoUser {
+  id: string;
+  email: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  date_joined: string;
+  is_active: boolean;
+}
 
 // Типы для аутентификации
 export interface LoginCredentials {

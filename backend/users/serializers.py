@@ -101,13 +101,17 @@ class UserCreateSerializer(serializers.ModelSerializer):
         referred_by_code = validated_data.pop('referred_by_code', None)
         password = validated_data.pop('password')
         
-        user = User.objects.create_user(**validated_data)
-        user.set_password(password)
+        # Используем новый метод для создания пользователя с реферальным кодом
+        user = User.objects.create_user_with_code(
+            email=validated_data['email'],
+            password=password,
+            **validated_data
+        )
         
         if referred_by_code:
             user.referred_by_code = referred_by_code
+            user.save()
         
-        user.save()
         return user
 
 

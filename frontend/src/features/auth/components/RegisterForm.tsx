@@ -68,7 +68,11 @@ export const RegisterForm: React.FC = () => {
    */
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const result = await registerUser(data);
+      const result = await registerUser({
+        email: data.email,
+        password: data.password,
+        re_password: data.confirmPassword,
+      });
       
       if (result.error) {
         // Ошибки показываются через toast в useAuth

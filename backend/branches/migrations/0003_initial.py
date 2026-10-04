@@ -9,29 +9,36 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("branches", "0001_initial"),
-        ("core", "0001_initial"),
+        ("branches", "0002_initial"),
+        ("exchange", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="branch",
-            name="address",
+            model_name="branchcurrency",
+            name="currency",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="branches",
-                to="core.address",
-                verbose_name="Адрес филиала",
+                to="exchange.currency",
+                verbose_name="Валюта",
             ),
         ),
         migrations.AddField(
-            model_name="branchcurrency",
+            model_name="branchhours",
             name="branch",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name="currencies",
+                related_name="hours",
                 to="branches.branch",
                 verbose_name="Филиал",
             ),
+        ),
+        migrations.AlterUniqueTogether(
+            name="branchcurrency",
+            unique_together={("branch", "currency")},
+        ),
+        migrations.AlterUniqueTogether(
+            name="branchhours",
+            unique_together={("branch", "weekday")},
         ),
     ]

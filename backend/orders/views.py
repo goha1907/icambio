@@ -1,34 +1,68 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import (
+    DjangoFilterBackend, FilterSet, DateFromToRangeFilter
+)
 from rest_framework.filters import SearchFilter, OrderingFilter
+from users.permissions import IsOwnerOrOperator
 from orders.models import Order, OrderProfit
 from orders.serializers import (
     OrderSerializer, OrderListSerializer, OrderCreateSerializer,
     OrderUpdateSerializer, OrderProfitSerializer
 )
+from rest_framework.pagination import PageNumberPagination
+
+
+class OrderPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+
+class OrderFilter(FilterSet):
+    created_at = DateFromToRangeFilter()
+
+    class Meta:
+        model = Order
+        fields = [
+            'status', 'delivery', 'branch', 'currency_from',
+            'currency_to', 'user', 'created_at',
+            'amount_from', 'amount_to'
+        ]
 
 
 class OrderViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с заказами."""
     
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOwnerOrOperator]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = OrderFilter
     filterset_fields = [
         'status', 'delivery', 'branch', 'currency_from', 'currency_to'
     ]
-    search_fields = ['id']
+    search_fields = [
+        'id', 'user__email', 'user__first_name', 'user__last_name',
+        'branch__name', 'currency_from__code', 'currency_to__code'
+    ]
     ordering_fields = ['created_at', 'amount_from', 'amount_to']
     ordering = ['-created_at']
+    pagination_class = OrderPagination
     
     def get_queryset(self):
-        return Order.objects.select_related(
-            'user', 'branch', 'currency_from', 'currency_to', 'delivery_address'
-        ).prefetch_related('profits__currency').filter(
-            user=self.request.user
-        )
+        # Операторы и выше видят все заказы, обычные пользователи - только свои
+        if self.request.user.role in ['operator', 'admin', 'owner']:
+            return Order.objects.select_related(
+                'user', 'branch', 'currency_from', 'currency_to',
+                'delivery_address'
+            ).prefetch_related('profits__currency')
+        else:
+            return Order.objects.select_related(
+                'user', 'branch', 'currency_from', 'currency_to',
+                'delivery_address'
+            ).prefetch_related('profits__currency').filter(
+                user=self.request.user
+            )
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -101,13 +135,17 @@ class OrderProfitViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с прибылью по заказам."""
     
     serializer_class = OrderProfitSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOwnerOrOperator]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['order', 'currency']
     ordering_fields = ['amount', 'created_at']
     ordering = ['-created_at']
     
     def get_queryset(self):
-        return OrderProfit.objects.select_related(
-            'order', 'currency'
-        ).filter(order__user=self.request.user)
+        # Операторы и выше видят все прибыли, обычные пользователи - только по своим заказам
+        if self.request.user.role in ['owner']:
+            return OrderProfit.objects.select_related('order', 'currency')
+        else:
+            return OrderProfit.objects.select_related(
+                'order', 'currency'
+            ).filter(order__user=self.request.user)
